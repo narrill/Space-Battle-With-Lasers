@@ -113,6 +113,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var context = void 0;
     var inputBox = void 0;
     var entry = void 0;
+    var startTime = 0;
     var cameras = {};
     var state = void 0;
     var shipList = [];
@@ -383,6 +384,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         drawing.drawHUD(cameras.camera);
         drawing.drawMinimap(cameras.minimapCamera, grid);
         utilities.fillText(cameras.camera.ctx, 'prjs: ' + worldInfo.prjs.length, 15, 30, "8pt Orbitron", 'white');
+
+        if (Date.now().valueOf() - startTime < 15000) drawing.drawTutorialGraphics(cameras.camera);
       } else if (state == GAME_STATES.TITLE) {
         //drawing.drawAsteroids(game.asteroids,cameras.camera,cameras.gridCamera);
         drawing.drawTitleScreen(cameras.camera);
@@ -430,6 +433,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       socket.on('grid', function (data) {
         resetWi();
         worldInfoModule.setLastWorldUpdate(Date.now().valueOf());
+        startTime = Date.now().valueOf();
         grid = data;
       });
 
@@ -1125,17 +1129,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var ctx = camera.ctx;
         ctx.save();
         ctx.textAlign = 'left';
-        utilities.fillText(ctx, "WASD moves your ship", camera.width / 10, camera.height / 12, "10pt Orbitron", 'white');
-        utilities.fillText(ctx, "LEFT and RIGHT arrow or mouse turns your ship", camera.width / 10, 2 * camera.height / 12, "10pt Orbitron", 'white');
-        utilities.fillText(ctx, "UP and DOWN arrow or mouse-wheel zooms the camera", camera.width / 10, 3 * camera.height / 12, "10pt Orbitron", 'white');
-        utilities.fillText(ctx, "SPACE or LEFT-CLICK fires your laser", camera.width / 10, 4 * camera.height / 12, "10pt Orbitron", 'white');
-        utilities.fillText(ctx, "SHIFT over-charges your thrusters", camera.width / 10, 5 * camera.height / 12, "10pt Orbitron", 'white');
-        utilities.fillText(ctx, "ALT over-charges your shield", camera.width / 10, 6 * camera.height / 12, "10pt Orbitron", 'white');
-        utilities.fillText(ctx, "RIGHT-CLICK over-charges your laser", camera.width / 10, 7 * camera.height / 12, "10pt Orbitron", 'white');
-        utilities.fillText(ctx, "C toggles the velocity limiter", camera.width / 10, 8 * camera.height / 12, "10pt Orbitron", 'white');
-        utilities.fillText(ctx, "TAB switches between assisted and manual controls", camera.width / 10, 9 * camera.height / 12, "10pt Orbitron", 'white');
-        utilities.fillText(ctx, "P pauses, F turns off the star-field graphics (they can be a resource hog)", camera.width / 10, 10 * camera.height / 12, "10pt Orbitron", 'white');
-        utilities.fillText(ctx, "Play around for a bit, then press ENTER to start the game. Your goal is to destroy all enemy ships", camera.width / 10, 11 * camera.height / 12, "10pt Orbitron", 'white');
+        utilities.fillText(ctx, "WASD moves your ship", camera.width / 10, camera.height / 11, "10pt Orbitron", 'white');
+        utilities.fillText(ctx, "LEFT and RIGHT arrow or mouse turns your ship", camera.width / 10, 2 * camera.height / 11, "10pt Orbitron", 'white');
+        utilities.fillText(ctx, "UP and DOWN arrow or mouse-wheel zooms the camera", camera.width / 10, 3 * camera.height / 11, "10pt Orbitron", 'white');
+        utilities.fillText(ctx, "SPACE or LEFT-CLICK fires your laser", camera.width / 10, 4 * camera.height / 11, "10pt Orbitron", 'white');
+        utilities.fillText(ctx, "SHIFT over-charges your thrusters", camera.width / 10, 5 * camera.height / 11, "10pt Orbitron", 'white');
+        utilities.fillText(ctx, "ALT over-charges your shield", camera.width / 10, 6 * camera.height / 11, "10pt Orbitron", 'white');
+        utilities.fillText(ctx, "RIGHT-CLICK over-charges your laser", camera.width / 10, 7 * camera.height / 11, "10pt Orbitron", 'white');
+        utilities.fillText(ctx, "C toggles the velocity limiter", camera.width / 10, 8 * camera.height / 11, "10pt Orbitron", 'white');
+        utilities.fillText(ctx, "TAB switches between assisted and manual controls", camera.width / 10, 9 * camera.height / 11, "10pt Orbitron", 'white');
+        utilities.fillText(ctx, "Your goal is to destroy all enemy ships", camera.width / 10, 10 * camera.height / 11, "10pt Orbitron", 'white');
         //this.fill
       }
     };

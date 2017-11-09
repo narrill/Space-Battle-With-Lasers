@@ -82,6 +82,7 @@ let canvas;
 let context;
 let inputBox;
 let entry;
+let startTime = 0;
 const cameras = {};
 let state;
 let shipList = [];
@@ -393,6 +394,9 @@ const draw = (cameras,  dt) => {
     drawing.drawHUD(cameras.camera);
     drawing.drawMinimap(cameras.minimapCamera, grid);
     utilities.fillText(cameras.camera.ctx,'prjs: '+worldInfo.prjs.length,15,30,"8pt Orbitron",'white');
+
+    if(Date.now().valueOf() - startTime < 15000)
+      drawing.drawTutorialGraphics(cameras.camera);
   }
   else if(state == GAME_STATES.TITLE)
   {
@@ -448,6 +452,7 @@ const init = () => {
   socket.on('grid', (data) => {
     resetWi();
     worldInfoModule.setLastWorldUpdate(Date.now().valueOf());
+    startTime = Date.now().valueOf();
     grid = data;
   });
 
