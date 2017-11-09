@@ -169,7 +169,7 @@ const constructors = {
     const stab = {
       id: id.takeIdTag(),
       enabled: true,
-      strength: 1200,
+      strength: 6,
       thrustRatio: 1.5,
       precision: 10,
       clamps: constructors.createComponentStabilizerClamps(
@@ -351,7 +351,7 @@ const constructors = {
       mouse: [],
       mouseDirection: 0,
       lastSend: 0,
-      sendInterval: 30,
+      sendInterval: 66.6666667,
     };
     function mh(data) {
       // console.log(data);

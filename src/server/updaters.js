@@ -449,10 +449,11 @@ const updaters = {
       this.remoteInput.lastSend = this.game.elapsedGameTime;
       gameFunctions.queueFunction(this.game, () => {
         const d = {};
-        if (!this.remoteInput.sentInterval) {
-          d.interval = this.remoteInput.sendInterval;
-          this.remoteInput.sentInterval = true;
-        }
+        // if (!this.remoteInput.sentInterval) {
+        //   d.interval = this.remoteInput.sendInterval;
+        //   this.remoteInput.sentInterval = true;
+        // }
+        d.interval = sinceLastSend;
         d.x = this.x;
         d.y = this.y;
         d.rotation = this.rotation;
