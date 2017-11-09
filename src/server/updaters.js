@@ -462,7 +462,7 @@ const updaters = {
         d.rotationalVelocity = this.rotationalVelocity;
         d.velocityClamps = stab.clamps;
         d.stabilized = stab.enabled;
-        const fetchInfo = gameFunctions.fetchFromTileArray(this.game, [this.x, this.y], 200000);
+        const fetchInfo = gameFunctions.fetchFromTileArray(this.game, [this.x, this.y], 15000);
         const worldInfo = {
           objs: [],
           asteroids: {
