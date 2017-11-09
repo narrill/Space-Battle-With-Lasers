@@ -104,7 +104,7 @@ const constructors = {
     updaters.populateOnDestroy.call(ship);
 
     Object.values(game.socketSubscriptions).forEach((socket) => {
-      if (ownerId && socket.id === ownerId) {
+      if (ownerId && socket.id === ownerId && ship.model.overlay.ranges) {
         console.log('yours');
         const modelCopy = utilities.deepObjectMerge.call({}, ship.model);
         const key2s = Object.keys(modelCopy.overlay.ranges);
