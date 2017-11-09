@@ -129,18 +129,18 @@ const drawing = {
 		ctx.scale(gridCamera.zoom,gridCamera.zoom);
 		if(ship.model.overlay.destructible){
 			ctx.beginPath();
-			ctx.arc(0,0,750,-Math.PI/2,-Math.PI*2*(ship.shp)-Math.PI/2,true);
+			ctx.arc(0,0,150,-Math.PI/2,-Math.PI*2*(ship.shp)-Math.PI/2,true);
 			ctx.strokeStyle = 'dodgerblue';
-			ctx.lineWidth = 100;
+			ctx.lineWidth = 20;
 			ctx.stroke();
 			ctx.beginPath();
-			ctx.arc(0,0,600,-Math.PI/2,-Math.PI*2*(interpolateWiValue(ship,'hp'))-Math.PI/2,true);
+			ctx.arc(0,0,125,-Math.PI/2,-Math.PI*2*(interpolateWiValue(ship,'hp'))-Math.PI/2,true);
 			ctx.strokeStyle = 'green';
 			ctx.stroke();
 		}
 		if(ship.model.overlay.colorCircle){
 			ctx.beginPath();
-			ctx.arc(0,0,300,0,Math.PI*2);
+			ctx.arc(0,0,75,0,Math.PI*2);
 			ctx.fillStyle = ship.color;
 			ctx.fill();	
 			ctx.beginPath();

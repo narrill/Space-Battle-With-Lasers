@@ -115,16 +115,16 @@ const constructors = {
       color: utilities.getRandomBrightColor(),
       noiseLevel: 0,
       medial: constructors.createComponentThruster(utilities.deepObjectMerge.call({
-        maxStrength: 3000,
-        efficiency: 1000,
+        maxStrength: 1000,
+        efficiency: 300,
       }, objectParams.medial)),
       lateral: constructors.createComponentThruster(utilities.deepObjectMerge.call({
-        maxStrength: 2000,
-        efficiency: 1000,
+        maxStrength: 660,
+        efficiency: 300,
       }, objectParams.lateral)),
       rotational: constructors.createComponentThruster(utilities.deepObjectMerge.call({
-        maxStrength: 750,
-        efficiency: 1000,
+        maxStrength: 250,
+        efficiency: 100,
       }, objectParams.rotational)),
     };
 
@@ -187,8 +187,8 @@ const constructors = {
     const clamps = {
       id: id.takeIdTag(),
       enabled: true,
-      medial: 3000,
-      lateral: 2000,
+      medial: 1000,
+      lateral: 660,
       rotational: 90,
     };
 
@@ -202,12 +202,12 @@ const constructors = {
       id: id.takeIdTag(),
       lastFireTime: 0,
       cd: 0.3,
-      range: 10000,
+      range: 2000,
       color: utilities.getRandomBrightColor(),
       currentPower: 0,
       coherence: 0.995,
-      maxPower: 6000,
-      efficiency: 200,
+      maxPower: 1000,
+      efficiency: 50,
       spread: 0,
       collisionFunction: 'basicLaserCollision',
     };
@@ -224,7 +224,7 @@ const constructors = {
       firing: false,
       lastFireTime: 0,
       cd: 0.12,
-      power: 96000,
+      power: 10000,
       ammo: constructors.createComponentAmmo(utilities.deepObjectMerge.call({}, objectParams.ammo)),
     };
 
@@ -237,8 +237,8 @@ const constructors = {
     const am = {
       id: id.takeIdTag(),
       destructible: constructors.createComponentDestructible(utilities.deepObjectMerge.call({
-        hp: 15,
-        radius: 3,
+        hp: 25,
+        radius: 10,
       }, objectParams.destructible)),
       color: 'yellow',
       tracerInterval: 1,
@@ -351,7 +351,7 @@ const constructors = {
       mouse: [],
       mouseDirection: 0,
       lastSend: 0,
-      sendInterval: 100,
+      sendInterval: 30,
     };
     function mh(data) {
       // console.log(data);
@@ -490,8 +490,8 @@ const constructors = {
       lower[0] + (grid.gridLines * grid.gridSpacing),
       lower[1] + (grid.gridLines * grid.gridSpacing),
     ];
-    const maxRadius = 3000;
-    const minRadius = 1000;
+    const maxRadius = 1000;
+    const minRadius = 100;
     // asteroids.objs = [];
     for (let c = asteroids.objs.length; c < asteroids.total; c++) {
       const radius = (Math.random() * (maxRadius - minRadius)) + minRadius;

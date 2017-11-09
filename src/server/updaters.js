@@ -563,7 +563,7 @@ const updaters = {
   },
 
   updatePrj(dt) {
-    this.destructible.hp -= this.destructible.maxHp * 0.5 * dt;
+    this.destructible.hp -= this.destructible.maxHp * 2.5 * dt;
   },
 
   queueReport() {

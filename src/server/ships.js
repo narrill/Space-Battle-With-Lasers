@@ -44,6 +44,22 @@ const ships = {
     laser: {},
     stabilizer: {},
     powerSystem: {},
+    thrusterSystem: {
+      medial: {
+        maxStrength: 2000
+      },
+      lateral: {
+        maxStrength: 2000
+      },
+      rotational: {
+        maxStrength: 400
+      }
+    },
+    destructible: {
+      shield: {
+        max: 30
+      }
+    }
   },
 
   gull: {

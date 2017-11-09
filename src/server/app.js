@@ -58,8 +58,8 @@ const BASE_GAME = {
   reportQueue: undefined,
   functionQueue: [],
   grid: {
-    gridLines: 1000, // number of grid lines
-    gridSpacing: 1000, // pixels per grid unit
+    gridLines: 500, // number of grid lines
+    gridSpacing: 100, // pixels per grid unit
     gridStart: [-125000, -125000], // corner anchor in world coordinates
     colors: [
       {

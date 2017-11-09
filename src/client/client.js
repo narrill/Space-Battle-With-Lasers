@@ -55,7 +55,7 @@ class Camera {
     this.y = (objectParams.y) ? objectParams.y : 0;
     this.rotation = (objectParams.rotation) ? objectParams.rotation : 0;
     this.zoom =  (objectParams.zoom) ? objectParams.zoom : 1;
-    this.minZoom = (objectParams.minZoom)?objectParams.minZoom:0;
+    this.minZoom = (objectParams.minZoom)?objectParams.minZoom:.1;
     this.maxZoom = (objectParams.maxZoom)?objectParams.maxZoom:Number.MAX_VALUE;
     this.viewport = new Viewport(objectParams.viewport);
     
@@ -296,7 +296,7 @@ const update = (dt) => {
     if(myKeys.keydown[myKeys.KEYBOARD.KEY_DOWN] && cameras.camera.zoom>=cameras.camera.minZoom)
       cameras.camera.zoom*=1+(.33-1)*dt;
     if(myMouse.wheel)
-      cameras.camera.zoom*=1+(myMouse.wheel/500);
+      cameras.camera.zoom*=1+(myMouse.wheel/2000);
     if(cameras.camera.zoom>cameras.camera.maxZoom)
       cameras.camera.zoom = cameras.camera.maxZoom;
     else if(cameras.camera.zoom<cameras.camera.minZoom)
@@ -348,8 +348,8 @@ const draw = (cameras,  dt) => {
   cameras.gridCamera.y = cameras.camera.y;
   cameras.gridCamera.rotation = cameras.camera.rotation;
   var cameraDistance = 1/cameras.camera.zoom;
-  cameras.starCamera.zoom = 1/(cameraDistance+10000);
-  cameras.gridCamera.zoom = 1/(cameraDistance+5);
+  cameras.starCamera.zoom = 1/(cameraDistance+7000);
+  cameras.gridCamera.zoom = 1/(cameraDistance+.85);
   cameras.minimapCamera.x = cameras.camera.x;
   cameras.minimapCamera.y = cameras.camera.y;
   cameras.minimapCamera.rotation = cameras.camera.rotation;
@@ -505,7 +505,9 @@ const init = () => {
   cameras.starCamera = new Camera(canvas);
   cameras.gridCamera = new Camera(canvas);
   cameras.minimapCamera = new Camera(canvas, {
-    zoom: .001,
+    zoom: .01,
+    maxZoom: .01,
+    minZoom: .01,
     viewport: {
       startX: .83,
       startY: .7,

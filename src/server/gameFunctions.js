@@ -440,7 +440,7 @@ const gameFunctions = {
       (this.tileArray.max[0] - this.tileArray.min[0]) + 4,
       (this.tileArray.max[1] - this.tileArray.min[1]) + 4,
     ];
-    map.precision = 120000;
+    map.precision = 30000;
     const taSize = mapFunctions.posTo1dIndex(
       [map.position[0] + map.size[0], map.position[1] + map.size[1]],
       map,
