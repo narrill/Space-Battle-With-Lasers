@@ -441,6 +441,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         state = GAME_STATES.DISCONNECTED;
       });
 
+      socket.on('badShipError', function () {
+        if (state === GAME_STATES.WAIT) {
+          entry = "";
+          state = GAME_STATES.CHOOSESHIP;
+        }
+      });
+
       socket.on('worldInfo', function (data) {
         if (state === GAME_STATES.WAIT) state = GAME_STATES.PLAYING;
         if (data.interval) worldInfoModule.setWiInterval(data.interval);

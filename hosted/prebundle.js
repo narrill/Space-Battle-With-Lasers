@@ -461,6 +461,13 @@ const init = () => {
     state = GAME_STATES.DISCONNECTED;
   });
 
+  socket.on('badShipError', () => {
+    if(state === GAME_STATES.WAIT) {
+      entry = "";
+      state = GAME_STATES.CHOOSESHIP;
+    }
+  });
+
   socket.on('worldInfo', (data) => {
     if(state === GAME_STATES.WAIT)
       state = GAME_STATES.PLAYING;

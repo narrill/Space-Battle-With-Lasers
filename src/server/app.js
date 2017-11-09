@@ -116,10 +116,17 @@ io.on('connection', (s) => {
       game.otherShips.push(ship);
       s.emit('grid', game.grid);
     }
+    else {
+      s.emit('badShipError');
+    }
   });
 
   s.on('input', (data) => {
     if (sendToShip) sendToShip(data);
+  });
+
+  s.on('disconnect', () => {
+    sendToShip = undefined;
   });
 });
 
