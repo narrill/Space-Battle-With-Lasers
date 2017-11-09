@@ -4,10 +4,12 @@
   "description": "",
   "main": "src/server/app.js",
   "scripts": {
-    "build": "babel ./src/client --out-file ./hosted/bundle.js",
-    "watch": "babel --watch ./src/client --out-file ./hosted/bundle.js",
+    "build": "babel ./hosted/prebundle.js --out-file ./hosted/bundle.js",
+    "watch": "babel --watch ./hosted/prebundle.js --out-file ./hosted/bundle.js",
+    "watchify": "watchify ./src/client/client.js -o ./hosted/prebundle.js",
     "nodemon": "nodemon --watch ./src ./src/server/app.js",
     "start": "node ./src/server/app.js",
+    "debug": "node --inspect ./src/server/app.js",
     "pretest": "eslint ./src/server --fix",
     "test": "echo \"Tests complete\""
   },
@@ -20,10 +22,12 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.6.0",
+    "browserify": "^14.5.0",
     "eslint": "^4.8.0",
     "eslint-config-airbnb": "^15.1.0",
     "eslint-plugin-import": "^2.7.0",
-    "nodemon": "^1.12.1"
+    "nodemon": "^1.12.1",
+    "watchify": "^3.9.0"
   },
   "dependencies": {
     "socket.io": "^2.0.3"
