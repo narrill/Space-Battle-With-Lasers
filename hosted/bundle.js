@@ -359,24 +359,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         drawing.drawAsteroidsOverlay(worldInfo.asteroids, cameras.camera, cameras.gridCamera);
         for (var n = 0; n < worldInfo.objs.length; n++) {
           var ship = worldInfo.objs[n];
-          if (!worldInfo.drawing[ship.id]) continue;
+          if (!worldInfo.drawing[ship.id] || !worldInfoModule.modelInfo[ship.id]) continue;
           if (!worldInfo.targets[ship.id]) {
             //removeIndexFromWiCollection(n,worldInfo.objs);
             //n--;
             continue;
           }
+          ship.model = worldInfoModule.modelInfo[ship.id];
           drawing.drawShipOverlay(ship, cameras.camera, cameras.gridCamera);
         }
         drawing.drawProjectiles(worldInfo.prjs, cameras.camera, dt);
         drawing.drawHitscans(worldInfo.hitscans, cameras.camera);
         for (var c = 0; c < worldInfo.objs.length; c++) {
           var ship = worldInfo.objs[c];
-          if (!worldInfo.drawing[ship.id]) continue;
+          if (!worldInfo.drawing[ship.id] || !worldInfoModule.modelInfo[ship.id]) continue;
           if (!worldInfo.targets[ship.id]) {
             removeIndexFromWiCollection(c, worldInfo.objs);
             c--;
             continue;
           }
+          ship.model = worldInfoModule.modelInfo[ship.id];
           drawing.drawShip(ship, cameras.camera);
         }
         drawing.drawRadials(worldInfo.radials, cameras.camera, dt);
@@ -424,10 +426,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       socket.on('shipList', function (data) {
         shipList = data;
-      });
-
-      socket.on('destroyed', function () {
-        state = GAME_STATES.DISCONNECTED;
       });
 
       socket.on('grid', function (data) {
@@ -486,6 +484,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       window.addEventListener('resize', function () {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+      });
+
+      socket.on('ship', function (shipInfo) {
+        worldInfoModule.addShip(shipInfo);
+      });
+
+      socket.on('ships', function (ships) {
+        worldInfoModule.addShips(ships);
       });
       context = canvas.getContext('2d');
 
@@ -1053,7 +1059,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         drawing.drawAsteroids(worldInfo.asteroids, camera);
         for (var n = worldInfo.objs.length - 1; n >= 0; n--) {
           var ship = worldInfo.objs[n];
-          drawing.drawShipMinimap(ship, camera);
+          if (worldInfoModule.modelInfo[ship.id]) {
+            ship.model = worldInfoModule.modelInfo[ship.id];
+            drawing.drawShipMinimap(ship, camera);
+          }
         }
         ctx.restore();
       },
@@ -1188,6 +1197,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       previousTargets: {}
     };
 
+    var modelInfo = {};
+
     function interpolateWiValue(obj, val) {
       var now = Date.now().valueOf();
       //console.log(updateInterval);
@@ -1231,11 +1242,24 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       worldInfo.previousTargets = {};
     }
 
+    function addShips(ships) {
+      Object.keys(ships).forEach(function (id) {
+        modelInfo[id] = ships[id];
+      });
+    }
+
+    function addShip(shipInfo) {
+      modelInfo[shipInfo.id] = shipInfo.model;
+    }
+
     module.exports = {
       playerInfo: playerInfo,
       lastPlayerInfo: lastPlayerInfo,
       hudInfo: hudInfo,
       worldInfo: worldInfo,
+      modelInfo: modelInfo,
+      addShips: addShips,
+      addShip: addShip,
       interpolateWiValue: interpolateWiValue,
       removeIndexFromWiCollection: removeIndexFromWiCollection,
       pushCollectionFromDataToWI: pushCollectionFromDataToWI,

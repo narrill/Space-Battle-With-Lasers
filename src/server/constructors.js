@@ -24,7 +24,7 @@ const constructors = {
   },
 
   // constructor for ship objects
-  createShip(objectParams = {}, game) {
+  createShip(objectParams = {}, game, ownerId) {
     const gridPosition = gridFunctions.randomGridPosition(game.grid);
     const ship = {
       id: id.takeIdTag(),
@@ -102,6 +102,22 @@ const constructors = {
     });
 
     updaters.populateOnDestroy.call(ship);
+
+    Object.values(game.socketSubscriptions).forEach((socket) => {
+      if (ownerId && socket.id === ownerId) {
+        console.log('yours');
+        const modelCopy = utilities.deepObjectMerge.call({}, ship.model);
+        const key2s = Object.keys(modelCopy.overlay.ranges);
+        for (let n = 0; n < key2s.length; n++) {
+          const key2 = key2s[n];
+          let r = ship[key2];
+          if (r) r = r.range;
+          if (r) modelCopy.overlay.ranges[key2] = r;
+        }
+        console.log(modelCopy);
+        socket.emit('ship', { id: ship.id, model: modelCopy });
+      } else { socket.emit('ship', { id: ship.id, model: ship.model }); }
+    });
 
     // this.updatables.push(ship);
 

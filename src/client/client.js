@@ -365,7 +365,7 @@ const draw = (cameras,  dt) => {
     drawing.drawAsteroidsOverlay(worldInfo.asteroids,cameras.camera,cameras.gridCamera);
     for(var n = 0;n<worldInfo.objs.length;n++){
       var ship = worldInfo.objs[n];
-      if(!worldInfo.drawing[ship.id])
+      if(!worldInfo.drawing[ship.id] || !worldInfoModule.modelInfo[ship.id])
         continue;
       if(!worldInfo.targets[ship.id])
       {
@@ -373,13 +373,14 @@ const draw = (cameras,  dt) => {
         //n--;
         continue;
       }
+      ship.model = worldInfoModule.modelInfo[ship.id];
       drawing.drawShipOverlay(ship,cameras.camera,cameras.gridCamera);
     }
     drawing.drawProjectiles(worldInfo.prjs, cameras.camera, dt);
     drawing.drawHitscans(worldInfo.hitscans, cameras.camera);
     for(var c = 0; c<worldInfo.objs.length;c++){
       var ship = worldInfo.objs[c];
-      if(!worldInfo.drawing[ship.id])
+      if(!worldInfo.drawing[ship.id] || !worldInfoModule.modelInfo[ship.id])
         continue;
       if(!worldInfo.targets[ship.id])
       {
@@ -387,6 +388,7 @@ const draw = (cameras,  dt) => {
         c--;
         continue;
       }
+      ship.model = worldInfoModule.modelInfo[ship.id];
       drawing.drawShip(ship,cameras.camera);
     }
     drawing.drawRadials(worldInfo.radials, cameras.camera, dt);
@@ -443,10 +445,6 @@ const init = () => {
 
   socket.on('shipList', (data) => {
     shipList = data;
-  });
-
-  socket.on('destroyed', () => {
-    state = GAME_STATES.DISCONNECTED;
   });
 
   socket.on('grid', (data) => {
@@ -506,6 +504,14 @@ const init = () => {
   window.addEventListener('resize', () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+  });
+
+  socket.on('ship', (shipInfo) => {
+    worldInfoModule.addShip(shipInfo);
+  });
+
+  socket.on('ships', (ships) => {
+    worldInfoModule.addShips(ships);
   });
   context = canvas.getContext('2d');
 

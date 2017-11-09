@@ -57,6 +57,7 @@ const BASE_GAME = {
   radials: [],
   reportQueue: undefined,
   functionQueue: [],
+  socketSubscriptions: {},
   grid: {
     gridLines: 500, // number of grid lines
     gridSpacing: 100, // pixels per grid unit
@@ -109,14 +110,19 @@ io.on('connection', (s) => {
   s.on('ship', (shipName) => {
     const chosenShip = ships[String(shipName).toLowerCase().valueOf()];
     if (chosenShip) {
+      game.socketSubscriptions[s.id] = s;
       chosenShip.remoteInput = {};
-      ship = constructors.createShip(chosenShip, game);
+      const shipModels = {};
+      Object.values(game.otherShips).forEach((sh) => {
+        shipModels[sh.id] = sh.model;
+      });
+      ship = constructors.createShip(chosenShip, game, s.id);
       ship.remoteInput.remoteSend = (data, msg) => { s.emit((msg) || 'worldInfo', data); };
       sendToShip = ship.remoteInput.messageHandler;
       game.otherShips.push(ship);
       s.emit('grid', game.grid);
-    }
-    else {
+      s.emit('ships', shipModels);
+    } else {
       s.emit('badShipError');
     }
   });
@@ -127,6 +133,7 @@ io.on('connection', (s) => {
 
   s.on('disconnect', () => {
     sendToShip = undefined;
+    delete game.socketSubscriptions[s.id];
   });
 });
 

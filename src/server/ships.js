@@ -46,20 +46,20 @@ const ships = {
     powerSystem: {},
     thrusterSystem: {
       medial: {
-        maxStrength: 2000
+        maxStrength: 2000,
       },
       lateral: {
-        maxStrength: 2000
+        maxStrength: 2000,
       },
       rotational: {
-        maxStrength: 400
-      }
+        maxStrength: 400,
+      },
     },
     destructible: {
       shield: {
-        max: 30
-      }
-    }
+        max: 30,
+      },
+    },
   },
 
   gull: {

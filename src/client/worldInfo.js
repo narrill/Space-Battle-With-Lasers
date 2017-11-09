@@ -34,6 +34,8 @@ let worldInfo = {
   previousTargets:{}
 };
 
+const modelInfo = {};
+
 function interpolateWiValue(obj, val){
 	const now = Date.now().valueOf();
 	//console.log(updateInterval);
@@ -78,11 +80,24 @@ function resetWi(){
 	worldInfo.previousTargets = {};
 }
 
+function addShips(ships) {
+	Object.keys(ships).forEach((id) => {
+		modelInfo[id] = ships[id];
+	});
+}
+
+function addShip(shipInfo) {
+	modelInfo[shipInfo.id] = shipInfo.model;
+}
+
 module.exports = {
 	playerInfo,
 	lastPlayerInfo,
 	hudInfo,
 	worldInfo,
+	modelInfo,
+	addShips,
+	addShip,
 	interpolateWiValue,
 	removeIndexFromWiCollection,
 	pushCollectionFromDataToWI,

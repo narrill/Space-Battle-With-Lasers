@@ -406,7 +406,7 @@ const updaters = {
     // rotational motion - mouse    
     // console.log(-this.remoteInput.mouseDirection); 
     const mouseDirection = this.remoteInput.mouseDirection;
-    const coeff = (15/this.remoteInput.sendInterval) * dt * ts.rotational.maxStrength;
+    const coeff = (15 / this.remoteInput.sendInterval) * dt * ts.rotational.maxStrength;
     objControls.objRotationalThrusters.call(this,
       (-mouseDirection * coeff) / stab.thrustRatio,
     );
@@ -476,7 +476,6 @@ const updaters = {
         };
         for (let c = 0; c < fetchInfo.obj.length; c++) {
           const o = fetchInfo.obj[c];
-          const mine = o === this;
           const dest = o.destructible;
           const ots = o.thrusterSystem;
           const wi = {
@@ -489,21 +488,12 @@ const updaters = {
             shc: dest.shield.max / dest.shield.efficiency,
             hp: dest.hp / dest.maxHp,
             color: o.color,
-            model: utilities.deepObjectMerge.call({}, o.model),
+            // model: utilities.deepObjectMerge.call({}, o.model),
             medial: ots.medial.currentStrength / ots.medial.efficiency,
             lateral: ots.lateral.currentStrength / ots.lateral.efficiency,
             rotational: ots.rotational.currentStrength / ots.rotational.efficiency,
             thrusterColor: ots.color,
           };
-          if (mine && wi.model.overlay.ranges) {
-            const key2s = Object.keys(wi.model.overlay.ranges);
-            for (let n = 0; n < key2s.length; n++) {
-              const key2 = key2s[n];
-              let r = this[key2];
-              if (r) r = r.range;
-              if (r) wi.model.overlay.ranges[key2] = r;
-            }
-          } else if (wi.model.overlay.ranges) { delete wi.model.overlay.ranges; }
           worldInfo.objs.push(wi);
         }
         for (let c = 0; c < this.game.asteroids.colors.length; c++) {

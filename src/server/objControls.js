@@ -27,7 +27,7 @@ const objControls = {
       && Math.abs(this.rotationalVelocity) > this.stabilizer.precision / 6) {
       objControls.objRotationalThrusters.call(
         this,
-        this.rotationalVelocity * this.stabilizer.strength * (1/dt) * dt,
+        this.rotationalVelocity * this.stabilizer.strength * (1 / dt) * dt,
       );
     } else if (this.stabilizer.clamps.enabled
       && Math.abs(this.rotationalVelocity) >= this.stabilizer.clamps.rotational
@@ -45,8 +45,8 @@ const objControls = {
     if (this.thrusterSystem.medial.targetStrength * medialVelocity >= 0
       && Math.abs(medialVelocity) > this.stabilizer.precision) {
       objControls.objMedialThrusters.call(
-        this, 
-        medialVelocity * this.stabilizer.strength * (1/dt) * dt
+        this,
+        medialVelocity * this.stabilizer.strength * (1 / dt) * dt,
       );
     } else if (this.stabilizer.clamps.enabled
       && Math.abs(medialVelocity) >= this.stabilizer.clamps.medial
@@ -63,8 +63,8 @@ const objControls = {
     if (this.thrusterSystem.lateral.targetStrength * lateralVelocity >= 0
       && Math.abs(lateralVelocity) > this.stabilizer.precision) {
       objControls.objLateralThrusters.call(
-        this, 
-        lateralVelocity * this.stabilizer.strength * (1/dt) * dt
+        this,
+        lateralVelocity * this.stabilizer.strength * (1 / dt) * dt,
       );
     } else if (this.stabilizer.clamps.enabled
       && Math.abs(lateralVelocity) >= this.stabilizer.clamps.lateral

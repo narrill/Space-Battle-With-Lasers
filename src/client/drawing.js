@@ -569,7 +569,10 @@ const drawing = {
 		drawing.drawAsteroids(worldInfo.asteroids,camera);
 		for(var n = worldInfo.objs.length-1;n>=0;n--){
 			var ship = worldInfo.objs[n];
-			drawing.drawShipMinimap(ship,camera);
+			if(worldInfoModule.modelInfo[ship.id]) {
+				ship.model = worldInfoModule.modelInfo[ship.id];
+				drawing.drawShipMinimap(ship,camera);
+			}
 		}
 		ctx.restore();
 	},
