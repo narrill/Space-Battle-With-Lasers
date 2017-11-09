@@ -42,7 +42,7 @@ const shipList = Object.keys(ships);
 
 const BASE_GAME = {
   accumulator: 0,
-  timeStep: 0.005,
+  timeStep: 0.0167,
   lastTime: 0, // used by calculateDeltaTime()
   runningTime: 0,
   updatables: [],
