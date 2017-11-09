@@ -23,6 +23,10 @@ class SuperArray { // (StupidArray)
   set(index, val) {
     this.array[index] = val;
   }
+
+  get count() {
+    return this.array.length;
+  }
 }
 
 module.exports = SuperArray;

@@ -48,7 +48,7 @@ const BASE_GAME = {
   updatables: [],
   otherShips: [],
   otherShipCount: 0,
-  maxOtherShips: 0,
+  maxOtherShips: 6,
   factions: 4,
   respawnQueue: [],
   factionColors: [],
