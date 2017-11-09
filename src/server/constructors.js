@@ -523,7 +523,9 @@ const constructors = {
         colorIndex: group,
         game,
         type: 'asteroid',
-        onDestroy: [(asteroid) => {constructors.makeAsteroids.call(asteroid.game, asteroid.game, asteroid.game.grid);}]
+        onDestroy: [(asteroid) => {
+          constructors.makeAsteroids.call(asteroid.game, asteroid.game, asteroid.game.grid);
+        }]
       });
     }
   },
