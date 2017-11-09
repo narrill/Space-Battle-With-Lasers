@@ -13,7 +13,9 @@ const aiFunctions = {
     for (let c = 0; c < this.game.otherShips.length; c++) {
       const ship = this.game.otherShips[c];
       if (!(this.faction === ship.faction && this.faction !== -1) || this !== ship) {
-        const distanceSqr = (this.x * ship.x) + (this.y * ship.y);
+        const leftRoot = this.x * ship.x;
+        const rightRoot = this.y * ship.y;
+        const distanceSqr = (leftRoot * leftRoot) + (rightRoot * rightRoot);
         if (distanceSqr < lowestDistance) {
           target = ship;
           lowestDistance = distanceSqr;
