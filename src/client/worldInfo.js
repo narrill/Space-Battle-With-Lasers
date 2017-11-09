@@ -36,6 +36,12 @@ let worldInfo = {
 
 const modelInfo = {};
 
+function interpolateFromWiInterval(from, to) {
+	const now = Date.now().valueOf();
+	const perc = (now - lastWorldUpdate)/wiInterval;
+	return utilities.lerp(from, to, utilities.clamp(0, perc, 1));
+}
+
 function interpolateWiValue(obj, val){
 	const now = Date.now().valueOf();
 	//console.log(updateInterval);
@@ -99,6 +105,7 @@ module.exports = {
 	addShips,
 	addShip,
 	interpolateWiValue,
+	interpolateFromWiInterval,
 	removeIndexFromWiCollection,
 	pushCollectionFromDataToWI,
 	resetWi,

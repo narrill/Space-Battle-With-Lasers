@@ -123,6 +123,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var lastPlayerInfo = worldInfoModule.lastPlayerInfo;
     var hudInfo = worldInfoModule.hudInfo;
     var interpolateWiValue = worldInfoModule.interpolateWiValue;
+    var interpolateFromWiInterval = worldInfoModule.interpolateFromWiInterval;
     var pushCollectionFromDataToWI = worldInfoModule.pushCollectionFromDataToWI;
     var removeIndexFromWiCollection = worldInfoModule.removeIndexFromWiCollection;
     var resetWi = worldInfoModule.resetWi;
@@ -329,8 +330,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       //clear cameras
       drawing.clearCamera(cameras.camera);
 
-      cameras.camera.x = utilities.lerp(cameras.camera.x, playerInfo.x + playerInfo.velX / 10, 12 * dt);
-      cameras.camera.y = utilities.lerp(cameras.camera.y, playerInfo.y + playerInfo.velY / 10, 12 * dt);
+      //cameras.camera.x = utilities.lerp(cameras.camera.x, interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX)/10,12*dt);
+      //cameras.camera.y = utilities.lerp(cameras.camera.y, interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY)/10,12*dt);
+      cameras.camera.x = interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX) / 10;
+      cameras.camera.y = interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY) / 10;
 
       var rotDiff = playerInfo.rotation + playerInfo.rotationalVelocity / 10 - cameras.camera.rotation;
       if (rotDiff > 180) rotDiff -= 360;else if (rotDiff < -180) rotDiff += 360;
@@ -461,6 +464,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         playerInfo.velY = data.velY;
         lastPlayerInfo.rotationalVelocity = playerInfo.rotationalVelocity;
         playerInfo.rotationalVelocity = data.rotationalVelocity;
+        lastPlayerInfo.thrusterPower = playerInfo.thrusterPower;
+        playerInfo.thrusterPower = data.thrusterPower;
+        lastPlayerInfo.weaponPower = playerInfo.weaponPower;
+        playerInfo.weaponPower = data.weaponPower;
+        lastPlayerInfo.shieldPower = playerInfo.shieldPower;
+        playerInfo.shieldPower = data.shieldPower;
         hudInfo.velocityClamps = data.velocityClamps;
         hudInfo.stabilized = data.stabilized;
         hudInfo.powerDistribution = data.powerDistribution;
@@ -533,6 +542,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var lastPlayerInfo = worldInfoModule.lastPlayerInfo;
     var hudInfo = worldInfoModule.hudInfo;
     var interpolateWiValue = worldInfoModule.interpolateWiValue;
+    var interpolateFromWiInterval = worldInfoModule.interpolateFromWiInterval;
     var removeIndexFromWiCollection = worldInfoModule.removeIndexFromWiCollection;
 
     var thrusterDetail = 3;
@@ -1032,9 +1042,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
         //utilities.fillText(ctx, "Thruster clamps: "+((this.ship.stabilizer.clamps.enabled)?'Medial '+Math.round(this.ship.stabilizer.clamps.medial)+' Lateral '+Math.round(this.ship.stabilizer.clamps.lateral)+' Rotational '+Math.round(this.ship.stabilizer.clamps.rotational):'disabled'),0,camera.height-10,"12pt Prime",'white')
         ctx.textAlign = 'right';
-        //utilities.fillText(ctx,'T '+Math.round(updaters.getPowerForComponent(ship.powerSystem,enums.SHIP_COMPONENTS.THRUSTERS)*100)+'%',camera.width-220,camera.height-10,"10pt Orbitron",'green');
-        //utilities.fillText(ctx,' L '+Math.round(updaters.getPowerForComponent(ship.powerSystem,enums.SHIP_COMPONENTS.LASERS)*100)+'%',camera.width-120,camera.height-10,"10pt Orbitron",'red');
-        //utilities.fillText(ctx,' S '+Math.round(updaters.getPowerForComponent(ship.powerSystem,enums.SHIP_COMPONENTS.SHIELDS)*100)+'%',camera.width-20,camera.height-10,"10pt Orbitron",'dodgerblue');
+        utilities.fillText(ctx, 'T ' + Math.round(interpolateFromWiInterval(lastPlayerInfo.thrusterPower, playerInfo.thrusterPower) * 100) + '%', camera.width - 220, camera.height - 10, "10pt Orbitron", 'green');
+        utilities.fillText(ctx, ' W ' + Math.round(interpolateFromWiInterval(lastPlayerInfo.weaponPower, playerInfo.weaponPower) * 100) + '%', camera.width - 120, camera.height - 10, "10pt Orbitron", 'red');
+        utilities.fillText(ctx, ' S ' + Math.round(interpolateFromWiInterval(lastPlayerInfo.shieldPower, playerInfo.shieldPower) * 100) + '%', camera.width - 20, camera.height - 10, "10pt Orbitron", 'dodgerblue');
 
         ctx.restore(); // NEW
       },
@@ -1199,6 +1209,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var modelInfo = {};
 
+    function interpolateFromWiInterval(from, to) {
+      var now = Date.now().valueOf();
+      var perc = (now - lastWorldUpdate) / wiInterval;
+      return utilities.lerp(from, to, utilities.clamp(0, perc, 1));
+    }
+
     function interpolateWiValue(obj, val) {
       var now = Date.now().valueOf();
       //console.log(updateInterval);
@@ -1261,6 +1277,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       addShips: addShips,
       addShip: addShip,
       interpolateWiValue: interpolateWiValue,
+      interpolateFromWiInterval: interpolateFromWiInterval,
       removeIndexFromWiCollection: removeIndexFromWiCollection,
       pushCollectionFromDataToWI: pushCollectionFromDataToWI,
       resetWi: resetWi,

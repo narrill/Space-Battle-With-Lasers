@@ -44,6 +44,7 @@ const ships = {
     laser: {},
     stabilizer: {},
     powerSystem: {},
+    warhead:{},
     thrusterSystem: {
       medial: {
         maxStrength: 2000,
@@ -103,6 +104,7 @@ const ships = {
     cannon: {},
     stabilizer: {},
     powerSystem: {},
+    warhead:{},
     launcher: {},
     targetingSystem: {},
   },

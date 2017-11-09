@@ -285,6 +285,19 @@ const updaters = {
     }
   },
 
+  // returns the current value of the given component ID (from component enum)
+  // in the given power system after applying a transformation function
+  getPowerForComponent(ps, component) {
+    if (component >= ps.current.length || component < 0) { return 0; }
+    const components = ps.current.length;
+    // this is the transformation function
+    return utilities.clamp(
+      0,
+      (ps.current[component] - (1 / components)) / (2 * (1 / components)),
+      1,
+    );
+  },
+
   updatePowerSystemComponent(dt) {
     // Scales target values of the given power system such that they sum to 1
     // Expects to be bound to the power system object
@@ -300,18 +313,7 @@ const updaters = {
       for (let c = 0; c < this.target.length; c++) { this.target[c] = this.target[c] / sum; }
     }
 
-    // returns the current value of the given component ID (from component enum)
-    // in the given power system after applying a transformation function
-    const getPowerForComponent = (ps, component) => {
-      if (component >= ps.current.length || component < 0) { return 0; }
-      const components = ps.current.length;
-      // this is the transformation function
-      return utilities.clamp(
-        0,
-        (ps.current[component] - (1 / components)) / (2 * (1 / components)),
-        1,
-      );
-    };
+    const getPowerForComponent = updaters.getPowerForComponent;
 
     // update power system
     // scale all relevant values down from the augmented 
@@ -328,6 +330,7 @@ const updaters = {
     this.stabilizer.clamps.rotational /= (1 + thrusterPower);
     // lasers
     if (has.call(this, 'laser')) { this.laser.maxPower /= (1 + laserPower); }
+    if (has.call(this, 'cannon')) { this.cannon.power /= (1 + laserPower); }
     // shields
     this.destructible.shield.current /= (1 + shieldPower);
     this.destructible.shield.max /= (1 + shieldPower);
@@ -359,6 +362,7 @@ const updaters = {
     this.stabilizer.clamps.rotational *= (1 + thrusterPower);
     // lasers
     if (has.call(this, 'laser')) { this.laser.maxPower *= (1 + laserPower); }
+    if (has.call(this, 'cannon')) { this.cannon.power *= (1 + laserPower); }
     // shields
     this.destructible.shield.current *= (1 + shieldPower);
     this.destructible.shield.max *= (1 + shieldPower);
@@ -463,6 +467,18 @@ const updaters = {
         d.rotationalVelocity = this.rotationalVelocity;
         d.velocityClamps = stab.clamps;
         d.stabilized = stab.enabled;
+        d.thrusterPower = updaters.getPowerForComponent(
+          this.powerSystem, 
+          enums.SHIP_COMPONENTS.THRUSTERS
+        );
+        d.weaponPower = updaters.getPowerForComponent(
+          this.powerSystem, 
+          enums.SHIP_COMPONENTS.LASERS
+        );
+        d.shieldPower = updaters.getPowerForComponent(
+          this.powerSystem, 
+          enums.SHIP_COMPONENTS.SHIELDS
+        );
         const fetchInfo = gameFunctions.fetchFromTileArray(this.game, [this.x, this.y], 15000);
         const worldInfo = {
           objs: [],

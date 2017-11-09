@@ -304,8 +304,8 @@ const constructors = {
     const wh = {
       id: id.takeIdTag(),
       radial: utilities.deepObjectMerge.call({
-        velocity: 1000,
-        decay: 0.99,
+        velocity: 6000,
+        decay: 12,
         color: 'red',
         collisionProperties: {
           density: 8,
@@ -517,12 +517,13 @@ const constructors = {
         y: (Math.random() * (upper[1] - lower[1])) + lower[1],
         radius, // graphical radius
         destructible: constructors.createComponentDestructible({
-          hp: (radius * radius) / 1000,
+          hp: (radius * radius) / 300,
           radius, // collider radius
         }),
         colorIndex: group,
         game,
         type: 'asteroid',
+        onDestroy: [(asteroid) => {constructors.makeAsteroids.call(asteroid.game, asteroid.game, asteroid.game.grid);}]
       });
     }
   },

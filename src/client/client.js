@@ -92,6 +92,7 @@ const playerInfo = worldInfoModule.playerInfo;
 const lastPlayerInfo = worldInfoModule.lastPlayerInfo;
 const hudInfo = worldInfoModule.hudInfo;
 const interpolateWiValue = worldInfoModule.interpolateWiValue;
+const interpolateFromWiInterval = worldInfoModule.interpolateFromWiInterval;
 const pushCollectionFromDataToWI = worldInfoModule.pushCollectionFromDataToWI;
 const removeIndexFromWiCollection = worldInfoModule.removeIndexFromWiCollection;
 const resetWi = worldInfoModule.resetWi;
@@ -328,8 +329,10 @@ const draw = (cameras,  dt) => {
   //clear cameras
   drawing.clearCamera(cameras.camera);
 
-  cameras.camera.x = utilities.lerp(cameras.camera.x,playerInfo.x+playerInfo.velX/10,12*dt);
-  cameras.camera.y = utilities.lerp(cameras.camera.y,playerInfo.y+playerInfo.velY/10,12*dt);
+  //cameras.camera.x = utilities.lerp(cameras.camera.x, interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX)/10,12*dt);
+  //cameras.camera.y = utilities.lerp(cameras.camera.y, interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY)/10,12*dt);
+  cameras.camera.x = interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX)/10;
+  cameras.camera.y = interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY)/10;
 
   var rotDiff = playerInfo.rotation+playerInfo.rotationalVelocity/10 - cameras.camera.rotation;
   if(rotDiff>180)
@@ -481,6 +484,12 @@ const init = () => {
     playerInfo.velY = data.velY;
     lastPlayerInfo.rotationalVelocity = playerInfo.rotationalVelocity;
     playerInfo.rotationalVelocity = data.rotationalVelocity;
+    lastPlayerInfo.thrusterPower = playerInfo.thrusterPower;
+    playerInfo.thrusterPower = data.thrusterPower;
+    lastPlayerInfo.weaponPower = playerInfo.weaponPower;
+    playerInfo.weaponPower = data.weaponPower;
+    lastPlayerInfo.shieldPower = playerInfo.shieldPower;
+    playerInfo.shieldPower = data.shieldPower;
     hudInfo.velocityClamps = data.velocityClamps;
     hudInfo.stabilized = data.stabilized;
     hudInfo.powerDistribution = data.powerDistribution;

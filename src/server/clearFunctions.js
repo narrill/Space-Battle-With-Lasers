@@ -39,7 +39,7 @@ const clearFunctions = {
 
   clearRadials: (radials) => {
     for (let c = 0; c < radials.length; c++) {
-      if (radials[c].velocity <= 5) { radials.splice(c--, 1); }
+      if (radials[c].velocity <= 500) { radials.splice(c--, 1); }
     }
   },
 };

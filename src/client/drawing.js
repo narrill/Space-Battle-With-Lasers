@@ -8,6 +8,7 @@ const playerInfo = worldInfoModule.playerInfo;
 const lastPlayerInfo = worldInfoModule.lastPlayerInfo;
 const hudInfo = worldInfoModule.hudInfo;
 const interpolateWiValue = worldInfoModule.interpolateWiValue;
+const interpolateFromWiInterval = worldInfoModule.interpolateFromWiInterval;
 const removeIndexFromWiCollection = worldInfoModule.removeIndexFromWiCollection;
 
 const thrusterDetail = 3;
@@ -542,9 +543,9 @@ const drawing = {
 		}
 		//utilities.fillText(ctx, "Thruster clamps: "+((this.ship.stabilizer.clamps.enabled)?'Medial '+Math.round(this.ship.stabilizer.clamps.medial)+' Lateral '+Math.round(this.ship.stabilizer.clamps.lateral)+' Rotational '+Math.round(this.ship.stabilizer.clamps.rotational):'disabled'),0,camera.height-10,"12pt Prime",'white')
 		ctx.textAlign = 'right';
-		//utilities.fillText(ctx,'T '+Math.round(updaters.getPowerForComponent(ship.powerSystem,enums.SHIP_COMPONENTS.THRUSTERS)*100)+'%',camera.width-220,camera.height-10,"10pt Orbitron",'green');
-		//utilities.fillText(ctx,' L '+Math.round(updaters.getPowerForComponent(ship.powerSystem,enums.SHIP_COMPONENTS.LASERS)*100)+'%',camera.width-120,camera.height-10,"10pt Orbitron",'red');
-		//utilities.fillText(ctx,' S '+Math.round(updaters.getPowerForComponent(ship.powerSystem,enums.SHIP_COMPONENTS.SHIELDS)*100)+'%',camera.width-20,camera.height-10,"10pt Orbitron",'dodgerblue');
+		utilities.fillText(ctx,'T '+Math.round(interpolateFromWiInterval(lastPlayerInfo.thrusterPower, playerInfo.thrusterPower) *100)+'%',camera.width-220,camera.height-10,"10pt Orbitron",'green');
+		utilities.fillText(ctx,' W '+Math.round(interpolateFromWiInterval(lastPlayerInfo.weaponPower, playerInfo.weaponPower)*100)+'%',camera.width-120,camera.height-10,"10pt Orbitron",'red');
+		utilities.fillText(ctx,' S '+Math.round(interpolateFromWiInterval(lastPlayerInfo.shieldPower, playerInfo.shieldPower)*100)+'%',camera.width-20,camera.height-10,"10pt Orbitron",'dodgerblue');
 		
 		ctx.restore(); // NEW
 	},
