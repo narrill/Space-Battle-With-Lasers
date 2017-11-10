@@ -159,7 +159,7 @@ const myMouse = keys.myMouse;
 myMouse.mousedown = [];
 myMouse.direction = 0;
 myMouse.wheel = 0;
-myMouse.sensitivity = 0.01;
+myMouse.sensitivity = 0.04;
 
 let locked = false;
 const pointerInit = (c) => {
@@ -274,7 +274,6 @@ const linkCameraWithOffset = (mainCamera, dependentCamera, offset) => {
   dependentCamera.zoom = 1/(cameraDistance+offset);
 };
 
-let lastMouseVal = 0;
 const update = (dt) => {
   if((state == GAME_STATES.TITLE || state == GAME_STATES.DISCONNECTED) && myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER])
   {
@@ -309,12 +308,7 @@ const update = (dt) => {
     //drawing.clearCamera(cameras.starCamera);
     //game.clearCamera(cameras.minimapCamera);
     //console.log(myMouse.direction);
-    const mouseVal = (myMouse.direction*myMouse.sensitivity)/dt;
-    
-    if(mouseVal !== lastMouseVal) {
-      socket.emit('input', {md:mouseVal});
-      lastMouseVal = mouseVal;
-    }
+    socket.emit('input', {md:(myMouse.direction*myMouse.sensitivity)/dt});
     if(myMouse[myMouse.BUTTONS.LEFT] != null)
     {
       socket.emit('input', {mb:myMouse.BUTTONS.LEFT,pos:myMouse[myMouse.BUTTONS.LEFT]});

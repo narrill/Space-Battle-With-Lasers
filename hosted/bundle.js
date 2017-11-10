@@ -181,7 +181,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     myMouse.mousedown = [];
     myMouse.direction = 0;
     myMouse.wheel = 0;
-    myMouse.sensitivity = 0.01;
+    myMouse.sensitivity = 0.04;
 
     var locked = false;
     var pointerInit = function pointerInit(c) {
@@ -289,7 +289,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       dependentCamera.zoom = 1 / (cameraDistance + offset);
     };
 
-    var lastMouseVal = 0;
     var update = function update(dt) {
       if ((state == GAME_STATES.TITLE || state == GAME_STATES.DISCONNECTED) && myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER]) {
         state = GAME_STATES.CHOOSESHIP;
@@ -312,12 +311,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         //drawing.clearCamera(cameras.starCamera);
         //game.clearCamera(cameras.minimapCamera);
         //console.log(myMouse.direction);
-        var mouseVal = myMouse.direction * myMouse.sensitivity / dt;
-
-        if (mouseVal !== lastMouseVal) {
-          socket.emit('input', { md: mouseVal });
-          lastMouseVal = mouseVal;
-        }
+        socket.emit('input', { md: myMouse.direction * myMouse.sensitivity / dt });
         if (myMouse[myMouse.BUTTONS.LEFT] != null) {
           socket.emit('input', { mb: myMouse.BUTTONS.LEFT, pos: myMouse[myMouse.BUTTONS.LEFT] });
           myMouse[myMouse.BUTTONS.LEFT] = undefined;

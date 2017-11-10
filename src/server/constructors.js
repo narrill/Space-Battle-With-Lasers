@@ -375,8 +375,7 @@ const constructors = {
       if (data.keyCode) { this.keyboard[data.keyCode] = data.pos; }
       if (data.mb || data.mb === 0) { this.mouse[data.mb] = data.pos; }
       if (data.md || data.md === 0) {
-        //this.mouseDirection = utilities.lerp(this.mouseDirection, data.md, 0.5);
-        this.mouseDirection += data.md;
+        this.mouseDirection = utilities.lerp(this.mouseDirection, data.md, 0.5);
       }
     }
     ri.messageHandler = mh.bind(ri);
