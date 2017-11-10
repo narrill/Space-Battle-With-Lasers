@@ -411,7 +411,7 @@ const updaters = {
     // console.log(-this.remoteInput.mouseDirection); 
     const mouseDirection = this.remoteInput.mouseDirection;
     this.remoteInput.mouseDirection = 0;
-    const coeff = (15 / this.remoteInput.sendInterval) * dt * ts.rotational.maxStrength;
+    const coeff = ts.rotational.maxStrength/200;
     objControls.objRotationalThrusters.call(this,
       (-mouseDirection * coeff) / stab.thrustRatio,
     );
