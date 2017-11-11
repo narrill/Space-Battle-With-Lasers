@@ -59,6 +59,7 @@ const ships = {
     destructible: {
       shield: {
         max: 30,
+        efficiency: 4
       },
     },
   },
