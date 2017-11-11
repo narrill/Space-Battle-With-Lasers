@@ -63,8 +63,8 @@ const drawing = {
 				let end = [start[0], gridStart[1] + gridLines * gridSpacing];
 
 				//convert to camera space
-				start = camera.worldPointToCameraSpace(start[0], start[1]);
-				end = camera.worldPointToCameraSpace(end[0], end[1]);      
+				start = camera.worldPointToCameraSpace(start[0], start[1], grid.z);
+				end = camera.worldPointToCameraSpace(end[0], end[1], grid.z);      
 				ctx.moveTo(start[0], start[1]);
 				ctx.lineTo(end[0], end[1]);
 			}
@@ -86,8 +86,8 @@ const drawing = {
 				//same as above, but perpendicular
 				let start = [gridStart[0], gridStart[0] + y * gridSpacing];
 				let end = [gridStart[0] + gridLines * gridSpacing, start[1]];
-				start = camera.worldPointToCameraSpace(start[0], start[1]);
-				end = camera.worldPointToCameraSpace(end[0], end[1]);
+				start = camera.worldPointToCameraSpace(start[0], start[1], grid.z);
+				end = camera.worldPointToCameraSpace(end[0], end[1], grid.z);
 				ctx.moveTo(start[0], start[1]);
 				ctx.lineTo(end[0], end[1]);
 			}
@@ -101,24 +101,26 @@ const drawing = {
 		}
 	},
 	//draws the projected overlay (shields, health, laser range) for the given ship using the two given cameras (one for the gameplay plane and one for the projected plane)
-	drawShipOverlay:function(ship,camera,gridCamera){
+	drawShipOverlay:function(ship,camera,grid){
 		var ctx = camera.ctx;
+		const gridZ = grid.z;		
+		const gridZoom = 1/(gridZ + 1/camera.zoom);
 		interpolateWiValue(ship,'x');
 		interpolateWiValue(ship,'y');
 		interpolateWiValue(ship,'rotation');
 		var shipPosInCameraSpace = camera.worldPointToCameraSpace(ship.x,ship.y); //get ship's position in camera space
-		var shipPosInGridCameraSpace = gridCamera.worldPointToCameraSpace(ship.x,ship.y);
+		var shipPosInGridCameraSpace = camera.worldPointToCameraSpace(ship.x,ship.y,gridZ);
 		ctx.save();
 		ctx.beginPath();
 		ctx.moveTo(shipPosInCameraSpace[0],shipPosInCameraSpace[1]);
 		ctx.lineTo(shipPosInGridCameraSpace[0],shipPosInGridCameraSpace[1]);
 		ctx.translate(shipPosInGridCameraSpace[0],shipPosInGridCameraSpace[1]);
-		ctx.rotate((ship.rotation-gridCamera.rotation) * (Math.PI / 180));
+		ctx.rotate((ship.rotation-camera.rotation) * (Math.PI / 180));
 		for(var type in ship.model.overlay.ranges)
 		{
-			ctx.arc(0,0,ship.model.overlay.ranges[type]*gridCamera.zoom,-Math.PI/2,Math.PI*2-Math.PI/2);
+			ctx.arc(0,0,ship.model.overlay.ranges[type]*gridZoom,-Math.PI/2,Math.PI*2-Math.PI/2);
 		}			
-		ctx.rotate(-(ship.rotation-gridCamera.rotation) * (Math.PI / 180));
+		ctx.rotate(-(ship.rotation-camera.rotation) * (Math.PI / 180));
 		ctx.translate(-shipPosInGridCameraSpace[0],-shipPosInGridCameraSpace[1]);
 		ctx.lineWidth = .5;
 		ctx.strokeStyle = 'grey';
@@ -127,7 +129,7 @@ const drawing = {
 
 		ctx.globalAlpha = .5;
 		ctx.translate(shipPosInGridCameraSpace[0],shipPosInGridCameraSpace[1]);
-		ctx.scale(gridCamera.zoom,gridCamera.zoom);
+		ctx.scale(gridZoom,gridZoom);
 		if(ship.model.overlay.destructible){
 			ctx.beginPath();
 			ctx.arc(0,0,150,-Math.PI/2,-Math.PI*2*(ship.shp)-Math.PI/2,true);
@@ -151,10 +153,10 @@ const drawing = {
 			ctx.fill();
 		}
 		else{
-			ctx.scale(1/gridCamera.zoom,1/gridCamera.zoom);
+			ctx.scale(1/gridZoom,1/gridZoom);
 			ctx.beginPath();
-			ctx.moveTo(ship.radius*gridCamera.zoom,0);
-			ctx.arc(0,0,ship.radius*gridCamera.zoom,0,Math.PI*2);
+			ctx.moveTo(ship.radius*gridZoom,0);
+			ctx.arc(0,0,ship.radius*gridZoom,0,Math.PI*2);
 			ctx.globalAlpha = .2;
 			ctx.lineWidth = .5;
 			ctx.strokeStyle = 'grey';
@@ -462,27 +464,28 @@ const drawing = {
 	},
 
 	//draws the projected overlay for all asteroids in the given array to the given main and projected cameras
-	drawAsteroidsOverlay:function(asteroids, camera, gridCamera){
+	drawAsteroidsOverlay:function(asteroids, camera, grid){
 		var start = [0,0];
 		var end = [camera.width,camera.height];
 		var ctx = camera.ctx;
 		var cameraPositions = [];
-		if(gridCamera)
+		const gridZoom = 1/(grid.z + 1/camera.zoom);
+		if(grid)
 		{
 			ctx.save();
 			ctx.beginPath();
 			for(var c = 0; c<asteroids.objs.length;c++)
 			{
 				var asteroid = asteroids.objs[c];
-				var gridPosition = gridCamera.worldPointToCameraSpace(asteroid.x,asteroid.y);
-				if(gridPosition[0] + asteroid.radius*gridCamera.zoom<start[0] || gridPosition[0] - asteroid.radius*gridCamera.zoom>end[0] || gridPosition[1] + asteroid.radius*gridCamera.zoom<start[1] || gridPosition[1] - asteroid.radius*gridCamera.zoom>end[1])
+				var gridPosition = camera.worldPointToCameraSpace(asteroid.x,asteroid.y, grid.z);
+				if(gridPosition[0] + asteroid.radius*gridZoom<start[0] || gridPosition[0] - asteroid.radius*gridZoom>end[0] || gridPosition[1] + asteroid.radius*gridZoom<start[1] || gridPosition[1] - asteroid.radius*gridZoom>end[1])
 					continue;			
 				cameraPositions[c] =(camera.worldPointToCameraSpace(asteroid.x,asteroid.y));
 				ctx.moveTo(cameraPositions[c][0],cameraPositions[c][1]);
 				ctx.lineTo(gridPosition[0],gridPosition[1]);
 				ctx.moveTo(gridPosition[0],gridPosition[1]);
 				//ctx.beginPath();
-				ctx.arc(gridPosition[0],gridPosition[1], asteroid.radius*gridCamera.zoom,0,Math.PI*2);
+				ctx.arc(gridPosition[0],gridPosition[1], asteroid.radius*gridZoom,0,Math.PI*2);
 			}	
 			ctx.strokeStyle = 'grey';
 			ctx.lineWidth = .5;
@@ -506,12 +509,13 @@ const drawing = {
 				if(asteroid.colorIndex!=group)
 					continue;
 
-				var finalPosition = camera.worldPointToCameraSpace(asteroid.x,asteroid.y); //get asteroid's position in camera space
+				const zoom = 1/((asteroid.z) ? asteroid.z : 0 + 1/camera.zoom);
+				var finalPosition = camera.worldPointToCameraSpace(asteroid.x,asteroid.y,asteroid.z); //get asteroid's position in camera space
 				
-				if(finalPosition[0] + asteroid.radius*camera.zoom<start[0] || finalPosition[0]-asteroid.radius*camera.zoom>end[0] || finalPosition[1] + asteroid.radius*camera.zoom<start[1] || finalPosition[1]-asteroid.radius*camera.zoom>end[1])
+				if(finalPosition[0] + asteroid.radius*zoom<start[0] || finalPosition[0]-asteroid.radius*zoom>end[0] || finalPosition[1] + asteroid.radius*zoom<start[1] || finalPosition[1]-asteroid.radius*zoom>end[1])
 						continue;
 				ctx.moveTo(finalPosition[0],finalPosition[1]);
-				ctx.arc(finalPosition[0],finalPosition[1],asteroid.radius*camera.zoom,0,Math.PI*2);
+				ctx.arc(finalPosition[0],finalPosition[1],asteroid.radius*zoom,0,Math.PI*2);
 			};
 			ctx.closePath();
 			ctx.fill();

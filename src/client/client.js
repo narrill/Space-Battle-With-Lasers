@@ -68,8 +68,9 @@ class Camera {
     return canvas.height;
   }
 
-  worldPointToCameraSpace (xw, yw) {
-    var cameraToPointVector = [(xw - this.x) * this.zoom, (yw - this.y) * this.zoom];
+  worldPointToCameraSpace (xw, yw, zw = 0) {
+    const zoom = 1/(1/this.zoom + zw);
+    var cameraToPointVector = [(xw - this.x) * zoom, (yw - this.y) * zoom];
     var rotatedVector = utilities.rotate(0, 0, cameraToPointVector[0], cameraToPointVector[1], this.rotation);
     return [this.width / 2 + rotatedVector[0], this.height / 2 + rotatedVector[1]];
   }
@@ -155,11 +156,14 @@ const generateStarField = (stars) => {
   const upper = 10000000;
   const maxRadius = 8000;
   const minRadius = 2000;
+  const minZ = 4000;
+  const maxZ = 7000;
   for(let c = 0; c < 500; c++){
     const group = Math.floor(Math.random() * stars.colors.length);
     stars.objs.push({
       x: Math.random() * (upper - lower) + lower,
       y: Math.random() * (upper - lower) + lower,
+      z: Math.random() * (maxZ - minZ) + minZ,
       radius: Math.random() * (maxRadius - minRadius) + minRadius,
       colorIndex: group
     });
@@ -359,27 +363,18 @@ const draw = (cameras,  dt) => {
     cameras.camera.rotation-=360;
   else if(cameras.camera.rotation<-180)
     cameras.camera.rotation+=360;
-  cameras.starCamera.x = cameras.camera.x;
-  cameras.starCamera.y = cameras.camera.y;
-  cameras.starCamera.rotation = cameras.camera.rotation;
-  cameras.gridCamera.x = cameras.camera.x;
-  cameras.gridCamera.y = cameras.camera.y;
-  cameras.gridCamera.rotation = cameras.camera.rotation;
-  var cameraDistance = 1/cameras.camera.zoom;
-  cameras.starCamera.zoom = 1/(cameraDistance+7000);
-  cameras.gridCamera.zoom = 1/(cameraDistance+.85);
   cameras.minimapCamera.x = cameras.camera.x;
   cameras.minimapCamera.y = cameras.camera.y;
   cameras.minimapCamera.rotation = cameras.camera.rotation;
 
   //draw grids then asteroids then ships
   //if(drawStarField)
-    drawing.drawAsteroids(stars,cameras.starCamera);    
+  drawing.drawAsteroids(stars,cameras.camera);  
   
   if(state == GAME_STATES.PLAYING)
   {
-    if(grid) drawing.drawGrid(cameras.gridCamera, grid);
-    drawing.drawAsteroidsOverlay(worldInfo.asteroids,cameras.camera,cameras.gridCamera);
+    if(grid) drawing.drawGrid(cameras.camera, grid);
+    drawing.drawAsteroidsOverlay(worldInfo.asteroids,cameras.camera,grid);
     for(var n = 0;n<worldInfo.objs.length;n++){
       var ship = worldInfo.objs[n];
       if(!worldInfo.drawing[ship.id] || !worldInfoModule.modelInfo[ship.id])
@@ -391,7 +386,7 @@ const draw = (cameras,  dt) => {
         continue;
       }
       ship.model = worldInfoModule.modelInfo[ship.id];
-      drawing.drawShipOverlay(ship,cameras.camera,cameras.gridCamera);
+      drawing.drawShipOverlay(ship,cameras.camera,grid);
     }
     drawing.drawProjectiles(worldInfo.prjs, cameras.camera, dt);
     drawing.drawHitscans(worldInfo.hitscans, cameras.camera);
@@ -409,7 +404,7 @@ const draw = (cameras,  dt) => {
       drawing.drawShip(ship,cameras.camera);
     }
     drawing.drawRadials(worldInfo.radials, cameras.camera, dt);
-    drawing.drawAsteroids(worldInfo.asteroids,cameras.camera, cameras.gridCamera);
+    drawing.drawAsteroids(worldInfo.asteroids,cameras.camera);
     drawing.drawHUD(cameras.camera);
     drawing.drawMinimap(cameras.minimapCamera, grid);
     utilities.fillText(cameras.camera.ctx,'prjs: '+worldInfo.prjs.length,15,30,"8pt Orbitron",'white');
@@ -469,6 +464,7 @@ const init = () => {
     worldInfoModule.setLastWorldUpdate(Date.now().valueOf());
     startTime = Date.now().valueOf();
     grid = data;
+    grid.z = .85;
   });
 
   socket.on('destroyed', () => {
@@ -543,8 +539,6 @@ const init = () => {
   inputBox = document.querySelector("#inputBox");
 
   cameras.camera = new Camera(canvas);
-  cameras.starCamera = new Camera(canvas);
-  cameras.gridCamera = new Camera(canvas);
   cameras.minimapCamera = new Camera(canvas, {
     zoom: .01,
     maxZoom: .01,
