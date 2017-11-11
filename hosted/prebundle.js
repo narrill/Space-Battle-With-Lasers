@@ -76,6 +76,19 @@ class Camera {
   }
 }
 
+class Oscillator {
+  constructor(periodSeconds) {
+    this.start = Date.now() / 1000;
+    this.period = periodSeconds;
+  }
+  getValue(t) {
+    return Math.sin((2*Math.PI*(t+this.start))/this.period);
+  }
+  restart(t) {
+    this.start = t;
+  }
+}
+
 let lastTime = 0;
 let accumulator = 0;
 let socket;
@@ -87,6 +100,7 @@ let startTime = 0;
 const cameras = {};
 let state;
 let shipList = [];
+const titleOsc = new Oscillator(6);
 const worldInfoModule = require('./worldInfo.js');
 const worldInfo = worldInfoModule.worldInfo;
 const playerInfo = worldInfoModule.playerInfo;
@@ -407,7 +421,7 @@ const draw = (cameras,  dt) => {
   else if(state == GAME_STATES.TITLE)
   {
     //drawing.drawAsteroids(game.asteroids,cameras.camera,cameras.gridCamera);
-    drawing.drawTitleScreen(cameras.camera);
+    drawing.drawTitleScreen(cameras.camera, titleOsc);
   } 
   else if(state == GAME_STATES.DISCONNECTED)
     drawing.drawDisconnectScreen(cameras.camera);
@@ -1134,7 +1148,7 @@ const drawing = {
 		ctx.restore();
 	},
 
-	drawTitleScreen:function(camera){
+	drawTitleScreen:function(camera, osc){
 		var ctx = camera.ctx;
 		ctx.save();
 		ctx.fillStyle = 'black';
@@ -1143,8 +1157,11 @@ const drawing = {
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
 		ctx.globalAlpha = 1;
-		utilities.fillText(ctx,"Space Battle With Lasers",camera.width/2,camera.height/5,"bold 64pt Aroma",'blue',.5);
-		utilities.fillText(ctx,"SPACE BATTLE WITH LASERS",camera.width/2,camera.height/5,"bold 24pt Aroma",'white');
+		const now = Date.now();
+		const smallOffset = osc.getValue(now/1000) * 6;
+		const bigOffset = osc.getValue(now/1000 - 1) * 4;
+		utilities.fillText(ctx,"Space Battle With Lasers",camera.width/2,bigOffset + camera.height/5,"bold 64pt Aroma",'blue',.5);
+		utilities.fillText(ctx,"SPACE BATTLE WITH LASERS",camera.width/2,smallOffset + camera.height/5,"bold 24pt Aroma",'white');
 		utilities.fillText(ctx,"Press ENTER to start",camera.width/2,4*camera.height/5,"12pt Orbitron",'white');
 		ctx.restore();
 	},

@@ -75,6 +75,19 @@ class Camera {
   }
 }
 
+class Oscillator {
+  constructor(periodSeconds) {
+    this.start = Date.now() / 1000;
+    this.period = periodSeconds;
+  }
+  getValue(t) {
+    return Math.sin((2*Math.PI*(t+this.start))/this.period);
+  }
+  restart(t) {
+    this.start = t;
+  }
+}
+
 let lastTime = 0;
 let accumulator = 0;
 let socket;
@@ -86,6 +99,7 @@ let startTime = 0;
 const cameras = {};
 let state;
 let shipList = [];
+const titleOsc = new Oscillator(6);
 const worldInfoModule = require('./worldInfo.js');
 const worldInfo = worldInfoModule.worldInfo;
 const playerInfo = worldInfoModule.playerInfo;
@@ -406,7 +420,7 @@ const draw = (cameras,  dt) => {
   else if(state == GAME_STATES.TITLE)
   {
     //drawing.drawAsteroids(game.asteroids,cameras.camera,cameras.gridCamera);
-    drawing.drawTitleScreen(cameras.camera);
+    drawing.drawTitleScreen(cameras.camera, titleOsc);
   } 
   else if(state == GAME_STATES.DISCONNECTED)
     drawing.drawDisconnectScreen(cameras.camera);

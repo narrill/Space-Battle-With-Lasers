@@ -578,7 +578,7 @@ const drawing = {
 		ctx.restore();
 	},
 
-	drawTitleScreen:function(camera){
+	drawTitleScreen:function(camera, osc){
 		var ctx = camera.ctx;
 		ctx.save();
 		ctx.fillStyle = 'black';
@@ -587,8 +587,11 @@ const drawing = {
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
 		ctx.globalAlpha = 1;
-		utilities.fillText(ctx,"Space Battle With Lasers",camera.width/2,camera.height/5,"bold 64pt Aroma",'blue',.5);
-		utilities.fillText(ctx,"SPACE BATTLE WITH LASERS",camera.width/2,camera.height/5,"bold 24pt Aroma",'white');
+		const now = Date.now();
+		const smallOffset = osc.getValue(now/1000) * 6;
+		const bigOffset = osc.getValue(now/1000 - 1) * 4;
+		utilities.fillText(ctx,"Space Battle With Lasers",camera.width/2,bigOffset + camera.height/5,"bold 64pt Aroma",'blue',.5);
+		utilities.fillText(ctx,"SPACE BATTLE WITH LASERS",camera.width/2,smallOffset + camera.height/5,"bold 24pt Aroma",'white');
 		utilities.fillText(ctx,"Press ENTER to start",camera.width/2,4*camera.height/5,"12pt Orbitron",'white');
 		ctx.restore();
 	},
