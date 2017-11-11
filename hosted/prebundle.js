@@ -90,6 +90,7 @@ class Oscillator {
   }
 }
 
+let titleMusic;
 let lastTime = 0;
 let accumulator = 0;
 let socket;
@@ -308,8 +309,12 @@ const update = (dt) => {
     myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER] = false;
     socket.emit('ship', entry);
   }
+  else if (state === GAME_STATES.CHOOSESHIP) {    
+    titleMusic.volume = utilities.clamp(0, titleMusic.volume - .2 * dt, 1);
+  }
   else if(state == GAME_STATES.PLAYING)
   {
+    titleMusic.volume = utilities.clamp(0, titleMusic.volume - dt, 1);
   //camera shenanigans
   //camera zoom controls
     if(myKeys.keydown[myKeys.KEYBOARD.KEY_UP] && cameras.camera.zoom<=cameras.camera.maxZoom)
@@ -518,6 +523,7 @@ const init = () => {
     worldInfo.asteroids = data.worldInfo.asteroids;
   });
 
+  titleMusic = document.querySelector('#titleMusic');
   canvas = document.querySelector('#mainCanvas');
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;

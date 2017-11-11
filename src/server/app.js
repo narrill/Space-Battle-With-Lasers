@@ -13,6 +13,7 @@ const fonts = {
   '/Orbitron-Light.ttf': fs.readFileSync(`${__dirname}/../../hosted/Orbitron-Light.ttf`),
   '/Orbitron-Black.ttf': fs.readFileSync(`${__dirname}/../../hosted/Orbitron-Black.ttf`),
 };
+const titleMusic = fs.readFileSync(`${__dirname}/../../hosted/title.mp3`);
 
 const onRequest = (request, response) => {
   console.log(request.url);
@@ -22,6 +23,9 @@ const onRequest = (request, response) => {
   } else if (fonts[request.url]) {
     response.writeHead(200, { 'content-type': 'application/font-sfnt' });
     response.end(fonts[request.url]);
+  } else if (request.url === '/hosted/title.mp3') {
+    response.writeHead(200, { 'content-type': 'audio/mpeg'});
+    response.end(titleMusic);
   } else {
     response.writeHead(200, { 'content-type': 'text/html' });
     response.end(index);
