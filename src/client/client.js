@@ -79,13 +79,16 @@ class Camera {
 class Oscillator {
   constructor(periodSeconds) {
     this.start = Date.now() / 1000;
-    this.period = periodSeconds;
+    this._period = periodSeconds;
   }
   getValue(t) {
     return Math.sin((2*Math.PI*(t+this.start))/this.period);
   }
   restart(t) {
     this.start = t;
+  }
+  get period() {
+    return this._period;
   }
 }
 
@@ -98,10 +101,12 @@ let context;
 let inputBox;
 let entry;
 let startTime = 0;
-const cameras = {};
+let camera;
+let minimapCamera;
 let state;
 let shipList = [];
 const titleOsc = new Oscillator(6);
+const titleCameraOsc = new Oscillator(60);
 const worldInfoModule = require('./worldInfo.js');
 const worldInfo = worldInfoModule.worldInfo;
 const playerInfo = worldInfoModule.playerInfo;
@@ -316,16 +321,16 @@ const update = (dt) => {
     titleMusic.volume = utilities.clamp(0, titleMusic.volume - dt, 1);
   //camera shenanigans
   //camera zoom controls
-    if(myKeys.keydown[myKeys.KEYBOARD.KEY_UP] && cameras.camera.zoom<=cameras.camera.maxZoom)
-      cameras.camera.zoom*=1+(3-1)*dt;
-    if(myKeys.keydown[myKeys.KEYBOARD.KEY_DOWN] && cameras.camera.zoom>=cameras.camera.minZoom)
-      cameras.camera.zoom*=1+(.33-1)*dt;
+    if(myKeys.keydown[myKeys.KEYBOARD.KEY_UP] && camera.zoom<=camera.maxZoom)
+      camera.zoom*=1+(3-1)*dt;
+    if(myKeys.keydown[myKeys.KEYBOARD.KEY_DOWN] && camera.zoom>=camera.minZoom)
+      camera.zoom*=1+(.33-1)*dt;
     if(myMouse.wheel)
-      cameras.camera.zoom*=1+(myMouse.wheel/2000);
-    if(cameras.camera.zoom>cameras.camera.maxZoom)
-      cameras.camera.zoom = cameras.camera.maxZoom;
-    else if(cameras.camera.zoom<cameras.camera.minZoom)
-      cameras.camera.zoom = cameras.camera.minZoom;
+      camera.zoom*=1+(myMouse.wheel/2000);
+    if(camera.zoom>camera.maxZoom)
+      camera.zoom = camera.maxZoom;
+    else if(camera.zoom<camera.minZoom)
+      camera.zoom = camera.minZoom;
 
     
     //drawing.clearCamera(cameras.starCamera);
@@ -347,39 +352,41 @@ const update = (dt) => {
 }
 
 //renders everything
-const draw = (cameras,  dt) => {    
+const draw = (camera, minimapCamera, dt) => {    
 
   //clear cameras
-  drawing.clearCamera(cameras.camera);
+  drawing.clearCamera(camera);
 
-  //cameras.camera.x = utilities.lerp(cameras.camera.x, interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX)/10,12*dt);
-  //cameras.camera.y = utilities.lerp(cameras.camera.y, interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY)/10,12*dt);
-  cameras.camera.x = interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX)/10;
-  cameras.camera.y = interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY)/10;
-
-  var rotDiff = playerInfo.rotation+playerInfo.rotationalVelocity/10 - cameras.camera.rotation;
-  if(rotDiff>180)
-    rotDiff-=360;
-  else if(rotDiff<-180)
-    rotDiff+=360;
-  cameras.camera.rotation += utilities.lerp(0,rotDiff,12*dt);
-  //cameras.camera.rotation+=rotDiff;
-  if(cameras.camera.rotation>180)
-    cameras.camera.rotation-=360;
-  else if(cameras.camera.rotation<-180)
-    cameras.camera.rotation+=360;
-  cameras.minimapCamera.x = cameras.camera.x;
-  cameras.minimapCamera.y = cameras.camera.y;
-  cameras.minimapCamera.rotation = cameras.camera.rotation;
+  //camera.x = utilities.lerp(camera.x, interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX)/10,12*dt);
+  //camera.y = utilities.lerp(camera.y, interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY)/10,12*dt);
+  
 
   //draw grids then asteroids then ships
   //if(drawStarField)
-  drawing.drawAsteroids(stars,cameras.camera);  
+  drawing.drawAsteroids(stars,camera);  
   
   if(state == GAME_STATES.PLAYING)
   {
-    if(grid) drawing.drawGrid(cameras.camera, grid);
-    drawing.drawAsteroidsOverlay(worldInfo.asteroids,cameras.camera,grid);
+    camera.x = interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX)/10;
+    camera.y = interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY)/10;
+
+    var rotDiff = playerInfo.rotation+playerInfo.rotationalVelocity/10 - camera.rotation;
+    if(rotDiff>180)
+      rotDiff-=360;
+    else if(rotDiff<-180)
+      rotDiff+=360;
+    camera.rotation += utilities.lerp(0,rotDiff,12*dt);
+    //camera.rotation+=rotDiff;
+    if(camera.rotation>180)
+      camera.rotation-=360;
+    else if(camera.rotation<-180)
+      camera.rotation+=360;
+    minimapCamera.x = camera.x;
+    minimapCamera.y = camera.y;
+    minimapCamera.rotation = camera.rotation;
+
+    if(grid) drawing.drawGrid(camera, grid);
+    drawing.drawAsteroidsOverlay(worldInfo.asteroids,camera,grid);
     for(var n = 0;n<worldInfo.objs.length;n++){
       var ship = worldInfo.objs[n];
       if(!worldInfo.drawing[ship.id] || !worldInfoModule.modelInfo[ship.id])
@@ -391,10 +398,10 @@ const draw = (cameras,  dt) => {
         continue;
       }
       ship.model = worldInfoModule.modelInfo[ship.id];
-      drawing.drawShipOverlay(ship,cameras.camera,grid);
+      drawing.drawShipOverlay(ship,camera,grid);
     }
-    drawing.drawProjectiles(worldInfo.prjs, cameras.camera, dt);
-    drawing.drawHitscans(worldInfo.hitscans, cameras.camera);
+    drawing.drawProjectiles(worldInfo.prjs, camera, dt);
+    drawing.drawHitscans(worldInfo.hitscans, camera);
     for(var c = 0; c<worldInfo.objs.length;c++){
       var ship = worldInfo.objs[c];
       if(!worldInfo.drawing[ship.id] || !worldInfoModule.modelInfo[ship.id])
@@ -406,33 +413,37 @@ const draw = (cameras,  dt) => {
         continue;
       }
       ship.model = worldInfoModule.modelInfo[ship.id];
-      drawing.drawShip(ship,cameras.camera);
+      drawing.drawShip(ship,camera);
     }
-    drawing.drawRadials(worldInfo.radials, cameras.camera, dt);
-    drawing.drawAsteroids(worldInfo.asteroids,cameras.camera);
-    drawing.drawHUD(cameras.camera);
-    drawing.drawMinimap(cameras.minimapCamera, grid);
-    utilities.fillText(cameras.camera.ctx,'prjs: '+worldInfo.prjs.length,15,30,"8pt Orbitron",'white');
+    drawing.drawRadials(worldInfo.radials, camera, dt);
+    drawing.drawAsteroids(worldInfo.asteroids,camera);
+    drawing.drawHUD(camera);
+    drawing.drawMinimap(minimapCamera, grid);
+    utilities.fillText(camera.ctx,'prjs: '+worldInfo.prjs.length,15,30,"8pt Orbitron",'white');
 
     if(Date.now().valueOf() - startTime < 15000)
-      drawing.drawTutorialGraphics(cameras.camera);
+      drawing.drawTutorialGraphics(camera);
   }
   else if(state == GAME_STATES.TITLE)
   {
-    //drawing.drawAsteroids(game.asteroids,cameras.camera,cameras.gridCamera);
-    drawing.drawTitleScreen(cameras.camera, titleOsc);
+    //drawing.drawAsteroids(game.asteroids,camera,cameras.gridCamera);
+    const now = Date.now()/1000;
+    camera.x = titleCameraOsc.getValue(now) * 100000;
+    camera.y = titleCameraOsc.getValue(now + titleCameraOsc.period/4) * 100000;
+    camera.rotation = correctOrientation(camera.rotation + .1 * dt);
+    drawing.drawTitleScreen(camera, titleOsc);
   } 
   else if(state == GAME_STATES.DISCONNECTED)
-    drawing.drawDisconnectScreen(cameras.camera);
+    drawing.drawDisconnectScreen(camera);
   else if(state == GAME_STATES.CHOOSESHIP)
-    drawing.drawChooseShipScreen(cameras.camera, entry, shipList);
+    drawing.drawChooseShipScreen(camera, entry, shipList);
 
   if(!locked)
-    drawing.drawLockedGraphic(cameras.camera);
+    drawing.drawLockedGraphic(camera);
 
   //resetMouse();
 
-  utilities.fillText(cameras.camera.ctx,'fps: '+Math.floor(1/dt),15,15,"8pt Orbitron",'white');
+  utilities.fillText(camera.ctx,'fps: '+Math.floor(1/dt),15,15,"8pt Orbitron",'white');
 }
 
 const frame = () => {
@@ -440,7 +451,7 @@ const frame = () => {
   var dt = (now-lastTime)/1000;
 
   lastTime = Date.now().valueOf();
-  draw(cameras,dt);
+  draw(camera, minimapCamera, dt);
 
   var step = .004;
   if(dt>step*8)
@@ -544,8 +555,8 @@ const init = () => {
 
   inputBox = document.querySelector("#inputBox");
 
-  cameras.camera = new Camera(canvas);
-  cameras.minimapCamera = new Camera(canvas, {
+  camera = new Camera(canvas);
+  minimapCamera = new Camera(canvas, {
     zoom: .01,
     maxZoom: .01,
     minZoom: .01,
@@ -554,7 +565,7 @@ const init = () => {
       startY: .7,
       endX: 1,
       endY: 1,
-      parent: cameras.camera
+      parent: camera
     }
   });
 

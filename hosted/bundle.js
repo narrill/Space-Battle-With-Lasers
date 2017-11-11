@@ -114,7 +114,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         _classCallCheck(this, Oscillator);
 
         this.start = Date.now() / 1000;
-        this.period = periodSeconds;
+        this._period = periodSeconds;
       }
 
       _createClass(Oscillator, [{
@@ -126,6 +126,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         key: "restart",
         value: function restart(t) {
           this.start = t;
+        }
+      }, {
+        key: "period",
+        get: function get() {
+          return this._period;
         }
       }]);
 
@@ -141,10 +146,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var inputBox = void 0;
     var entry = void 0;
     var startTime = 0;
-    var cameras = {};
+    var camera = void 0;
+    var minimapCamera = void 0;
     var state = void 0;
     var shipList = [];
     var titleOsc = new Oscillator(6);
+    var titleCameraOsc = new Oscillator(60);
     var worldInfoModule = require('./worldInfo.js');
     var worldInfo = worldInfoModule.worldInfo;
     var playerInfo = worldInfoModule.playerInfo;
@@ -337,10 +344,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         titleMusic.volume = utilities.clamp(0, titleMusic.volume - dt, 1);
         //camera shenanigans
         //camera zoom controls
-        if (myKeys.keydown[myKeys.KEYBOARD.KEY_UP] && cameras.camera.zoom <= cameras.camera.maxZoom) cameras.camera.zoom *= 1 + (3 - 1) * dt;
-        if (myKeys.keydown[myKeys.KEYBOARD.KEY_DOWN] && cameras.camera.zoom >= cameras.camera.minZoom) cameras.camera.zoom *= 1 + (.33 - 1) * dt;
-        if (myMouse.wheel) cameras.camera.zoom *= 1 + myMouse.wheel / 2000;
-        if (cameras.camera.zoom > cameras.camera.maxZoom) cameras.camera.zoom = cameras.camera.maxZoom;else if (cameras.camera.zoom < cameras.camera.minZoom) cameras.camera.zoom = cameras.camera.minZoom;
+        if (myKeys.keydown[myKeys.KEYBOARD.KEY_UP] && camera.zoom <= camera.maxZoom) camera.zoom *= 1 + (3 - 1) * dt;
+        if (myKeys.keydown[myKeys.KEYBOARD.KEY_DOWN] && camera.zoom >= camera.minZoom) camera.zoom *= 1 + (.33 - 1) * dt;
+        if (myMouse.wheel) camera.zoom *= 1 + myMouse.wheel / 2000;
+        if (camera.zoom > camera.maxZoom) camera.zoom = camera.maxZoom;else if (camera.zoom < camera.minZoom) camera.zoom = camera.minZoom;
 
         //drawing.clearCamera(cameras.starCamera);
         //game.clearCamera(cameras.minimapCamera);
@@ -359,32 +366,34 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     //renders everything
-    var draw = function draw(cameras, dt) {
+    var draw = function draw(camera, minimapCamera, dt) {
 
       //clear cameras
-      drawing.clearCamera(cameras.camera);
+      drawing.clearCamera(camera);
 
-      //cameras.camera.x = utilities.lerp(cameras.camera.x, interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX)/10,12*dt);
-      //cameras.camera.y = utilities.lerp(cameras.camera.y, interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY)/10,12*dt);
-      cameras.camera.x = interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX) / 10;
-      cameras.camera.y = interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY) / 10;
+      //camera.x = utilities.lerp(camera.x, interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX)/10,12*dt);
+      //camera.y = utilities.lerp(camera.y, interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY)/10,12*dt);
 
-      var rotDiff = playerInfo.rotation + playerInfo.rotationalVelocity / 10 - cameras.camera.rotation;
-      if (rotDiff > 180) rotDiff -= 360;else if (rotDiff < -180) rotDiff += 360;
-      cameras.camera.rotation += utilities.lerp(0, rotDiff, 12 * dt);
-      //cameras.camera.rotation+=rotDiff;
-      if (cameras.camera.rotation > 180) cameras.camera.rotation -= 360;else if (cameras.camera.rotation < -180) cameras.camera.rotation += 360;
-      cameras.minimapCamera.x = cameras.camera.x;
-      cameras.minimapCamera.y = cameras.camera.y;
-      cameras.minimapCamera.rotation = cameras.camera.rotation;
 
       //draw grids then asteroids then ships
       //if(drawStarField)
-      drawing.drawAsteroids(stars, cameras.camera);
+      drawing.drawAsteroids(stars, camera);
 
       if (state == GAME_STATES.PLAYING) {
-        if (grid) drawing.drawGrid(cameras.camera, grid);
-        drawing.drawAsteroidsOverlay(worldInfo.asteroids, cameras.camera, grid);
+        camera.x = interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX) / 10;
+        camera.y = interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY) / 10;
+
+        var rotDiff = playerInfo.rotation + playerInfo.rotationalVelocity / 10 - camera.rotation;
+        if (rotDiff > 180) rotDiff -= 360;else if (rotDiff < -180) rotDiff += 360;
+        camera.rotation += utilities.lerp(0, rotDiff, 12 * dt);
+        //camera.rotation+=rotDiff;
+        if (camera.rotation > 180) camera.rotation -= 360;else if (camera.rotation < -180) camera.rotation += 360;
+        minimapCamera.x = camera.x;
+        minimapCamera.y = camera.y;
+        minimapCamera.rotation = camera.rotation;
+
+        if (grid) drawing.drawGrid(camera, grid);
+        drawing.drawAsteroidsOverlay(worldInfo.asteroids, camera, grid);
         for (var n = 0; n < worldInfo.objs.length; n++) {
           var ship = worldInfo.objs[n];
           if (!worldInfo.drawing[ship.id] || !worldInfoModule.modelInfo[ship.id]) continue;
@@ -394,10 +403,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             continue;
           }
           ship.model = worldInfoModule.modelInfo[ship.id];
-          drawing.drawShipOverlay(ship, cameras.camera, grid);
+          drawing.drawShipOverlay(ship, camera, grid);
         }
-        drawing.drawProjectiles(worldInfo.prjs, cameras.camera, dt);
-        drawing.drawHitscans(worldInfo.hitscans, cameras.camera);
+        drawing.drawProjectiles(worldInfo.prjs, camera, dt);
+        drawing.drawHitscans(worldInfo.hitscans, camera);
         for (var c = 0; c < worldInfo.objs.length; c++) {
           var ship = worldInfo.objs[c];
           if (!worldInfo.drawing[ship.id] || !worldInfoModule.modelInfo[ship.id]) continue;
@@ -407,25 +416,29 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             continue;
           }
           ship.model = worldInfoModule.modelInfo[ship.id];
-          drawing.drawShip(ship, cameras.camera);
+          drawing.drawShip(ship, camera);
         }
-        drawing.drawRadials(worldInfo.radials, cameras.camera, dt);
-        drawing.drawAsteroids(worldInfo.asteroids, cameras.camera);
-        drawing.drawHUD(cameras.camera);
-        drawing.drawMinimap(cameras.minimapCamera, grid);
-        utilities.fillText(cameras.camera.ctx, 'prjs: ' + worldInfo.prjs.length, 15, 30, "8pt Orbitron", 'white');
+        drawing.drawRadials(worldInfo.radials, camera, dt);
+        drawing.drawAsteroids(worldInfo.asteroids, camera);
+        drawing.drawHUD(camera);
+        drawing.drawMinimap(minimapCamera, grid);
+        utilities.fillText(camera.ctx, 'prjs: ' + worldInfo.prjs.length, 15, 30, "8pt Orbitron", 'white');
 
-        if (Date.now().valueOf() - startTime < 15000) drawing.drawTutorialGraphics(cameras.camera);
+        if (Date.now().valueOf() - startTime < 15000) drawing.drawTutorialGraphics(camera);
       } else if (state == GAME_STATES.TITLE) {
-        //drawing.drawAsteroids(game.asteroids,cameras.camera,cameras.gridCamera);
-        drawing.drawTitleScreen(cameras.camera, titleOsc);
-      } else if (state == GAME_STATES.DISCONNECTED) drawing.drawDisconnectScreen(cameras.camera);else if (state == GAME_STATES.CHOOSESHIP) drawing.drawChooseShipScreen(cameras.camera, entry, shipList);
+        //drawing.drawAsteroids(game.asteroids,camera,cameras.gridCamera);
+        var now = Date.now() / 1000;
+        camera.x = titleCameraOsc.getValue(now) * 100000;
+        camera.y = titleCameraOsc.getValue(now + titleCameraOsc.period / 4) * 100000;
+        camera.rotation = correctOrientation(camera.rotation + .1 * dt);
+        drawing.drawTitleScreen(camera, titleOsc);
+      } else if (state == GAME_STATES.DISCONNECTED) drawing.drawDisconnectScreen(camera);else if (state == GAME_STATES.CHOOSESHIP) drawing.drawChooseShipScreen(camera, entry, shipList);
 
-      if (!locked) drawing.drawLockedGraphic(cameras.camera);
+      if (!locked) drawing.drawLockedGraphic(camera);
 
       //resetMouse();
 
-      utilities.fillText(cameras.camera.ctx, 'fps: ' + Math.floor(1 / dt), 15, 15, "8pt Orbitron", 'white');
+      utilities.fillText(camera.ctx, 'fps: ' + Math.floor(1 / dt), 15, 15, "8pt Orbitron", 'white');
     };
 
     var frame = function frame() {
@@ -433,7 +446,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var dt = (now - lastTime) / 1000;
 
       lastTime = Date.now().valueOf();
-      draw(cameras, dt);
+      draw(camera, minimapCamera, dt);
 
       var step = .004;
       if (dt > step * 8) {
@@ -535,8 +548,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       inputBox = document.querySelector("#inputBox");
 
-      cameras.camera = new Camera(canvas);
-      cameras.minimapCamera = new Camera(canvas, {
+      camera = new Camera(canvas);
+      minimapCamera = new Camera(canvas, {
         zoom: .01,
         maxZoom: .01,
         minZoom: .01,
@@ -545,7 +558,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           startY: .7,
           endX: 1,
           endY: 1,
-          parent: cameras.camera
+          parent: camera
         }
       });
 
@@ -1117,7 +1130,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         ctx.globalAlpha = 1;
         var now = Date.now();
         var smallOffset = osc.getValue(now / 1000) * 6;
-        var bigOffset = osc.getValue(now / 1000 - 1) * 4;
+        var bigOffset = osc.getValue(now / 1000 - osc.period / 6) * 4;
         utilities.fillText(ctx, "Space Battle With Lasers", camera.width / 2, bigOffset + camera.height / 5, "bold 64pt Aroma", 'blue', .5);
         utilities.fillText(ctx, "SPACE BATTLE WITH LASERS", camera.width / 2, smallOffset + camera.height / 5, "bold 24pt Aroma", 'white');
         utilities.fillText(ctx, "Press ENTER to start", camera.width / 2, 4 * camera.height / 5, "12pt Orbitron", 'white');

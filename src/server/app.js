@@ -65,7 +65,7 @@ const BASE_GAME = {
   grid: {
     gridLines: 500, // number of grid lines
     gridSpacing: 100, // pixels per grid unit
-    gridStart: [-125000, -125000], // corner anchor in world coordinates
+    gridStart: [-25000, -25000], // corner anchor in world coordinates
     colors: [
       {
         color: '#1111FF',
