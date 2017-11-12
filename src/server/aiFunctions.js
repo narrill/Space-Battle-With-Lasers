@@ -12,9 +12,9 @@ const aiFunctions = {
     let lowestDistance = Number.MAX_VALUE;
     for (let c = 0; c < this.game.otherShips.length; c++) {
       const ship = this.game.otherShips[c];
-      if (!(this.faction === ship.faction && this.faction !== -1) || this !== ship) {
-        const leftRoot = this.x * ship.x;
-        const rightRoot = this.y * ship.y;
+      if (!(this.faction === ship.faction && this.faction !== -1) && this !== ship) {
+        const leftRoot = this.x - ship.x;
+        const rightRoot = this.y - ship.y;
         const distanceSqr = (leftRoot * leftRoot) + (rightRoot * rightRoot);
         if (distanceSqr < lowestDistance) {
           target = ship;
@@ -26,7 +26,6 @@ const aiFunctions = {
     if (!target) {
       return;
     }
-    // console.log(cVal+' '+this.faction);
     const vectorToTarget = [target.x - this.x, target.y - this.y];
     const forwardVector = utilities.getForwardVector.call(this);
     const relativeAngleToTarget = utilities.angleBetweenVectors(
@@ -52,7 +51,7 @@ const aiFunctions = {
 
     const distanceSqr = utilities.vectorMagnitudeSqr(vectorToTarget[0], vectorToTarget[1]);
 
-    const myRange = (has.call(this, 'laser')) ? this.laser.range : 10000;
+    const myRange = (has.call(this, 'laser')) ? this.laser.range/2 : 10000;
 
     if (relativeAngleToTarget < this.ai.fireSpread / 2
       && relativeAngleToTarget > (-this.ai.fireSpread) / 2) {
@@ -64,7 +63,7 @@ const aiFunctions = {
       }
     }
 
-    if (distanceSqr > this.ai.followMax * this.ai.followMax) {
+    if (distanceSqr > this.ai.followMax * this.ai.followMax || distanceSqr > myRange * myRange) {
       objControls.objMedialThrusters.call(
         this,
         this.thrusterSystem.medial.maxStrength / this.stabilizer.thrustRatio,
