@@ -109,8 +109,6 @@ const titleOsc = new Oscillator(6);
 const titleCameraOsc = new Oscillator(60);
 const worldInfoModule = require('./worldInfo.js');
 const worldInfo = worldInfoModule.worldInfo;
-const playerInfo = worldInfoModule.playerInfo;
-const lastPlayerInfo = worldInfoModule.lastPlayerInfo;
 const hudInfo = worldInfoModule.hudInfo;
 const interpolateWiValue = worldInfoModule.interpolateWiValue;
 const interpolateFromWiInterval = worldInfoModule.interpolateFromWiInterval;
@@ -353,24 +351,19 @@ const update = (dt) => {
 
 //renders everything
 const draw = (camera, minimapCamera, dt) => {    
-
+  const now = Date.now().valueOf();
   //clear cameras
   drawing.clearCamera(camera);
-
-  //camera.x = utilities.lerp(camera.x, interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX)/10,12*dt);
-  //camera.y = utilities.lerp(camera.y, interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY)/10,12*dt);
   
-
-  //draw grids then asteroids then ships
-  //if(drawStarField)
   drawing.drawAsteroids(stars,camera);  
   
   if(state == GAME_STATES.PLAYING)
   {
-    camera.x = interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX)/10;
-    camera.y = interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY)/10;
+    const playerInfo = worldInfoModule.getPlayerInfo();
+    camera.x = playerInfo.interpolateWiValue('x', now) + playerInfo.interpolateWiValue('velX', now)/10;
+    camera.y = playerInfo.interpolateWiValue('y', now) + playerInfo.interpolateWiValue('velY', now)/10;
 
-    var rotDiff = playerInfo.rotation+playerInfo.rotationalVelocity/10 - camera.rotation;
+    var rotDiff = playerInfo.interpolateWiValue('rotation', now) + playerInfo.interpolateWiValue('rotationalVelocity', now)/10 - camera.rotation;
     if(rotDiff>180)
       rotDiff-=360;
     else if(rotDiff<-180)
@@ -497,40 +490,7 @@ const init = () => {
   socket.on('worldInfo', (data) => {
     if(state === GAME_STATES.WAIT)
       state = GAME_STATES.PLAYING;
-    if(data.interval) worldInfoModule.setWiInterval(data.interval);
-    lastPlayerInfo.x = playerInfo.x;
-    playerInfo.x = data.x;
-    lastPlayerInfo.y = playerInfo.y;
-    playerInfo.y = data.y;
-    lastPlayerInfo.rotation = playerInfo.rotation;
-    playerInfo.rotation = data.rotation;
-    lastPlayerInfo.velX = playerInfo.velX;
-    playerInfo.velX = data.velX;
-    lastPlayerInfo.velY = playerInfo.velY;
-    playerInfo.velY = data.velY;
-    lastPlayerInfo.rotationalVelocity = playerInfo.rotationalVelocity;
-    playerInfo.rotationalVelocity = data.rotationalVelocity;
-    lastPlayerInfo.thrusterPower = playerInfo.thrusterPower;
-    playerInfo.thrusterPower = data.thrusterPower;
-    lastPlayerInfo.weaponPower = playerInfo.weaponPower;
-    playerInfo.weaponPower = data.weaponPower;
-    lastPlayerInfo.shieldPower = playerInfo.shieldPower;
-    playerInfo.shieldPower = data.shieldPower;
-    hudInfo.velocityClamps = data.velocityClamps;
-    hudInfo.stabilized = data.stabilized;
-    hudInfo.powerDistribution = data.powerDistribution;
-
-    for(var id in worldInfo.targets)
-      worldInfo.previousTargets[id] = worldInfo.targets[id];
-    worldInfo.targets = {};
-    var now = Date.now().valueOf();
-    worldInfoModule.setLastWorldUpdate(now);
-    //console.log('last: '+lastWorldUpdate+'\nnow: '+nextWorldUpdate+'\nnext: '+nextWorldUpdate);
-    pushCollectionFromDataToWI(data.worldInfo,'objs');
-    pushCollectionFromDataToWI(data.worldInfo,'prjs');
-    pushCollectionFromDataToWI(data.worldInfo,'hitscans');
-    pushCollectionFromDataToWI(data.worldInfo,'radials');
-    worldInfo.asteroids = data.worldInfo.asteroids;
+    worldInfoModule.pushWiData(data);
   });
 
   titleMusic = document.querySelector('#titleMusic');

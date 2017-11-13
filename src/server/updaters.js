@@ -451,34 +451,18 @@ const updaters = {
 
     const sinceLastSend = this.game.elapsedGameTime - this.remoteInput.lastSend;
     if (this.remoteInput.remoteSend && sinceLastSend >= this.remoteInput.sendInterval) {
-      this.remoteInput.lastSend = this.game.elapsedGameTime;
+      this.remoteInput.lastSend += this.remoteInput.sendInterval;
       gameFunctions.queueFunction(this.game, () => {
         const d = {};
-        // if (!this.remoteInput.sentInterval) {
-        //   d.interval = this.remoteInput.sendInterval;
-        //   this.remoteInput.sentInterval = true;
-        // }
-        d.interval = sinceLastSend;
-        d.x = this.x;
-        d.y = this.y;
-        d.rotation = this.rotation;
-        d.velX = this.velocityX;
-        d.velY = this.velocityY;
-        d.rotationalVelocity = this.rotationalVelocity;
-        d.velocityClamps = stab.clamps;
-        d.stabilized = stab.enabled;
-        d.thrusterPower = updaters.getPowerForComponent(
-          this.powerSystem, 
-          enums.SHIP_COMPONENTS.THRUSTERS
-        );
-        d.weaponPower = updaters.getPowerForComponent(
-          this.powerSystem, 
-          enums.SHIP_COMPONENTS.LASERS
-        );
-        d.shieldPower = updaters.getPowerForComponent(
-          this.powerSystem, 
-          enums.SHIP_COMPONENTS.SHIELDS
-        );
+        if (!this.remoteInput.sentInterval) {
+          d.interval = this.remoteInput.sendInterval;
+          this.remoteInput.sentInterval = true;
+        }
+        if (!this.remoteInput.sentId) {
+          d.id = this.id;
+          this.remoteInput.sentId = true;
+        }
+        
         const fetchInfo = gameFunctions.fetchFromTileArray(this.game, [this.x, this.y], 15000);
         const worldInfo = {
           objs: [],
@@ -562,6 +546,25 @@ const updaters = {
             color: r.color,
           });
         }
+        const us = worldInfo.objs[this.id];
+        us.velX = this.velocityX;
+        us.velY = this.velocityY;
+        us.rotationalVelocity = this.rotationalVelocity;
+        us.velocityClamps = stab.clamps;
+        us.stabilized = stab.enabled;
+        us.thrusterPower = updaters.getPowerForComponent(
+          this.powerSystem, 
+          enums.SHIP_COMPONENTS.THRUSTERS
+        );
+        us.weaponPower = updaters.getPowerForComponent(
+          this.powerSystem, 
+          enums.SHIP_COMPONENTS.LASERS
+        );
+        us.shieldPower = updaters.getPowerForComponent(
+          this.powerSystem, 
+          enums.SHIP_COMPONENTS.SHIELDS
+        );
+
         d.worldInfo = worldInfo;
         // d.powerDistribution = 
         // console.log('remote send');

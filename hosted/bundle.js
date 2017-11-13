@@ -154,8 +154,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var titleCameraOsc = new Oscillator(60);
     var worldInfoModule = require('./worldInfo.js');
     var worldInfo = worldInfoModule.worldInfo;
-    var playerInfo = worldInfoModule.playerInfo;
-    var lastPlayerInfo = worldInfoModule.lastPlayerInfo;
     var hudInfo = worldInfoModule.hudInfo;
     var interpolateWiValue = worldInfoModule.interpolateWiValue;
     var interpolateFromWiInterval = worldInfoModule.interpolateFromWiInterval;
@@ -367,23 +365,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     //renders everything
     var draw = function draw(camera, minimapCamera, dt) {
-
+      var now = Date.now().valueOf();
       //clear cameras
       drawing.clearCamera(camera);
 
-      //camera.x = utilities.lerp(camera.x, interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX)/10,12*dt);
-      //camera.y = utilities.lerp(camera.y, interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY)/10,12*dt);
-
-
-      //draw grids then asteroids then ships
-      //if(drawStarField)
       drawing.drawAsteroids(stars, camera);
 
       if (state == GAME_STATES.PLAYING) {
-        camera.x = interpolateFromWiInterval(lastPlayerInfo.x, playerInfo.x) + interpolateFromWiInterval(lastPlayerInfo.velX, playerInfo.velX) / 10;
-        camera.y = interpolateFromWiInterval(lastPlayerInfo.y, playerInfo.y) + interpolateFromWiInterval(lastPlayerInfo.velY, playerInfo.velY) / 10;
+        var playerInfo = worldInfoModule.getPlayerInfo();
+        camera.x = playerInfo.interpolateWiValue('x', now) + playerInfo.interpolateWiValue('velX', now) / 10;
+        camera.y = playerInfo.interpolateWiValue('y', now) + playerInfo.interpolateWiValue('velY', now) / 10;
 
-        var rotDiff = playerInfo.rotation + playerInfo.rotationalVelocity / 10 - camera.rotation;
+        var rotDiff = playerInfo.interpolateWiValue('rotation', now) + playerInfo.interpolateWiValue('rotationalVelocity', now) / 10 - camera.rotation;
         if (rotDiff > 180) rotDiff -= 360;else if (rotDiff < -180) rotDiff += 360;
         camera.rotation += utilities.lerp(0, rotDiff, 12 * dt);
         //camera.rotation+=rotDiff;
@@ -427,9 +420,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         if (Date.now().valueOf() - startTime < 15000) drawing.drawTutorialGraphics(camera);
       } else if (state == GAME_STATES.TITLE) {
         //drawing.drawAsteroids(game.asteroids,camera,cameras.gridCamera);
-        var now = Date.now() / 1000;
-        camera.x = titleCameraOsc.getValue(now) * 100000;
-        camera.y = titleCameraOsc.getValue(now + titleCameraOsc.period / 4) * 100000;
+        var _now = Date.now() / 1000;
+        camera.x = titleCameraOsc.getValue(_now) * 100000;
+        camera.y = titleCameraOsc.getValue(_now + titleCameraOsc.period / 4) * 100000;
         camera.rotation = correctOrientation(camera.rotation + .1 * dt);
         drawing.drawTitleScreen(camera, titleOsc);
       } else if (state == GAME_STATES.DISCONNECTED) drawing.drawDisconnectScreen(camera);else if (state == GAME_STATES.CHOOSESHIP) drawing.drawChooseShipScreen(camera, entry, shipList);
@@ -490,40 +483,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       socket.on('worldInfo', function (data) {
         if (state === GAME_STATES.WAIT) state = GAME_STATES.PLAYING;
-        if (data.interval) worldInfoModule.setWiInterval(data.interval);
-        lastPlayerInfo.x = playerInfo.x;
-        playerInfo.x = data.x;
-        lastPlayerInfo.y = playerInfo.y;
-        playerInfo.y = data.y;
-        lastPlayerInfo.rotation = playerInfo.rotation;
-        playerInfo.rotation = data.rotation;
-        lastPlayerInfo.velX = playerInfo.velX;
-        playerInfo.velX = data.velX;
-        lastPlayerInfo.velY = playerInfo.velY;
-        playerInfo.velY = data.velY;
-        lastPlayerInfo.rotationalVelocity = playerInfo.rotationalVelocity;
-        playerInfo.rotationalVelocity = data.rotationalVelocity;
-        lastPlayerInfo.thrusterPower = playerInfo.thrusterPower;
-        playerInfo.thrusterPower = data.thrusterPower;
-        lastPlayerInfo.weaponPower = playerInfo.weaponPower;
-        playerInfo.weaponPower = data.weaponPower;
-        lastPlayerInfo.shieldPower = playerInfo.shieldPower;
-        playerInfo.shieldPower = data.shieldPower;
-        hudInfo.velocityClamps = data.velocityClamps;
-        hudInfo.stabilized = data.stabilized;
-        hudInfo.powerDistribution = data.powerDistribution;
-
-        for (var id in worldInfo.targets) {
-          worldInfo.previousTargets[id] = worldInfo.targets[id];
-        }worldInfo.targets = {};
-        var now = Date.now().valueOf();
-        worldInfoModule.setLastWorldUpdate(now);
-        //console.log('last: '+lastWorldUpdate+'\nnow: '+nextWorldUpdate+'\nnext: '+nextWorldUpdate);
-        pushCollectionFromDataToWI(data.worldInfo, 'objs');
-        pushCollectionFromDataToWI(data.worldInfo, 'prjs');
-        pushCollectionFromDataToWI(data.worldInfo, 'hitscans');
-        pushCollectionFromDataToWI(data.worldInfo, 'radials');
-        worldInfo.asteroids = data.worldInfo.asteroids;
+        worldInfoModule.pushWiData(data);
       });
 
       titleMusic = document.querySelector('#titleMusic');
@@ -1223,34 +1183,105 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var wiInterval = 0;
     var lastWorldUpdate = 0;
+    var playerId = 0;
 
-    var playerInfo = {
-      x: 0,
-      y: 0,
-      rotation: 0,
-      velX: 0,
-      velY: 0,
-      rotationalVelocity: 0
-    };
-    var lastPlayerInfo = {
-      x: 0,
-      y: 0,
-      rotation: 0,
-      velX: 0,
-      velY: 0,
-      rotationalVelocity: 0
-    };
     var hudInfo = {};
-    var worldInfo = {
-      objs: [],
-      asteroids: [],
-      radials: [],
-      prjs: [],
-      hitscans: [],
-      drawing: {},
-      targets: {},
-      previousTargets: {}
-    };
+
+    var WorldInfo = function () {
+      function WorldInfo() {
+        _classCallCheck(this, WorldInfo);
+
+        this.reset();
+      }
+
+      _createClass(WorldInfo, [{
+        key: "reset",
+        value: function reset() {
+          this.objs = [];
+          this.asteroids = [];
+          this.radials = [];
+          this.prjs = [];
+          this.hitscans = [];
+          this.objInfos = {};
+        }
+      }, {
+        key: "pushCollectionFromDataToWI",
+        value: function pushCollectionFromDataToWI(dwi, type) {
+          var now = Date.now().valueOf();
+          for (var c = 0; c < dwi[type].length; c++) {
+            var obj = dwi[type][c];
+            if (this.objInfos[obj.id]) {
+              this.objInfos[obj.id].pushState(obj, now);
+            } else {
+              var newObjInfo = new ObjInfo(obj, now);
+              this.objInfos[obj.id] = newObjInfo;
+              this[type].push(newObjInfo);
+            }
+          }
+          for (var _c = 0; _c < this[type].length; _c++) {
+            var _obj = this[type][_c];
+            if (!this.objInfos[_obj.id]) removeIndexFromWiCollection(_c, this[type]);
+          }
+        }
+      }, {
+        key: "prep",
+        value: function prep() {
+          this.objInfos = {};
+        }
+      }, {
+        key: "pushWiData",
+        value: function pushWiData(dwi) {
+          this.prep();
+          this.pushCollectionFromDataToWI(dwi, 'objs');
+          this.pushCollectionFromDataToWI(dwi, 'prjs');
+          this.pushCollectionFromDataToWI(dwi, 'hitscans');
+          this.pushCollectionFromDataToWI(dwi, 'radials');
+          this.asteroids = dwi.asteroids;
+        }
+      }]);
+
+      return WorldInfo;
+    }();
+
+    var worldInfo = new WorldInfo();
+
+    var ObjInfo = function () {
+      function ObjInfo(initialState, time) {
+        _classCallCheck(this, ObjInfo);
+
+        this.states = [initialState];
+        this.stateCount = 3;
+        this.lastStateTime = time;
+      }
+
+      _createClass(ObjInfo, [{
+        key: "pushState",
+        value: function pushState(obj, time) {
+          this.lastStateTime = time;
+          this.states.push(obj);
+          while (states.length > this.stateCount) {
+            this.states.shift();
+          }
+        }
+      }, {
+        key: "interpolateWiValue",
+        value: function interpolateWiValue(val, time) {
+          var perc = (time - this.lastStateTime) / wiInterval;
+          if (perc <= 1) {
+            return utilities.lerp(this.states[0][val], this.states[1][val], perc);
+          } else {
+            return utilities.lerp(this.states[1][val], this.states[2][val], utilities.clamp(0, perc - 1, 1));
+          }
+        }
+      }, {
+        key: "isDrawable",
+        get: function get() {
+          return this.states.length === this.stateCount;
+        }
+      }]);
+
+      return ObjInfo;
+    }();
 
     var modelInfo = {};
 
@@ -1260,47 +1291,22 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       return utilities.lerp(from, to, utilities.clamp(0, perc, 1));
     }
 
-    function interpolateWiValue(obj, val) {
-      var now = Date.now().valueOf();
-      //console.log(updateInterval);
-      var perc = (now - lastWorldUpdate) / wiInterval;
-      var prevObj = worldInfo.previousTargets[obj.id];
-      var currentObj = worldInfo.targets[obj.id];
-      obj[val] = utilities.lerp(prevObj[val], currentObj[val], utilities.clamp(0, perc, 1));
-      return obj[val];
-    }
-
     function removeIndexFromWiCollection(index, collection) {
       var obj = collection[index];
-      delete worldInfo.targets[obj.id];
-      delete worldInfo.previousTargets[obj.id];
-      delete worldInfo.drawing[obj.id];
+      delete worldInfo.objInfos[obj.id];
       collection.splice(index, 1);
     }
 
     function pushCollectionFromDataToWI(dwi, type) {
-      for (var c = 0; c < dwi[type].length; c++) {
-        var obj = dwi[type][c];
-        if (worldInfo.drawing.hasOwnProperty(obj.id)) {
-          worldInfo.targets[obj.id] = obj;
-          worldInfo.drawing[obj.id] = true;
-        } else {
-          worldInfo.previousTargets[obj.id] = utilities.deepObjectMerge.call({}, obj);
-          worldInfo[type].push(obj);
-          worldInfo.drawing[obj.id] = false;
-        }
-      }
+      worldInfo.pushCollectionFromDataToWI(dwi, type);
     }
 
+    var getPlayerInfo = function getPlayerInfo() {
+      return worldInfo.objInfos[playerId];
+    };
+
     function resetWi() {
-      worldInfo.objs = [];
-      worldInfo.asteroids = [];
-      worldInfo.radials = [];
-      worldInfo.prjs = [];
-      worldInfo.hitscans = [];
-      worldInfo.drawing = {};
-      worldInfo.targets = {};
-      worldInfo.previousTargets = {};
+      worldInfo.reset();
     }
 
     function addShips(ships) {
@@ -1313,25 +1319,23 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       modelInfo[shipInfo.id] = shipInfo.model;
     }
 
+    var pushWiData = function pushWiData(data) {
+      if (data.interval) wiInterval = data.interval;
+      if (data.id) playerId = data.id;
+
+      var now = Date.now().valueOf();
+      lastWorldUpdate = now;
+      worldInfo.pushWiData(data.worldInfo);
+    };
+
     module.exports = {
-      playerInfo: playerInfo,
-      lastPlayerInfo: lastPlayerInfo,
-      hudInfo: hudInfo,
+      getPlayerInfo: getPlayerInfo,
       worldInfo: worldInfo,
       modelInfo: modelInfo,
       addShips: addShips,
       addShip: addShip,
-      interpolateWiValue: interpolateWiValue,
       interpolateFromWiInterval: interpolateFromWiInterval,
-      removeIndexFromWiCollection: removeIndexFromWiCollection,
-      pushCollectionFromDataToWI: pushCollectionFromDataToWI,
-      resetWi: resetWi,
-      setWiInterval: function setWiInterval(wii) {
-        wiInterval = wii;
-      },
-      setLastWorldUpdate: function setLastWorldUpdate(lwu) {
-        lastWorldUpdate = lwu;
-      }
+      resetWi: resetWi
     };
   }, { "../server/utilities.js": 5 }], 4: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
