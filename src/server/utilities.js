@@ -543,6 +543,14 @@ const utilities = {
     return this;
   },
 
+  // deepObjectCopy(src) {
+  //   const keys = Object.keys(src);
+  //   const copy = {};
+  //   for(let c = 0; c < keys.length; c++) {
+  //     const key = keys[c];
+  //   }
+  // }
+
   veryShallowObjectMerge(src) {
     if (!src) { return this; }
     // loop through source's attributes

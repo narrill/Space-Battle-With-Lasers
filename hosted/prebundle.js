@@ -1176,7 +1176,10 @@ class WorldInfo {
 	}
 	reset() {
 		this.objs = [];
-		this.asteroids = [];
+		this.asteroids = {
+			objs: [],
+			colors:[]
+		};
 		this.radials = [];
 		this.prjs = [];
 		this.hitscans = [];
@@ -1215,7 +1218,23 @@ class WorldInfo {
 		this.pushCollectionFromDataToWI(dwi,'prjs');
 		this.pushCollectionFromDataToWI(dwi,'hitscans');
 		this.pushCollectionFromDataToWI(dwi,'radials');
-		this.asteroids = dwi.asteroids;
+		
+		// Asteroids
+		this.asteroids.colors = dwi.asteroids.colors;
+
+		const destroyedAsteroids = {};
+		for(let c = 0; c < dwi.asteroids.objs.length; c++) {
+			const a = dwi.asteroids.objs[c];
+			if(a.destroyed)
+				destroyedAsteroids[a.destroyed] = true;
+			else
+				this.asteroids.objs.push(a);
+		}
+		for(let c = 0; c < this.asteroids.objs.length; c++) {
+			const a = this.asteroids.objs[c];
+			if(destroyedAsteroids[a.id])
+				this.asteroids.objs.splice(c, 1);
+		}
 	}
 	addShips(ships) {
 		Object.keys(ships).forEach((id) => {
@@ -1877,6 +1896,14 @@ const utilities = {
 
     return this;
   },
+
+  // deepObjectCopy(src) {
+  //   const keys = Object.keys(src);
+  //   const copy = {};
+  //   for(let c = 0; c < keys.length; c++) {
+  //     const key = keys[c];
+  //   }
+  // }
 
   veryShallowObjectMerge(src) {
     if (!src) { return this; }

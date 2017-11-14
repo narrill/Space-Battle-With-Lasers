@@ -522,15 +522,39 @@ const updaters = {
         for (let c = 0; c < this.game.asteroids.colors.length; c++) {
           worldInfo.asteroids.colors.push(this.game.asteroids.colors[c]);
         }
+
+        const newAsteroidsById = {};
         for (let c = 0; c < fetchInfo.asteroid.length; c++) {
           const a = fetchInfo.asteroid[c];
-          worldInfo.asteroids.objs.push({
-            x: a.x,
-            y: a.y,
-            colorIndex: a.colorIndex,
-            radius: a.destructible.radius,
-          });
+          newAsteroidsById[a.id] = a;
+          worldInfo.asteroids.objs.push();
         }
+        const previousAsteroidsById = this.remoteInput.nonInterp.asteroids || {};
+        const newKeys = Object.keys(newAsteroidsById);
+        for(let c = 0; c < newKeys.length; c++) {
+          const id = newKeys[c];
+          if(!previousAsteroidsById[id]) {
+            const a = newAsteroidsById[id];
+            worldInfo.asteroids.objs.push({
+              id: a.id,
+              x: a.x,
+              y: a.y,
+              colorIndex: a.colorIndex,
+              radius: a.destructible.radius,
+            });
+          }
+        }
+        const prevKeys = Object.keys(previousAsteroidsById);
+        for(let c = 0; c < prevKeys.length; c++) {
+          const id = prevKeys[c];
+          if(!newAsteroidsById[id]) {
+            worldInfo.asteroids.objs.push({
+              destroyed: id
+            });
+          }
+        }
+        this.remoteInput.nonInterp.asteroids = newAsteroidsById;
+
         for (let c = 0; c < fetchInfo.prj.length; c++) {
           const p = fetchInfo.prj[c];
           if (p.visible) {

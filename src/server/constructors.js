@@ -8,6 +8,7 @@ const gridFunctions = require('./gridFunctions.js');
 const ships = require('./ships.js');
 const updaters = dependencyCatch(require('./updaters.js'));
 const missiles = require('./missiles.js');
+const pson = require('pson');
 
 const has = Object.prototype.hasOwnProperty;
 
@@ -368,6 +369,7 @@ const constructors = {
       mouseDirection: 0,
       lastSend: 0,
       sendInterval: 33.333,
+      nonInterp:{}
     };
     function mh(data) {
       // console.log(data);
@@ -513,6 +515,7 @@ const constructors = {
       const radius = (Math.random() * (maxRadius - minRadius)) + minRadius;
       const group = Math.floor(Math.random() * this.asteroids.colors.length);
       asteroids.objs.push({
+        id: id.takeIdTag(),
         x: (Math.random() * (upper[0] - lower[0])) + lower[0],
         y: (Math.random() * (upper[1] - lower[1])) + lower[1],
         radius, // graphical radius
@@ -524,6 +527,7 @@ const constructors = {
         game,
         type: 'asteroid',
         onDestroy: [(asteroid) => {
+          id.returnIdTag(asteroid.id),
           constructors.makeAsteroids.call(asteroid.game, asteroid.game, asteroid.game.grid);
         }]
       });

@@ -1146,7 +1146,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         key: "reset",
         value: function reset() {
           this.objs = [];
-          this.asteroids = [];
+          this.asteroids = {
+            objs: [],
+            colors: []
+          };
           this.radials = [];
           this.prjs = [];
           this.hitscans = [];
@@ -1189,7 +1192,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.pushCollectionFromDataToWI(dwi, 'prjs');
           this.pushCollectionFromDataToWI(dwi, 'hitscans');
           this.pushCollectionFromDataToWI(dwi, 'radials');
-          this.asteroids = dwi.asteroids;
+
+          // Asteroids
+          this.asteroids.colors = dwi.asteroids.colors;
+
+          var destroyedAsteroids = {};
+          for (var c = 0; c < dwi.asteroids.objs.length; c++) {
+            var a = dwi.asteroids.objs[c];
+            if (a.destroyed) destroyedAsteroids[a.destroyed] = true;else this.asteroids.objs.push(a);
+          }
+          for (var _c2 = 0; _c2 < this.asteroids.objs.length; _c2++) {
+            var _a = this.asteroids.objs[_c2];
+            if (destroyedAsteroids[_a.id]) this.asteroids.objs.splice(_c2, 1);
+          }
         }
       }, {
         key: "addShips",
@@ -1872,6 +1887,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return this;
       },
+
+
+      // deepObjectCopy(src) {
+      //   const keys = Object.keys(src);
+      //   const copy = {};
+      //   for(let c = 0; c < keys.length; c++) {
+      //     const key = keys[c];
+      //   }
+      // }
+
       veryShallowObjectMerge: function veryShallowObjectMerge(src) {
         var _this2 = this;
 
