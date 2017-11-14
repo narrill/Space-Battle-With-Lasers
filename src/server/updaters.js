@@ -494,6 +494,29 @@ const updaters = {
             rotational: ots.rotational.currentStrength / ots.rotational.efficiency,
             thrusterColor: ots.color,
           };
+
+          if(o.id === this.id) {
+            wi.velX = this.velocityX;
+            wi.velY = this.velocityY;
+            wi.rotationalVelocity = this.rotationalVelocity;
+            wi.clampMedial = stab.clamps.medial;
+            wi.clampLateral = stab.clamps.lateral;
+            wi.clampRotational = stab.clamps.rotational;
+            wi.clampsEnabled = stab.clamps.enabled;
+            wi.stabilized = stab.enabled;
+            wi.thrusterPower = updaters.getPowerForComponent(
+              this.powerSystem, 
+              enums.SHIP_COMPONENTS.THRUSTERS
+            );
+            wi.weaponPower = updaters.getPowerForComponent(
+              this.powerSystem, 
+              enums.SHIP_COMPONENTS.LASERS
+            );
+            wi.shieldPower = updaters.getPowerForComponent(
+              this.powerSystem, 
+              enums.SHIP_COMPONENTS.SHIELDS
+            );
+          }
           worldInfo.objs.push(wi);
         }
         for (let c = 0; c < this.game.asteroids.colors.length; c++) {
@@ -547,23 +570,7 @@ const updaters = {
           });
         }
         const us = worldInfo.objs[this.id];
-        us.velX = this.velocityX;
-        us.velY = this.velocityY;
-        us.rotationalVelocity = this.rotationalVelocity;
-        us.velocityClamps = stab.clamps;
-        us.stabilized = stab.enabled;
-        us.thrusterPower = updaters.getPowerForComponent(
-          this.powerSystem, 
-          enums.SHIP_COMPONENTS.THRUSTERS
-        );
-        us.weaponPower = updaters.getPowerForComponent(
-          this.powerSystem, 
-          enums.SHIP_COMPONENTS.LASERS
-        );
-        us.shieldPower = updaters.getPowerForComponent(
-          this.powerSystem, 
-          enums.SHIP_COMPONENTS.SHIELDS
-        );
+
 
         d.worldInfo = worldInfo;
         // d.powerDistribution = 

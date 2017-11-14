@@ -12,33 +12,6 @@ const GAME_STATES = {
   WAIT:4
 };
 
-const clamp = (val, min, max) => {
-  return Math.min(Math.max(val, min), max);
-};
-
-// Translates an arbitrary orientation into the range of -180 to 180
-const correctOrientation = (orientation) => {
-  while (orientation > 180)
-    orientation -= 360;
-  while (orientation < -180)
-    orientation += 360;
-
-  return orientation;
-};
-
-const lerp = (from, to, percent) => {
-  return (from * (1.0 - percent)) + (to * percent);
-};
-
-const rotationLerp = (from, to, percent) => {
-	if(Math.abs(to - from) > 180) {
-		const adjustment = (from > to) ? -360 : 360;
-		return correctOrientation(lerp(from + adjustment, to, percent));
-	}
-	else
-		return lerp(from, to, percent);
-};
-
 class Viewport {
   constructor(objectParams = {}) {
     this.startX = (objectParams.startX) ? objectParams.startX : 0;
@@ -107,14 +80,8 @@ let state;
 let shipList = [];
 const titleOsc = new Oscillator(6);
 const titleCameraOsc = new Oscillator(60);
-const worldInfoModule = require('./worldInfo.js');
-const worldInfo = worldInfoModule.worldInfo;
-const hudInfo = worldInfoModule.hudInfo;
-const interpolateWiValue = worldInfoModule.interpolateWiValue;
-const interpolateFromWiInterval = worldInfoModule.interpolateFromWiInterval;
-const pushCollectionFromDataToWI = worldInfoModule.pushCollectionFromDataToWI;
-const removeIndexFromWiCollection = worldInfoModule.removeIndexFromWiCollection;
-const resetWi = worldInfoModule.resetWi;
+const worldInfo = require('./worldInfo.js').worldInfo;
+const modelInfo = require('./worldInfo.js').modelInfo;
 
 const stars = { // Container for the starfield background objects. Populated at run-time
   objs:[], // From an old project of mine - https://github.com/narrill/Space-Battle/blob/master/js/main.js
@@ -359,60 +326,50 @@ const draw = (camera, minimapCamera, dt) => {
   
   if(state == GAME_STATES.PLAYING)
   {
-    const playerInfo = worldInfoModule.getPlayerInfo();
-    camera.x = playerInfo.interpolateWiValue('x', now) + playerInfo.interpolateWiValue('velX', now)/10;
-    camera.y = playerInfo.interpolateWiValue('y', now) + playerInfo.interpolateWiValue('velY', now)/10;
+    const playerInfo = worldInfo.getPlayerInfo();
+    if(playerInfo && playerInfo.isDrawable) {
+      camera.x = playerInfo.interpolateWiValue('x', now) + playerInfo.interpolateWiValue('velX', now)/10;
+      camera.y = playerInfo.interpolateWiValue('y', now) + playerInfo.interpolateWiValue('velY', now)/10;
 
-    var rotDiff = playerInfo.interpolateWiValue('rotation', now) + playerInfo.interpolateWiValue('rotationalVelocity', now)/10 - camera.rotation;
-    if(rotDiff>180)
-      rotDiff-=360;
-    else if(rotDiff<-180)
-      rotDiff+=360;
-    camera.rotation += utilities.lerp(0,rotDiff,12*dt);
-    //camera.rotation+=rotDiff;
-    if(camera.rotation>180)
-      camera.rotation-=360;
-    else if(camera.rotation<-180)
-      camera.rotation+=360;
-    minimapCamera.x = camera.x;
-    minimapCamera.y = camera.y;
-    minimapCamera.rotation = camera.rotation;
+      let rotDiff = playerInfo.interpolateRotationValue('rotation', now) + playerInfo.interpolateWiValue('rotationalVelocity', now)/10 - camera.rotation;
+      if(rotDiff > 180)
+        rotDiff -= 360;
+      else if(rotDiff < -180)
+        rotDiff += 360;
+      camera.rotation += utilities.lerp(0, rotDiff, 12 * dt);
+      //camera.rotation+=rotDiff;
+      if(camera.rotation > 180)
+        camera.rotation -= 360;
+      else if(camera.rotation < -180)
+        camera.rotation += 360;
+      minimapCamera.x = camera.x;
+      minimapCamera.y = camera.y;
+      minimapCamera.rotation = camera.rotation;
+    }
 
     if(grid) drawing.drawGrid(camera, grid);
-    drawing.drawAsteroidsOverlay(worldInfo.asteroids,camera,grid);
-    for(var n = 0;n<worldInfo.objs.length;n++){
-      var ship = worldInfo.objs[n];
-      if(!worldInfo.drawing[ship.id] || !worldInfoModule.modelInfo[ship.id])
-        continue;
-      if(!worldInfo.targets[ship.id])
-      {
-        //removeIndexFromWiCollection(n,worldInfo.objs);
-        //n--;
-        continue;
+    drawing.drawAsteroidsOverlay(worldInfo.asteroids, camera, grid);
+    for(let n = 0; n < worldInfo.objs.length; n++){
+      const shipInfo = worldInfo.objs[n];
+      if(shipInfo.isDrawable && shipInfo.hasModel) {
+        shipInfo.model = worldInfo.getModel(shipInfo.getMostRecentValue('id'));
+        drawing.drawShipOverlay(shipInfo, camera, grid, now);
       }
-      ship.model = worldInfoModule.modelInfo[ship.id];
-      drawing.drawShipOverlay(ship,camera,grid);
     }
-    drawing.drawProjectiles(worldInfo.prjs, camera, dt);
-    drawing.drawHitscans(worldInfo.hitscans, camera);
-    for(var c = 0; c<worldInfo.objs.length;c++){
-      var ship = worldInfo.objs[c];
-      if(!worldInfo.drawing[ship.id] || !worldInfoModule.modelInfo[ship.id])
-        continue;
-      if(!worldInfo.targets[ship.id])
-      {
-        removeIndexFromWiCollection(c,worldInfo.objs);
-        c--;
-        continue;
+    drawing.drawProjectiles(worldInfo.prjs, camera, dt, now);
+    drawing.drawHitscans(worldInfo.hitscans, camera, now);
+    for(let c = 0; c < worldInfo.objs.length; c++){
+      const ship = worldInfo.objs[c];
+      if(ship.isDrawable && ship.hasModel) {
+        ship.model = worldInfo.getModel(ship.getMostRecentValue('id'));
+        drawing.drawShip(ship, camera, now);
       }
-      ship.model = worldInfoModule.modelInfo[ship.id];
-      drawing.drawShip(ship,camera);
     }
-    drawing.drawRadials(worldInfo.radials, camera, dt);
-    drawing.drawAsteroids(worldInfo.asteroids,camera);
-    drawing.drawHUD(camera);
-    drawing.drawMinimap(minimapCamera, grid);
-    utilities.fillText(camera.ctx,'prjs: '+worldInfo.prjs.length,15,30,"8pt Orbitron",'white');
+    drawing.drawRadials(worldInfo.radials, camera, dt, now);
+    drawing.drawAsteroids(worldInfo.asteroids, camera);
+    drawing.drawHUD(camera, now);
+    drawing.drawMinimap(minimapCamera, grid, now);
+    utilities.fillText(camera.ctx,'prjs: ' + worldInfo.prjs.length, 15, 30, "8pt Orbitron", 'white');
 
     if(Date.now().valueOf() - startTime < 15000)
       drawing.drawTutorialGraphics(camera);
@@ -420,10 +377,10 @@ const draw = (camera, minimapCamera, dt) => {
   else if(state == GAME_STATES.TITLE)
   {
     //drawing.drawAsteroids(game.asteroids,camera,cameras.gridCamera);
-    const now = Date.now()/1000;
-    camera.x = titleCameraOsc.getValue(now) * 100000;
-    camera.y = titleCameraOsc.getValue(now + titleCameraOsc.period/4) * 100000;
-    camera.rotation = correctOrientation(camera.rotation + .1 * dt);
+    const nowS = now / 1000;
+    camera.x = titleCameraOsc.getValue(nowS) * 100000;
+    camera.y = titleCameraOsc.getValue(nowS + titleCameraOsc.period/4) * 100000;
+    camera.rotation = utilities.correctOrientation(camera.rotation + .1 * dt);
     drawing.drawTitleScreen(camera, titleOsc);
   } 
   else if(state == GAME_STATES.DISCONNECTED)
@@ -436,17 +393,17 @@ const draw = (camera, minimapCamera, dt) => {
 
   //resetMouse();
 
-  utilities.fillText(camera.ctx,'fps: '+Math.floor(1/dt),15,15,"8pt Orbitron",'white');
+  utilities.fillText(camera.ctx,'fps: ' + Math.floor(1 / dt), 15, 15, "8pt Orbitron", 'white');
 }
 
 const frame = () => {
-  var now = Date.now().valueOf();
-  var dt = (now-lastTime)/1000;
+  const now = Date.now().valueOf();
+  let dt = (now-lastTime)/1000;
 
   lastTime = Date.now().valueOf();
   draw(camera, minimapCamera, dt);
 
-  var step = .004;
+  const step = .004;
   if(dt>step*8)
   {
       dt = step;
@@ -469,8 +426,7 @@ const init = () => {
   });
 
   socket.on('grid', (data) => {
-    resetWi();
-    worldInfoModule.setLastWorldUpdate(Date.now().valueOf());
+    worldInfo.reset();
     startTime = Date.now().valueOf();
     grid = data;
     grid.z = .85;
@@ -490,7 +446,7 @@ const init = () => {
   socket.on('worldInfo', (data) => {
     if(state === GAME_STATES.WAIT)
       state = GAME_STATES.PLAYING;
-    worldInfoModule.pushWiData(data);
+    worldInfo.pushWiData(data);
   });
 
   titleMusic = document.querySelector('#titleMusic');
@@ -503,11 +459,11 @@ const init = () => {
   });
 
   socket.on('ship', (shipInfo) => {
-    worldInfoModule.addShip(shipInfo);
+    worldInfo.addShip(shipInfo);
   });
 
   socket.on('ships', (ships) => {
-    worldInfoModule.addShips(ships);
+    worldInfo.addShips(ships);
   });
   context = canvas.getContext('2d');
 

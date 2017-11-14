@@ -31,30 +31,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       WAIT: 4
     };
 
-    var clamp = function clamp(val, min, max) {
-      return Math.min(Math.max(val, min), max);
-    };
-
-    // Translates an arbitrary orientation into the range of -180 to 180
-    var correctOrientation = function correctOrientation(orientation) {
-      while (orientation > 180) {
-        orientation -= 360;
-      }while (orientation < -180) {
-        orientation += 360;
-      }return orientation;
-    };
-
-    var lerp = function lerp(from, to, percent) {
-      return from * (1.0 - percent) + to * percent;
-    };
-
-    var rotationLerp = function rotationLerp(from, to, percent) {
-      if (Math.abs(to - from) > 180) {
-        var adjustment = from > to ? -360 : 360;
-        return correctOrientation(lerp(from + adjustment, to, percent));
-      } else return lerp(from, to, percent);
-    };
-
     var Viewport = function Viewport() {
       var objectParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
@@ -152,14 +128,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var shipList = [];
     var titleOsc = new Oscillator(6);
     var titleCameraOsc = new Oscillator(60);
-    var worldInfoModule = require('./worldInfo.js');
-    var worldInfo = worldInfoModule.worldInfo;
-    var hudInfo = worldInfoModule.hudInfo;
-    var interpolateWiValue = worldInfoModule.interpolateWiValue;
-    var interpolateFromWiInterval = worldInfoModule.interpolateFromWiInterval;
-    var pushCollectionFromDataToWI = worldInfoModule.pushCollectionFromDataToWI;
-    var removeIndexFromWiCollection = worldInfoModule.removeIndexFromWiCollection;
-    var resetWi = worldInfoModule.resetWi;
+    var worldInfo = require('./worldInfo.js').worldInfo;
+    var modelInfo = require('./worldInfo.js').modelInfo;
 
     var stars = { // Container for the starfield background objects. Populated at run-time
       objs: [], // From an old project of mine - https://github.com/narrill/Space-Battle/blob/master/js/main.js
@@ -372,58 +342,52 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       drawing.drawAsteroids(stars, camera);
 
       if (state == GAME_STATES.PLAYING) {
-        var playerInfo = worldInfoModule.getPlayerInfo();
-        camera.x = playerInfo.interpolateWiValue('x', now) + playerInfo.interpolateWiValue('velX', now) / 10;
-        camera.y = playerInfo.interpolateWiValue('y', now) + playerInfo.interpolateWiValue('velY', now) / 10;
+        var playerInfo = worldInfo.getPlayerInfo();
+        if (playerInfo && playerInfo.isDrawable) {
+          camera.x = playerInfo.interpolateWiValue('x', now) + playerInfo.interpolateWiValue('velX', now) / 10;
+          camera.y = playerInfo.interpolateWiValue('y', now) + playerInfo.interpolateWiValue('velY', now) / 10;
 
-        var rotDiff = playerInfo.interpolateWiValue('rotation', now) + playerInfo.interpolateWiValue('rotationalVelocity', now) / 10 - camera.rotation;
-        if (rotDiff > 180) rotDiff -= 360;else if (rotDiff < -180) rotDiff += 360;
-        camera.rotation += utilities.lerp(0, rotDiff, 12 * dt);
-        //camera.rotation+=rotDiff;
-        if (camera.rotation > 180) camera.rotation -= 360;else if (camera.rotation < -180) camera.rotation += 360;
-        minimapCamera.x = camera.x;
-        minimapCamera.y = camera.y;
-        minimapCamera.rotation = camera.rotation;
+          var rotDiff = playerInfo.interpolateRotationValue('rotation', now) + playerInfo.interpolateWiValue('rotationalVelocity', now) / 10 - camera.rotation;
+          if (rotDiff > 180) rotDiff -= 360;else if (rotDiff < -180) rotDiff += 360;
+          camera.rotation += utilities.lerp(0, rotDiff, 12 * dt);
+          //camera.rotation+=rotDiff;
+          if (camera.rotation > 180) camera.rotation -= 360;else if (camera.rotation < -180) camera.rotation += 360;
+          minimapCamera.x = camera.x;
+          minimapCamera.y = camera.y;
+          minimapCamera.rotation = camera.rotation;
+        }
 
         if (grid) drawing.drawGrid(camera, grid);
         drawing.drawAsteroidsOverlay(worldInfo.asteroids, camera, grid);
         for (var n = 0; n < worldInfo.objs.length; n++) {
-          var ship = worldInfo.objs[n];
-          if (!worldInfo.drawing[ship.id] || !worldInfoModule.modelInfo[ship.id]) continue;
-          if (!worldInfo.targets[ship.id]) {
-            //removeIndexFromWiCollection(n,worldInfo.objs);
-            //n--;
-            continue;
+          var shipInfo = worldInfo.objs[n];
+          if (shipInfo.isDrawable && shipInfo.hasModel) {
+            shipInfo.model = worldInfo.getModel(shipInfo.getMostRecentValue('id'));
+            drawing.drawShipOverlay(shipInfo, camera, grid, now);
           }
-          ship.model = worldInfoModule.modelInfo[ship.id];
-          drawing.drawShipOverlay(ship, camera, grid);
         }
-        drawing.drawProjectiles(worldInfo.prjs, camera, dt);
-        drawing.drawHitscans(worldInfo.hitscans, camera);
+        drawing.drawProjectiles(worldInfo.prjs, camera, dt, now);
+        drawing.drawHitscans(worldInfo.hitscans, camera, now);
         for (var c = 0; c < worldInfo.objs.length; c++) {
           var ship = worldInfo.objs[c];
-          if (!worldInfo.drawing[ship.id] || !worldInfoModule.modelInfo[ship.id]) continue;
-          if (!worldInfo.targets[ship.id]) {
-            removeIndexFromWiCollection(c, worldInfo.objs);
-            c--;
-            continue;
+          if (ship.isDrawable && ship.hasModel) {
+            ship.model = worldInfo.getModel(ship.getMostRecentValue('id'));
+            drawing.drawShip(ship, camera, now);
           }
-          ship.model = worldInfoModule.modelInfo[ship.id];
-          drawing.drawShip(ship, camera);
         }
-        drawing.drawRadials(worldInfo.radials, camera, dt);
+        drawing.drawRadials(worldInfo.radials, camera, dt, now);
         drawing.drawAsteroids(worldInfo.asteroids, camera);
-        drawing.drawHUD(camera);
-        drawing.drawMinimap(minimapCamera, grid);
+        drawing.drawHUD(camera, now);
+        drawing.drawMinimap(minimapCamera, grid, now);
         utilities.fillText(camera.ctx, 'prjs: ' + worldInfo.prjs.length, 15, 30, "8pt Orbitron", 'white');
 
         if (Date.now().valueOf() - startTime < 15000) drawing.drawTutorialGraphics(camera);
       } else if (state == GAME_STATES.TITLE) {
         //drawing.drawAsteroids(game.asteroids,camera,cameras.gridCamera);
-        var _now = Date.now() / 1000;
-        camera.x = titleCameraOsc.getValue(_now) * 100000;
-        camera.y = titleCameraOsc.getValue(_now + titleCameraOsc.period / 4) * 100000;
-        camera.rotation = correctOrientation(camera.rotation + .1 * dt);
+        var nowS = now / 1000;
+        camera.x = titleCameraOsc.getValue(nowS) * 100000;
+        camera.y = titleCameraOsc.getValue(nowS + titleCameraOsc.period / 4) * 100000;
+        camera.rotation = utilities.correctOrientation(camera.rotation + .1 * dt);
         drawing.drawTitleScreen(camera, titleOsc);
       } else if (state == GAME_STATES.DISCONNECTED) drawing.drawDisconnectScreen(camera);else if (state == GAME_STATES.CHOOSESHIP) drawing.drawChooseShipScreen(camera, entry, shipList);
 
@@ -463,8 +427,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       });
 
       socket.on('grid', function (data) {
-        resetWi();
-        worldInfoModule.setLastWorldUpdate(Date.now().valueOf());
+        worldInfo.reset();
         startTime = Date.now().valueOf();
         grid = data;
         grid.z = .85;
@@ -483,7 +446,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       socket.on('worldInfo', function (data) {
         if (state === GAME_STATES.WAIT) state = GAME_STATES.PLAYING;
-        worldInfoModule.pushWiData(data);
+        worldInfo.pushWiData(data);
       });
 
       titleMusic = document.querySelector('#titleMusic');
@@ -496,11 +459,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       });
 
       socket.on('ship', function (shipInfo) {
-        worldInfoModule.addShip(shipInfo);
+        worldInfo.addShip(shipInfo);
       });
 
       socket.on('ships', function (ships) {
-        worldInfoModule.addShips(ships);
+        worldInfo.addShips(ships);
       });
       context = canvas.getContext('2d');
 
@@ -534,14 +497,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     // https://github.com/narrill/Space-Battle/blob/dev/js/drawing.js
 
     var utilities = require('../server/utilities.js');
-    var worldInfoModule = require('./worldInfo.js');
-    var worldInfo = worldInfoModule.worldInfo;
-    var playerInfo = worldInfoModule.playerInfo;
-    var lastPlayerInfo = worldInfoModule.lastPlayerInfo;
-    var hudInfo = worldInfoModule.hudInfo;
-    var interpolateWiValue = worldInfoModule.interpolateWiValue;
-    var interpolateFromWiInterval = worldInfoModule.interpolateFromWiInterval;
-    var removeIndexFromWiCollection = worldInfoModule.removeIndexFromWiCollection;
+    var worldInfo = require('./worldInfo.js').worldInfo;
 
     var thrusterDetail = 3;
     var hitscanDetail = 3;
@@ -631,25 +587,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       },
 
       //draws the projected overlay (shields, health, laser range) for the given ship using the two given cameras (one for the gameplay plane and one for the projected plane)
-      drawShipOverlay: function drawShipOverlay(ship, camera, grid) {
+      drawShipOverlay: function drawShipOverlay(ship, camera, grid, time) {
         var ctx = camera.ctx;
         var gridZ = grid.z;
         var gridZoom = 1 / (gridZ + 1 / camera.zoom);
-        interpolateWiValue(ship, 'x');
-        interpolateWiValue(ship, 'y');
-        interpolateWiValue(ship, 'rotation');
-        var shipPosInCameraSpace = camera.worldPointToCameraSpace(ship.x, ship.y); //get ship's position in camera space
-        var shipPosInGridCameraSpace = camera.worldPointToCameraSpace(ship.x, ship.y, gridZ);
+        var x = ship.interpolateWiValue('x', time);
+        var y = ship.interpolateWiValue('y', time);
+        var rotation = ship.interpolateWiValue('rotation', time);
+        var radius = ship.getMostRecentValue('radius');
+        var color = ship.getMostRecentValue('color');
+
+        var shipPosInCameraSpace = camera.worldPointToCameraSpace(x, y); //get ship's position in camera space
+        var shipPosInGridCameraSpace = camera.worldPointToCameraSpace(x, y, gridZ);
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(shipPosInCameraSpace[0], shipPosInCameraSpace[1]);
         ctx.lineTo(shipPosInGridCameraSpace[0], shipPosInGridCameraSpace[1]);
         ctx.translate(shipPosInGridCameraSpace[0], shipPosInGridCameraSpace[1]);
-        ctx.rotate((ship.rotation - camera.rotation) * (Math.PI / 180));
+        ctx.rotate((rotation - camera.rotation) * (Math.PI / 180));
         for (var type in ship.model.overlay.ranges) {
           ctx.arc(0, 0, ship.model.overlay.ranges[type] * gridZoom, -Math.PI / 2, Math.PI * 2 - Math.PI / 2);
         }
-        ctx.rotate(-(ship.rotation - camera.rotation) * (Math.PI / 180));
+        ctx.rotate(-(rotation - camera.rotation) * (Math.PI / 180));
         ctx.translate(-shipPosInGridCameraSpace[0], -shipPosInGridCameraSpace[1]);
         ctx.lineWidth = .5;
         ctx.strokeStyle = 'grey';
@@ -661,30 +620,30 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         ctx.scale(gridZoom, gridZoom);
         if (ship.model.overlay.destructible) {
           ctx.beginPath();
-          ctx.arc(0, 0, 150, -Math.PI / 2, -Math.PI * 2 * ship.shp - Math.PI / 2, true);
+          ctx.arc(0, 0, 150, -Math.PI / 2, -Math.PI * 2 * ship.interpolateWiValue('shp', time) - Math.PI / 2, true);
           ctx.strokeStyle = 'dodgerblue';
           ctx.lineWidth = 20;
           ctx.stroke();
           ctx.beginPath();
-          ctx.arc(0, 0, 125, -Math.PI / 2, -Math.PI * 2 * interpolateWiValue(ship, 'hp') - Math.PI / 2, true);
+          ctx.arc(0, 0, 125, -Math.PI / 2, -Math.PI * 2 * ship.interpolateWiValue('hp', time) - Math.PI / 2, true);
           ctx.strokeStyle = 'green';
           ctx.stroke();
         }
         if (ship.model.overlay.colorCircle) {
           ctx.beginPath();
           ctx.arc(0, 0, 75, 0, Math.PI * 2);
-          ctx.fillStyle = ship.color;
+          ctx.fillStyle = color;
           ctx.fill();
           ctx.beginPath();
-          ctx.arc(0, 0, ship.radius, 0, Math.PI * 2);
+          ctx.arc(0, 0, radius, 0, Math.PI * 2);
           ctx.fillStyle = 'black';
           ctx.globalAlpha = 1;
           ctx.fill();
         } else {
           ctx.scale(1 / gridZoom, 1 / gridZoom);
           ctx.beginPath();
-          ctx.moveTo(ship.radius * gridZoom, 0);
-          ctx.arc(0, 0, ship.radius * gridZoom, 0, Math.PI * 2);
+          ctx.moveTo(radius * gridZoom, 0);
+          ctx.arc(0, 0, radius * gridZoom, 0, Math.PI * 2);
           ctx.globalAlpha = .2;
           ctx.lineWidth = .5;
           ctx.strokeStyle = 'grey';
@@ -694,12 +653,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       },
 
       //draws the give ship's minimap representation to the given camera
-      drawShipMinimap: function drawShipMinimap(ship, camera) {
+      drawShipMinimap: function drawShipMinimap(ship, camera, time) {
         var ctx = camera.ctx;
         ctx.save();
-        var shipPosInCameraSpace = camera.worldPointToCameraSpace(ship.x, ship.y); //get ship's position in camera space
+        var x = ship.interpolateWiValue('x', time);
+        var y = ship.interpolateWiValue('y', time);
+        var rotation = ship.interpolateRotationValue('rotation', time);
+        var color = ship.getMostRecentValue('color');
+        var shipPosInCameraSpace = camera.worldPointToCameraSpace(x, y); //get ship's position in camera space
         ctx.translate(shipPosInCameraSpace[0], shipPosInCameraSpace[1]); //translate to camera space position
-        ctx.rotate((ship.rotation - camera.rotation) * (Math.PI / 180)); //rotate by difference in rotations
+        ctx.rotate((rotation - camera.rotation) * (Math.PI / 180)); //rotate by difference in rotations
 
         ctx.scale(.5, .5); //scale by zoom value
 
@@ -711,26 +674,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           ctx.lineTo(vert[0], vert[1]);
         }
         ctx.closePath();
-        ctx.fillStyle = ship.color;
+        ctx.fillStyle = color;
         ctx.fill();
         ctx.restore();
       },
 
       //draws the given ship in the given camera
-      drawShip: function drawShip(ship, camera) {
-        //var shipArray = (Array.isArray(ship))?ship:[ship];
+      drawShip: function drawShip(ship, camera, time) {
+        var x = ship.interpolateWiValue('x', time);
+        var y = ship.interpolateWiValue('y', time);
+        var rotation = ship.interpolateRotationValue('rotation', time);
+        var radius = ship.getMostRecentValue('radius');
+        var thrusterColor = ship.getMostRecentValue('thrusterColor');
+        var color = ship.getMostRecentValue('color');
 
-        interpolateWiValue(ship, 'x');
-        interpolateWiValue(ship, 'y');
-        interpolateWiValue(ship, 'rotation');
-        var shipPosInCameraSpace = camera.worldPointToCameraSpace(ship.x, ship.y); //get ship's position in camera space
+        var shipPosInCameraSpace = camera.worldPointToCameraSpace(x, y); //get ship's position in camera space
 
-        if (shipPosInCameraSpace[0] - ship.radius * camera.zoom > camera.width || shipPosInCameraSpace[0] + ship.radius * camera.zoom < 0 || shipPosInCameraSpace[1] - ship.radius * camera.zoom > camera.height || shipPosInCameraSpace[1] + ship.radius * camera.zoom < 0) return;
+        if (shipPosInCameraSpace[0] - radius * camera.zoom > camera.width || shipPosInCameraSpace[0] + radius * camera.zoom < 0 || shipPosInCameraSpace[1] - radius * camera.zoom > camera.height || shipPosInCameraSpace[1] + radius * camera.zoom < 0) return;
 
         var ctx = camera.ctx;
         ctx.save();
         ctx.translate(shipPosInCameraSpace[0], shipPosInCameraSpace[1]); //translate to camera space position
-        ctx.rotate((ship.rotation - camera.rotation) * (Math.PI / 180)); //rotate by difference in rotations
+        ctx.rotate((rotation - camera.rotation) * (Math.PI / 180)); //rotate by difference in rotations
 
         ctx.scale(camera.zoom, camera.zoom); //scale by zoom value
 
@@ -738,16 +703,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var width = ship.model.thrusterPoints.width;
         //forward thrust
         for (var c = 0; c <= thrusterDetail; c++) {
-          ctx.fillStyle = shadeRGBColor(worldInfo.targets[ship.id].thrusterColor, .5 * c);
+          ctx.fillStyle = shadeRGBColor(thrusterColor, .5 * c);
           ctx.save();
           ctx.beginPath();
 
           //Medial Thrusters
           //forward
-          interpolateWiValue(ship, 'medial');
-          var trailLength = 40 * ship.medial * (1 - c / (thrusterDetail + 1));
+          var medial = ship.interpolateWiValue('medial', time);
+          var trailLength = 40 * medial * (1 - c / (thrusterDetail + 1));
 
-          if (ship.medial > 0) {
+          if (medial > 0) {
             for (var n = 0; n < ship.model.thrusterPoints.medial.positive.length; n++) {
               var tp = ship.model.thrusterPoints.medial.positive[n];
               ctx.moveTo(tp[0] + rightVector[0] * width / 2, tp[1] + rightVector[1] * width / 2);
@@ -757,7 +722,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
           }
           //backward
-          else if (ship.medial < 0) {
+          else if (medial < 0) {
               for (var n = 0; n < ship.model.thrusterPoints.medial.positive.length; n++) {
                 var tp = ship.model.thrusterPoints.medial.negative[n];
                 ctx.moveTo(tp[0] + rightVector[0] * width / 2, tp[1] + rightVector[1] * width / 2);
@@ -768,10 +733,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
           //rotational thrusters	
-          interpolateWiValue(ship, 'rotational');
-          trailLength = 40 * ship.rotational * (1 - c / (thrusterDetail + 1));
+          var rotational = ship.interpolateWiValue('rotational', time);
+          trailLength = 40 * rotational * (1 - c / (thrusterDetail + 1));
           //ccw
-          if (ship.rotational > 0) {
+          if (rotational > 0) {
             for (var n = 0; n < ship.model.thrusterPoints.rotational.positive.length; n++) {
               var tp = ship.model.thrusterPoints.rotational.positive[n];
               ctx.moveTo(tp[0] + upVector[0] * width / 2, tp[1] + upVector[1] * width / 2);
@@ -781,7 +746,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
           }
           //cw
-          else if (ship.rotational < 0) {
+          else if (rotational < 0) {
               for (var n = 0; n < ship.model.thrusterPoints.rotational.negative.length; n++) {
                 var tp = ship.model.thrusterPoints.rotational.negative[n];
                 ctx.moveTo(tp[0] + upVector[0] * width / 2, tp[1] + upVector[1] * width / 2);
@@ -792,10 +757,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
           //lateral thrusters
-          interpolateWiValue(ship, 'lateral');
-          trailLength = 40 * ship.lateral * (1 - c / (thrusterDetail + 1));
+          var lateral = ship.interpolateWiValue('lateral', time);
+          trailLength = 40 * lateral * (1 - c / (thrusterDetail + 1));
           //rightward
-          if (ship.lateral > 0) {
+          if (lateral > 0) {
             for (var n = 0; n < ship.model.thrusterPoints.lateral.positive.length; n++) {
               var tp = ship.model.thrusterPoints.lateral.positive[n];
               ctx.moveTo(tp[0] + upVector[0] * width / 2, tp[1] + upVector[1] * width / 2);
@@ -805,16 +770,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
           }
           //leftward
-          else if (ship.lateral < 0) {
-              //ctx.save();				
-              //ctx.beginPath();
-              /*ctx.moveTo(10,0);
-              ctx.lineTo(10,-5);
-              ctx.lineTo(10-40*(ship.thrusterSystem.lateral.currentStrength/ship.thrusterSystem.lateral.efficiency)*(1-(c/(this.thrusterDetail+1))),-2.5);
-              ctx.lineTo(10,0);*/
-              //ctx.globalAlpha = ((c+1)/(this.thrusterDetail+1));
-              //ctx.fill();
-              //ctx.restore();
+          else if (lateral < 0) {
               for (var n = 0; n < ship.model.thrusterPoints.lateral.negative.length; n++) {
                 var tp = ship.model.thrusterPoints.lateral.negative[n];
                 ctx.moveTo(tp[0] + upVector[0] * width / 2, tp[1] + upVector[1] * width / 2);
@@ -830,11 +786,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         //shields
-        interpolateWiValue(ship, 'shp');
-        interpolateWiValue(ship, 'shc');
-        if (ship.shp > 0) {
-          //console.log(ship.shp+', '+ship.shc);
-          var shieldCoeff = ship.shc;
+        var shp = ship.interpolateWiValue('shp', time);
+        var shc = ship.interpolateWiValue('shc', time);
+        if (shp > 0) {
+          var shieldCoeff = shc;
           ctx.save();
           ctx.fillStyle = 'dodgerblue';
           ctx.beginPath();
@@ -844,7 +799,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var shieldVert = [vert[0] + vec[0] * shieldCoeff, vert[1] + vec[1] * shieldCoeff];
             if (n == 0) ctx.moveTo(shieldVert[0], shieldVert[1]);else ctx.lineTo(shieldVert[0], shieldVert[1]);
           }
-          ctx.globalAlpha = ship.shp;
+          ctx.globalAlpha = shp;
           ctx.fill();
           ctx.restore();
         }
@@ -857,35 +812,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           ctx.lineTo(vert[0], vert[1]);
         }
         ctx.closePath();
-        ctx.fillStyle = worldInfo.targets[ship.id].color;
+        ctx.fillStyle = color;
         ctx.fill();
         ctx.restore();
       },
 
       //draws all laser objects in the given array to the given camera
-      drawHitscans: function drawHitscans(hitscans, camera) {
+      drawHitscans: function drawHitscans(hitscans, camera, time) {
         var ctx = camera.ctx;
         for (var n = 0; n < hitscans.length; n++) {
-          //if(hitscan.power == 0)
-          //	return;
           var hitscan = hitscans[n];
-          if (!worldInfo.drawing[hitscan.id]) return;
-          if (!worldInfo.targets[hitscan.id]) {
-            removeIndexFromWiCollection(n, worldInfo.hitscans);
-            n--;
-            continue;
-          }
-          interpolateWiValue(hitscan, 'startX');
-          interpolateWiValue(hitscan, 'startY');
-          interpolateWiValue(hitscan, 'endX');
-          interpolateWiValue(hitscan, 'endY');
-          interpolateWiValue(hitscan, 'power');
-          interpolateWiValue(hitscan, 'efficiency');
-          var start = camera.worldPointToCameraSpace(hitscan.startX, hitscan.startY);
-          var end = camera.worldPointToCameraSpace(hitscan.endX, hitscan.endY);
+          if (!hitscan.isDrawable) continue;
+          var startX = hitscan.interpolateWiValue('startX', time);
+          var startY = hitscan.interpolateWiValue('startY', time);
+          var endX = hitscan.interpolateWiValue('endX', time);
+          var endY = hitscan.interpolateWiValue('endY', time);
+          var power = hitscan.interpolateWiValue('power', time);
+          var efficiency = hitscan.interpolateWiValue('efficiency', time);
+          var start = camera.worldPointToCameraSpace(startX, startY);
+          var end = camera.worldPointToCameraSpace(endX, endY);
           var angle = utilities.angleBetweenVectors(end[0] - start[0], end[1] - start[1], 1, 0);
           var rightVector = utilities.rotate(0, 0, 1, 0, angle + 90);
-          var width = hitscan.power && hitscan.efficiency ? hitscan.power / hitscan.efficiency * camera.zoom : 0;
+          var width = power && efficiency ? power / efficiency * camera.zoom : 0;
           if (width < .8) width = .8;
           for (var c = 0; c <= hitscanDetail; c++) {
             var coeff = 1 - c / (hitscanDetail + 1);
@@ -896,11 +844,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             ctx.lineTo(end[0], end[1]);
             ctx.lineTo(start[0] - coeff * width * rightVector[0] / 2, start[1] - width * rightVector[1] / 2);
             ctx.arc(start[0], start[1], coeff * width / 2, -(angle - 90) * (Math.PI / 180), (angle - 90) * (Math.PI / 180) - 90, false);
-            ctx.fillStyle = shadeRGBColor(worldInfo.targets[hitscan.id].color, 0 + c / (hitscanDetail + 1));
-            /*ctx.lineTo(end[0], end[1]);
-            ctx.lineTo(endNext[0], endNext[1]);
-            ctx.lineTo(startNext[0], startNext[1]);
-            ctx.fillStyle = hitscan.color;*/
+            ctx.fillStyle = shadeRGBColor(hitscan.getMostRecentValue('color'), 0 + c / (hitscanDetail + 1));
             ctx.fill();
             ctx.restore();
           }
@@ -908,21 +852,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       },
 
       //draws all projectile objects in the given array to the given camera
-      drawProjectiles: function drawProjectiles(projectiles, camera, dt) {
+      drawProjectiles: function drawProjectiles(projectiles, camera, dt, time) {
         var ctx = camera.ctx;
         for (var c = 0; c < projectiles.length; c++) {
           var prj = projectiles[c];
-          if (!worldInfo.drawing[prj.id]) continue;
-          if (!worldInfo.targets[prj.id]) {
-            removeIndexFromWiCollection(c, worldInfo.prjs);
-            c--;
-            continue;
-          }
-          interpolateWiValue(prj, 'x');
-          interpolateWiValue(prj, 'y');
-          var start = camera.worldPointToCameraSpace(prj.x, prj.y);
-          var end = camera.worldPointToCameraSpace(prj.x + worldInfo.targets[prj.id].velocityX * dt, prj.y + worldInfo.targets[prj.id].velocityY * dt);
-          var radius = worldInfo.targets[prj.id].radius;
+          if (!prj.isDrawable) continue;
+          var x = prj.interpolateWiValue('x', time);
+          var y = prj.interpolateWiValue('y', time);
+          var velX = prj.getMostRecentValue('velocityX');
+          var velY = prj.getMostRecentValue('velocityY');
+          var start = camera.worldPointToCameraSpace(x, y);
+          var end = camera.worldPointToCameraSpace(x + velX * dt, y + velY * dt);
+          var radius = prj.getMostRecentValue('radius');
 
           if (start[0] > camera.width + radius || start[0] < 0 - radius || start[1] > camera.height + radius || start[1] < 0 - radius) continue;
 
@@ -930,7 +871,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           ctx.beginPath();
           ctx.moveTo(start[0], start[1]);
           ctx.lineTo(end[0], end[1]);
-          ctx.strokeStyle = worldInfo.targets[prj.id].color;
+          ctx.strokeStyle = prj.getMostRecentValue('color');
           var width = radius * camera.zoom;
           ctx.lineWidth = width > 1 ? width : 1;
           ctx.stroke();
@@ -938,29 +879,24 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
       },
 
-      drawRadials: function drawRadials(radials, camera, dt) {
+      drawRadials: function drawRadials(radials, camera, dt, time) {
         var ctx = camera.ctx;
         for (var c = 0; c < radials.length; c++) {
           var radial = radials[c];
-          if (!worldInfo.drawing[radial.id]) return;
-          if (!worldInfo.targets[radial.id]) {
-            removeIndexFromWiCollection(c, worldInfo.radials);
-            c--;
-            continue;
-          }
-          interpolateWiValue(radial, 'x');
-          interpolateWiValue(radial, 'y');
-          interpolateWiValue(radial, 'radius');
-          interpolateWiValue(radial, 'velocity');
-          var center = camera.worldPointToCameraSpace(radial.x, radial.y);
-          var frameVelocity = radial.velocity * dt;
+          if (!radial.isDrawable) continue;
+          var x = radial.interpolateWiValue('x', time);
+          var y = radial.interpolateWiValue('y', time);
+          var velocity = radial.interpolateWiValue('velocity', time);
+          var radius = radial.interpolateWiValue('radius', time);
+          var center = camera.worldPointToCameraSpace(x, y);
+          var frameVelocity = velocity * dt;
 
-          if (center[0] > camera.width + radial.radius + frameVelocity || center[0] < 0 - radial.radius - frameVelocity || center[1] > camera.height + radial.radius + frameVelocity || center[1] < 0 - radial.radius - frameVelocity) return;
+          if (center[0] > camera.width + radius + frameVelocity || center[0] < 0 - radius - frameVelocity || center[1] > camera.height + radius + frameVelocity || center[1] < 0 - radius - frameVelocity) return;
 
           ctx.save();
           ctx.beginPath();
-          ctx.arc(center[0], center[1], (radial.radius + frameVelocity / 2) * camera.zoom, 0, Math.PI * 2);
-          ctx.strokeStyle = worldInfo.targets[radial.id].color;
+          ctx.arc(center[0], center[1], (radius + frameVelocity / 2) * camera.zoom, 0, Math.PI * 2);
+          ctx.strokeStyle = radial.getMostRecentValue('color');
           var width = frameVelocity * camera.zoom;
           ctx.lineWidth = width > .3 ? width : .1;
           ctx.stroke();
@@ -1024,36 +960,44 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       },
 
       //draws the heads-up display to the given camera
-      drawHUD: function drawHUD(camera) {
+      drawHUD: function drawHUD(camera, time) {
+        var hudInfo = worldInfo.getPlayerInfo();
+        if (!hudInfo.isDrawable) return;
         var ctx = camera.ctx;
         ctx.save(); // NEW
         ctx.textAlign = 'center';
         ctx.textBaseline = 'center';
         ctx.fillRect(0, camera.height, camera.width, -30);
-        utilities.fillText(ctx, hudInfo.stabilized ? 'assisted' : 'manual', camera.width / 2, camera.height - 10, "bold 12pt Orbitron", hudInfo.stabilized ? 'green' : 'red');
+        utilities.fillText(ctx, hudInfo.current.stabilized ? 'assisted' : 'manual', camera.width / 2, camera.height - 10, "bold 12pt Orbitron", hudInfo.current.stabilized ? 'green' : 'red');
         ctx.textAlign = 'left';
         utilities.fillText(ctx, 'limiter', 10, camera.height - 10, "8pt Orbitron", 'white');
-        if (hudInfo.velocityClamps.enabled) {
+        if (hudInfo.current.clampsEnabled) {
+          var medial = hudInfo.interpolateWiValue('clampMedial', time);
+          var lateral = hudInfo.interpolateWiValue('clampLateral', time);
+          var rotational = hudInfo.interpolateWiValue('clampRotational', time);
           ctx.textAlign = 'right';
-          utilities.fillText(ctx, Math.round(hudInfo.velocityClamps.medial), 110, camera.height - 10, "10pt Orbitron", 'green');
-          utilities.fillText(ctx, Math.round(hudInfo.velocityClamps.lateral), 160, camera.height - 10, "10pt Orbitron", 'cyan');
-          utilities.fillText(ctx, Math.round(hudInfo.velocityClamps.rotational), 195, camera.height - 10, "10pt Orbitron", 'yellow');
+          utilities.fillText(ctx, Math.round(medial), 110, camera.height - 10, "10pt Orbitron", 'green');
+          utilities.fillText(ctx, Math.round(lateral), 160, camera.height - 10, "10pt Orbitron", 'cyan');
+          utilities.fillText(ctx, Math.round(rotational), 195, camera.height - 10, "10pt Orbitron", 'yellow');
         } else {
           ctx.textAlign = 'left';
           utilities.fillText(ctx, 'disabled', 110, camera.height - 10, "10pt Orbitron", 'red');
         }
-        //utilities.fillText(ctx, "Thruster clamps: "+((this.ship.stabilizer.clamps.enabled)?'Medial '+Math.round(this.ship.stabilizer.clamps.medial)+' Lateral '+Math.round(this.ship.stabilizer.clamps.lateral)+' Rotational '+Math.round(this.ship.stabilizer.clamps.rotational):'disabled'),0,camera.height-10,"12pt Prime",'white')
+
         ctx.textAlign = 'right';
-        utilities.fillText(ctx, 'T ' + Math.round(interpolateFromWiInterval(lastPlayerInfo.thrusterPower, playerInfo.thrusterPower) * 100) + '%', camera.width - 220, camera.height - 10, "10pt Orbitron", 'green');
-        utilities.fillText(ctx, ' W ' + Math.round(interpolateFromWiInterval(lastPlayerInfo.weaponPower, playerInfo.weaponPower) * 100) + '%', camera.width - 120, camera.height - 10, "10pt Orbitron", 'red');
-        utilities.fillText(ctx, ' S ' + Math.round(interpolateFromWiInterval(lastPlayerInfo.shieldPower, playerInfo.shieldPower) * 100) + '%', camera.width - 20, camera.height - 10, "10pt Orbitron", 'dodgerblue');
+        var thrusterPower = hudInfo.interpolateWiValue('thrusterPower', time);
+        var weaponPower = hudInfo.interpolateWiValue('weaponPower', time);
+        var shieldPower = hudInfo.interpolateWiValue('shieldPower', time);
+        utilities.fillText(ctx, 'T ' + Math.round(thrusterPower * 100) + '%', camera.width - 220, camera.height - 10, "10pt Orbitron", 'green');
+        utilities.fillText(ctx, ' W ' + Math.round(weaponPower * 100) + '%', camera.width - 120, camera.height - 10, "10pt Orbitron", 'red');
+        utilities.fillText(ctx, ' S ' + Math.round(shieldPower * 100) + '%', camera.width - 20, camera.height - 10, "10pt Orbitron", 'dodgerblue');
 
         ctx.restore(); // NEW
       },
 
       //draws the minimap to the given camera
       //note that the minimap camera has a viewport
-      drawMinimap: function drawMinimap(camera, grid) {
+      drawMinimap: function drawMinimap(camera, grid, time) {
         var ctx = camera.viewport.parent.ctx;
         var viewportStart = [camera.viewport.parent.width * camera.viewport.startX, camera.viewport.parent.height * camera.viewport.startY];
         var viewportEnd = [camera.viewport.parent.width * camera.viewport.endX, camera.viewport.parent.height * camera.viewport.endY];
@@ -1071,9 +1015,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         drawing.drawAsteroids(worldInfo.asteroids, camera);
         for (var n = worldInfo.objs.length - 1; n >= 0; n--) {
           var ship = worldInfo.objs[n];
-          if (worldInfoModule.modelInfo[ship.id]) {
-            ship.model = worldInfoModule.modelInfo[ship.id];
-            drawing.drawShipMinimap(ship, camera);
+          var model = worldInfo.getModel(ship.id);
+          if (model && ship.isDrawable) {
+            ship.model = model;
+            drawing.drawShipMinimap(ship, camera, time);
           }
         }
         ctx.restore();
@@ -1182,7 +1127,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var utilities = require('../server/utilities.js');
 
     var wiInterval = 0;
-    var lastWorldUpdate = 0;
     var playerId = 0;
 
     var hudInfo = {};
@@ -1203,6 +1147,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.prjs = [];
           this.hitscans = [];
           this.objInfos = {};
+          this.objTracker = {};
         }
       }, {
         key: "pushCollectionFromDataToWI",
@@ -1210,6 +1155,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           var now = Date.now().valueOf();
           for (var c = 0; c < dwi[type].length; c++) {
             var obj = dwi[type][c];
+            this.objTracker[obj.id] = true;
             if (this.objInfos[obj.id]) {
               this.objInfos[obj.id].pushState(obj, now);
             } else {
@@ -1220,23 +1166,48 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           }
           for (var _c = 0; _c < this[type].length; _c++) {
             var _obj = this[type][_c];
-            if (!this.objInfos[_obj.id]) removeIndexFromWiCollection(_c, this[type]);
+            if (!this.objTracker[_obj.id]) removeIndexFromWiCollection(_c, this[type]);
           }
         }
       }, {
         key: "prep",
         value: function prep() {
-          this.objInfos = {};
+          this.objTracker = {};
         }
       }, {
         key: "pushWiData",
-        value: function pushWiData(dwi) {
+        value: function pushWiData(data) {
+          if (data.interval) wiInterval = data.interval;
+          if (data.id) playerId = data.id;
+          var dwi = data.worldInfo;
           this.prep();
           this.pushCollectionFromDataToWI(dwi, 'objs');
           this.pushCollectionFromDataToWI(dwi, 'prjs');
           this.pushCollectionFromDataToWI(dwi, 'hitscans');
           this.pushCollectionFromDataToWI(dwi, 'radials');
           this.asteroids = dwi.asteroids;
+        }
+      }, {
+        key: "addShips",
+        value: function addShips(ships) {
+          Object.keys(ships).forEach(function (id) {
+            modelInfo[id] = ships[id];
+          });
+        }
+      }, {
+        key: "addShip",
+        value: function addShip(shipInfo) {
+          modelInfo[shipInfo.id] = shipInfo.model;
+        }
+      }, {
+        key: "getPlayerInfo",
+        value: function getPlayerInfo() {
+          return this.objInfos[playerId];
+        }
+      }, {
+        key: "getModel",
+        value: function getModel(id) {
+          return modelInfo[id];
         }
       }]);
 
@@ -1252,6 +1223,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.states = [initialState];
         this.stateCount = 3;
         this.lastStateTime = time;
+        this.id = initialState.id;
       }
 
       _createClass(ObjInfo, [{
@@ -1259,24 +1231,49 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         value: function pushState(obj, time) {
           this.lastStateTime = time;
           this.states.push(obj);
-          while (states.length > this.stateCount) {
+          while (this.states.length > this.stateCount) {
             this.states.shift();
           }
         }
       }, {
         key: "interpolateWiValue",
         value: function interpolateWiValue(val, time) {
+          return this.interpolateValue(val, time, utilities.lerp);
+        }
+      }, {
+        key: "interpolateRotationValue",
+        value: function interpolateRotationValue(val, time) {
+          return this.interpolateValue(val, time, utilities.rotationLerp);
+        }
+      }, {
+        key: "interpolateValue",
+        value: function interpolateValue(val, time, lerp) {
           var perc = (time - this.lastStateTime) / wiInterval;
           if (perc <= 1) {
-            return utilities.lerp(this.states[0][val], this.states[1][val], perc);
+            return lerp(this.states[0][val], this.states[1][val], perc);
           } else {
-            return utilities.lerp(this.states[1][val], this.states[2][val], utilities.clamp(0, perc - 1, 1));
+            return lerp(this.states[1][val], this.states[2][val], utilities.clamp(0, perc - 1, 1));
           }
+        }
+      }, {
+        key: "getMostRecentValue",
+        value: function getMostRecentValue(val) {
+          return this.states[this.stateCount - 1][val];
         }
       }, {
         key: "isDrawable",
         get: function get() {
           return this.states.length === this.stateCount;
+        }
+      }, {
+        key: "hasModel",
+        get: function get() {
+          return Boolean(modelInfo[this.id]);
+        }
+      }, {
+        key: "current",
+        get: function get() {
+          return this.states[this.stateCount - 1];
         }
       }]);
 
@@ -1285,57 +1282,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var modelInfo = {};
 
-    function interpolateFromWiInterval(from, to) {
-      var now = Date.now().valueOf();
-      var perc = (now - lastWorldUpdate) / wiInterval;
-      return utilities.lerp(from, to, utilities.clamp(0, perc, 1));
-    }
-
     function removeIndexFromWiCollection(index, collection) {
       var obj = collection[index];
       delete worldInfo.objInfos[obj.id];
       collection.splice(index, 1);
     }
 
-    function pushCollectionFromDataToWI(dwi, type) {
-      worldInfo.pushCollectionFromDataToWI(dwi, type);
-    }
-
-    var getPlayerInfo = function getPlayerInfo() {
-      return worldInfo.objInfos[playerId];
-    };
-
-    function resetWi() {
-      worldInfo.reset();
-    }
-
-    function addShips(ships) {
-      Object.keys(ships).forEach(function (id) {
-        modelInfo[id] = ships[id];
-      });
-    }
-
-    function addShip(shipInfo) {
-      modelInfo[shipInfo.id] = shipInfo.model;
-    }
-
-    var pushWiData = function pushWiData(data) {
-      if (data.interval) wiInterval = data.interval;
-      if (data.id) playerId = data.id;
-
-      var now = Date.now().valueOf();
-      lastWorldUpdate = now;
-      worldInfo.pushWiData(data.worldInfo);
-    };
-
     module.exports = {
-      getPlayerInfo: getPlayerInfo,
       worldInfo: worldInfo,
-      modelInfo: modelInfo,
-      addShips: addShips,
-      addShip: addShip,
-      interpolateFromWiInterval: interpolateFromWiInterval,
-      resetWi: resetWi
+      modelInfo: modelInfo
     };
   }, { "../server/utilities.js": 5 }], 4: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
@@ -1493,6 +1448,22 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         return { x: x, y: y };
+      },
+
+      // Translates an arbitrary orientation into the range of -180 to 180
+      correctOrientation: function correctOrientation(orientation) {
+        while (orientation > 180) {
+          orientation -= 360;
+        }while (orientation < -180) {
+          orientation += 360;
+        }return orientation;
+      },
+
+      rotationLerp: function rotationLerp(from, to, percent) {
+        if (Math.abs(to - from) > 180) {
+          var adjustment = from > to ? -360 : 360;
+          return utilities.correctOrientation(utilities.lerp(from + adjustment, to, percent));
+        } else return utilities.lerp(from, to, percent);
       },
 
       clamp: function clamp(min, val, max) {

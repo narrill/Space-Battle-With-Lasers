@@ -116,6 +116,25 @@ const utilities = {
     return { x, y };
   },
 
+  // Translates an arbitrary orientation into the range of -180 to 180
+  correctOrientation: (orientation) => {
+    while (orientation > 180)
+      orientation -= 360;
+    while (orientation < -180)
+      orientation += 360;
+
+    return orientation;
+  },
+
+  rotationLerp: (from, to, percent) => {
+    if(Math.abs(to - from) > 180) {
+      const adjustment = (from > to) ? -360 : 360;
+      return utilities.correctOrientation(utilities.lerp(from + adjustment, to, percent));
+    }
+    else
+      return utilities.lerp(from, to, percent);
+  },
+
   clamp: (min, val, max) => Math.max(min, Math.min(max, val)),
 
   distanceSqr: (p1, p2) => {
