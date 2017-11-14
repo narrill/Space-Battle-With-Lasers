@@ -1159,9 +1159,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: "pushCollectionFromDataToWI",
         value: function pushCollectionFromDataToWI(dwi, type) {
+          var dwiCollection = dwi[type] || [];
           var now = Date.now().valueOf();
-          for (var c = 0; c < dwi[type].length; c++) {
-            var obj = dwi[type][c];
+          for (var c = 0; c < dwiCollection.length; c++) {
+            var obj = dwiCollection[c];
             this.objTracker[obj.id] = true;
             if (this.objInfos[obj.id]) {
               this.objInfos[obj.id].pushState(obj, now);
@@ -1194,16 +1195,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.pushCollectionFromDataToWI(dwi, 'radials');
 
           // Asteroids
-          this.asteroids.colors = dwi.asteroids.colors;
+          if (dwi.asteroids.colors) this.asteroids.colors = dwi.asteroids.colors;
 
-          var destroyedAsteroids = {};
-          for (var c = 0; c < dwi.asteroids.objs.length; c++) {
-            var a = dwi.asteroids.objs[c];
-            if (a.destroyed) destroyedAsteroids[a.destroyed] = true;else this.asteroids.objs.push(a);
-          }
-          for (var _c2 = 0; _c2 < this.asteroids.objs.length; _c2++) {
-            var _a = this.asteroids.objs[_c2];
-            if (destroyedAsteroids[_a.id]) this.asteroids.objs.splice(_c2, 1);
+          if (dwi.asteroids.objs) {
+            var destroyedAsteroids = {};
+            for (var c = 0; c < dwi.asteroids.objs.length; c++) {
+              var a = dwi.asteroids.objs[c];
+              if (a.destroyed) destroyedAsteroids[a.destroyed] = true;else this.asteroids.objs.push(a);
+            }
+            for (var _c2 = 0; _c2 < this.asteroids.objs.length; _c2++) {
+              var _a = this.asteroids.objs[_c2];
+              if (destroyedAsteroids[_a.id]) this.asteroids.objs.splice(_c2, 1);
+            }
           }
         }
       }, {

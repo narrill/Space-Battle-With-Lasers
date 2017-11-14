@@ -466,13 +466,7 @@ const updaters = {
         const fetchInfo = gameFunctions.fetchFromTileArray(this.game, [this.x, this.y], 15000);
         const worldInfo = {
           objs: [],
-          asteroids: {
-            objs: [],
-            colors: [],
-          },
-          radials: [],
-          prjs: [],
-          hitscans: [],
+          asteroids: {}
         };
         for (let c = 0; c < fetchInfo.obj.length; c++) {
           const o = fetchInfo.obj[c];
@@ -519,21 +513,27 @@ const updaters = {
           }
           worldInfo.objs.push(wi);
         }
-        for (let c = 0; c < this.game.asteroids.colors.length; c++) {
-          worldInfo.asteroids.colors.push(this.game.asteroids.colors[c]);
+
+        if(!this.remoteInput.sentAsteroidColors) {
+          worldInfo.asteroids.colors = [];
+          for (let c = 0; c < this.game.asteroids.colors.length; c++) {
+            worldInfo.asteroids.colors.push(this.game.asteroids.colors[c]);
+          }
+          this.remoteInput.sentAsteroidColors = true;
         }
 
         const newAsteroidsById = {};
         for (let c = 0; c < fetchInfo.asteroid.length; c++) {
           const a = fetchInfo.asteroid[c];
           newAsteroidsById[a.id] = a;
-          worldInfo.asteroids.objs.push();
         }
         const previousAsteroidsById = this.remoteInput.nonInterp.asteroids || {};
         const newKeys = Object.keys(newAsteroidsById);
         for(let c = 0; c < newKeys.length; c++) {
           const id = newKeys[c];
           if(!previousAsteroidsById[id]) {
+            if(!worldInfo.asteroids.objs)
+              worldInfo.asteroids.objs = [];
             const a = newAsteroidsById[id];
             worldInfo.asteroids.objs.push({
               id: a.id,
@@ -548,6 +548,8 @@ const updaters = {
         for(let c = 0; c < prevKeys.length; c++) {
           const id = prevKeys[c];
           if(!newAsteroidsById[id]) {
+            if(!worldInfo.asteroids.objs)
+              worldInfo.asteroids.objs = [];
             worldInfo.asteroids.objs.push({
               destroyed: id
             });
@@ -555,6 +557,8 @@ const updaters = {
         }
         this.remoteInput.nonInterp.asteroids = newAsteroidsById;
 
+        if(fetchInfo.prj.length)
+          worldInfo.prjs = [];
         for (let c = 0; c < fetchInfo.prj.length; c++) {
           const p = fetchInfo.prj[c];
           if (p.visible) {
@@ -569,6 +573,9 @@ const updaters = {
             });
           }
         }
+
+        if(fetchInfo.hitscan.length)
+          worldInfo.hitscans = [];
         for (let c = 0; c < fetchInfo.hitscan.length; c++) {
           const h = fetchInfo.hitscan[c];
           worldInfo.hitscans.push({
@@ -582,6 +589,9 @@ const updaters = {
             efficiency: h.efficiency,
           });
         }
+
+        if(fetchInfo.radial.length)
+          worldInfo.radials = [];
         for (let c = 0; c < fetchInfo.radial.length; c++) {
           const r = fetchInfo.radial[c];
           worldInfo.radials.push({

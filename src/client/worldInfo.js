@@ -25,9 +25,10 @@ class WorldInfo {
 		this.objTracker = {};
 	}
 	pushCollectionFromDataToWI(dwi, type) {
+		const dwiCollection = dwi[type] || [];
 		const now = Date.now().valueOf();
-		for(let c = 0;c<dwi[type].length;c++){
-			const obj = dwi[type][c];
+		for(let c = 0;c<dwiCollection.length;c++){
+			const obj = dwiCollection[c];
 			this.objTracker[obj.id] = true;
 			if(this.objInfos[obj.id]) {
 				this.objInfos[obj.id].pushState(obj, now);
@@ -58,20 +59,23 @@ class WorldInfo {
 		this.pushCollectionFromDataToWI(dwi,'radials');
 		
 		// Asteroids
-		this.asteroids.colors = dwi.asteroids.colors;
+		if(dwi.asteroids.colors)
+			this.asteroids.colors = dwi.asteroids.colors;
 
-		const destroyedAsteroids = {};
-		for(let c = 0; c < dwi.asteroids.objs.length; c++) {
-			const a = dwi.asteroids.objs[c];
-			if(a.destroyed)
-				destroyedAsteroids[a.destroyed] = true;
-			else
-				this.asteroids.objs.push(a);
-		}
-		for(let c = 0; c < this.asteroids.objs.length; c++) {
-			const a = this.asteroids.objs[c];
-			if(destroyedAsteroids[a.id])
-				this.asteroids.objs.splice(c, 1);
+		if(dwi.asteroids.objs) {
+			const destroyedAsteroids = {};
+			for(let c = 0; c < dwi.asteroids.objs.length; c++) {
+				const a = dwi.asteroids.objs[c];
+				if(a.destroyed)
+					destroyedAsteroids[a.destroyed] = true;
+				else
+					this.asteroids.objs.push(a);
+			}
+			for(let c = 0; c < this.asteroids.objs.length; c++) {
+				const a = this.asteroids.objs[c];
+				if(destroyedAsteroids[a.id])
+					this.asteroids.objs.splice(c, 1);
+			}
 		}
 	}
 	addShips(ships) {
