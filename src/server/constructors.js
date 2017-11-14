@@ -368,7 +368,7 @@ const constructors = {
       mouse: [],
       mouseDirection: 0,
       lastSend: 0,
-      sendInterval: 33.333,
+      sendInterval: 66.6666,
       nonInterp:{}
     };
     function mh(data) {
