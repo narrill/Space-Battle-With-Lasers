@@ -142,6 +142,7 @@ const generateStarField = (stars) => {
   }
 };
 
+let report = false;
 const keys = require('../server/keys.js');
 const myKeys = keys.myKeys;
 myKeys.keydown = [];
@@ -171,8 +172,11 @@ window.addEventListener("keydown",function(e){
       entry = entry.slice(0,-1);
     else if(e.keyCode!=13) entry+=String.fromCharCode(e.keyCode);
   }
-  else if(state === GAME_STATES.PLAYING)
+  else if(state === GAME_STATES.PLAYING) {
     socket.emit('input', {keyCode:e.keyCode,pos:1});
+    if(e.key === 'r')
+      report = true;
+  }
   myKeys.keydown[e.keyCode] = true;
   e.preventDefault();
   e.stopPropagation();
@@ -447,6 +451,10 @@ const init = () => {
   socket.on('worldInfo', (data) => {
     if(state === GAME_STATES.WAIT)
       state = GAME_STATES.PLAYING;
+    if(report) {
+      console.log(data);
+      report = false;
+    }
     worldInfo.pushWiData(data);
   });
 
@@ -467,10 +475,6 @@ const init = () => {
     worldInfo.addShips(ships);
   });
   context = canvas.getContext('2d');
-
-  inputBox = document.querySelector("#inputBox");
-
-  inputBox = document.querySelector("#inputBox");
 
   camera = new Camera(canvas);
   minimapCamera = new Camera(canvas, {

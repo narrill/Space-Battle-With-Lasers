@@ -569,9 +569,6 @@ const updaters = {
             color: r.color,
           });
         }
-        const us = worldInfo.objs[this.id];
-
-
         d.worldInfo = worldInfo;
         // d.powerDistribution = 
         // console.log('remote send');

@@ -180,6 +180,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
     };
 
+    var report = false;
     var keys = require('../server/keys.js');
     var myKeys = keys.myKeys;
     myKeys.keydown = [];
@@ -206,7 +207,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     window.addEventListener("keydown", function (e) {
       if (state == GAME_STATES.CHOOSESHIP) {
         if (e.keyCode == 8 && entry.length > 0) entry = entry.slice(0, -1);else if (e.keyCode != 13) entry += String.fromCharCode(e.keyCode);
-      } else if (state === GAME_STATES.PLAYING) socket.emit('input', { keyCode: e.keyCode, pos: 1 });
+      } else if (state === GAME_STATES.PLAYING) {
+        socket.emit('input', { keyCode: e.keyCode, pos: 1 });
+        if (e.key === 'r') report = true;
+      }
       myKeys.keydown[e.keyCode] = true;
       e.preventDefault();
       e.stopPropagation();
@@ -446,6 +450,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       socket.on('worldInfo', function (data) {
         if (state === GAME_STATES.WAIT) state = GAME_STATES.PLAYING;
+        if (report) {
+          console.log(data);
+          report = false;
+        }
         worldInfo.pushWiData(data);
       });
 
@@ -466,10 +474,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         worldInfo.addShips(ships);
       });
       context = canvas.getContext('2d');
-
-      inputBox = document.querySelector("#inputBox");
-
-      inputBox = document.querySelector("#inputBox");
 
       camera = new Camera(canvas);
       minimapCamera = new Camera(canvas, {
