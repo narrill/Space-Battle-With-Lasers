@@ -410,9 +410,9 @@ const updaters = {
     // rotational motion - mouse    
     // console.log(-this.remoteInput.mouseDirection); 
     const mouseDirection = this.remoteInput.mouseDirection;
-    const coeff = (15 / this.remoteInput.sendInterval) * dt * ts.rotational.maxStrength;
+    const mouseSensitivity = 150;
     objControls.objRotationalThrusters.call(this,
-      (-mouseDirection * coeff) / stab.thrustRatio,
+      (((-mouseDirection) / mouseSensitivity) * ts.rotational.maxStrength) / stab.thrustRatio,
     );
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_LEFT]) {
       objControls.objRotationalThrusters.call(this, ts.rotational.maxStrength / stab.thrustRatio);

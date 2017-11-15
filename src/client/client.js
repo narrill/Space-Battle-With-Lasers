@@ -65,6 +65,21 @@ class Oscillator {
   }
 }
 
+class LooseTimer {
+  constructor(intervalMS, func) {
+    this.interval = intervalMS;
+    this.lastTick = 0;
+    this.func = func;
+  }
+  check(now = Date.now().valueOf()) {
+    const diffTicks = (now - this.lastTick) / this.interval;
+    if(diffTicks >= 1) {
+      this.lastTick += this.interval * Math.floor(diffTicks);
+      this.func();
+    }
+  }
+}
+
 let titleMusic;
 let lastTime = 0;
 let accumulator = 0;
@@ -257,6 +272,16 @@ const resetDirection = () => {
   myMouse.direction = 0;
 }
 
+let lastMouseDirection = 0;
+const mouseTimer = new LooseTimer(50, () => {
+  if(myMouse.direction !== lastMouseDirection) {
+    lastMouseDirection = myMouse.direction;
+    console.log(`mouse report ${myMouse.direction}`);
+    socket.emit('input', {md: myMouse.direction});
+    resetDirection();
+  }
+});
+
 // Moves the dependent camera to the location and orientation of the main 
 // camera, but with the given Z-offset to simulate depth
 const linkCameraWithOffset = (mainCamera, dependentCamera, offset) => {
@@ -300,12 +325,9 @@ const update = (dt) => {
       camera.zoom = camera.maxZoom;
     else if(camera.zoom<camera.minZoom)
       camera.zoom = camera.minZoom;
+    resetWheel();
 
-    
-    //drawing.clearCamera(cameras.starCamera);
-    //game.clearCamera(cameras.minimapCamera);
-    //console.log(myMouse.direction);
-    socket.emit('input', {md:(myMouse.direction*myMouse.sensitivity)/dt});
+    mouseTimer.check();
     if(myMouse[myMouse.BUTTONS.LEFT] != null)
     {
       socket.emit('input', {mb:myMouse.BUTTONS.LEFT,pos:myMouse[myMouse.BUTTONS.LEFT]});
@@ -316,7 +338,6 @@ const update = (dt) => {
       socket.emit('input', {mb:myMouse.BUTTONS.RIGHT,pos:myMouse[myMouse.BUTTONS.RIGHT]});
       myMouse[myMouse.BUTTONS.RIGHT] = undefined;
     }
-    resetMouse();
   }
 }
 

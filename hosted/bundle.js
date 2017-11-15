@@ -113,6 +113,31 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       return Oscillator;
     }();
 
+    var LooseTimer = function () {
+      function LooseTimer(intervalMS, func) {
+        _classCallCheck(this, LooseTimer);
+
+        this.interval = intervalMS;
+        this.lastTick = 0;
+        this.func = func;
+      }
+
+      _createClass(LooseTimer, [{
+        key: "check",
+        value: function check() {
+          var now = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : Date.now().valueOf();
+
+          var diffTicks = (now - this.lastTick) / this.interval;
+          if (diffTicks >= 1) {
+            this.lastTick += this.interval * Math.floor(diffTicks);
+            this.func();
+          }
+        }
+      }]);
+
+      return LooseTimer;
+    }();
+
     var titleMusic = void 0;
     var lastTime = 0;
     var accumulator = 0;
@@ -289,6 +314,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       myMouse.direction = 0;
     };
 
+    var lastMouseDirection = 0;
+    var mouseTimer = new LooseTimer(50, function () {
+      if (myMouse.direction !== lastMouseDirection) {
+        lastMouseDirection = myMouse.direction;
+        console.log("mouse report " + myMouse.direction);
+        socket.emit('input', { md: myMouse.direction });
+        resetDirection();
+      }
+    });
+
     // Moves the dependent camera to the location and orientation of the main 
     // camera, but with the given Z-offset to simulate depth
     var linkCameraWithOffset = function linkCameraWithOffset(mainCamera, dependentCamera, offset) {
@@ -320,11 +355,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         if (myKeys.keydown[myKeys.KEYBOARD.KEY_DOWN] && camera.zoom >= camera.minZoom) camera.zoom *= 1 + (.33 - 1) * dt;
         if (myMouse.wheel) camera.zoom *= 1 + myMouse.wheel / 2000;
         if (camera.zoom > camera.maxZoom) camera.zoom = camera.maxZoom;else if (camera.zoom < camera.minZoom) camera.zoom = camera.minZoom;
+        resetWheel();
 
-        //drawing.clearCamera(cameras.starCamera);
-        //game.clearCamera(cameras.minimapCamera);
-        //console.log(myMouse.direction);
-        socket.emit('input', { md: myMouse.direction * myMouse.sensitivity / dt });
+        mouseTimer.check();
         if (myMouse[myMouse.BUTTONS.LEFT] != null) {
           socket.emit('input', { mb: myMouse.BUTTONS.LEFT, pos: myMouse[myMouse.BUTTONS.LEFT] });
           myMouse[myMouse.BUTTONS.LEFT] = undefined;
@@ -333,7 +366,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           socket.emit('input', { mb: myMouse.BUTTONS.RIGHT, pos: myMouse[myMouse.BUTTONS.RIGHT] });
           myMouse[myMouse.BUTTONS.RIGHT] = undefined;
         }
-        resetMouse();
       }
     };
 
