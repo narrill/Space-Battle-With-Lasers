@@ -106,7 +106,6 @@ const constructors = {
 
     Object.values(game.socketSubscriptions).forEach((socket) => {
       if (ownerId && socket.id === ownerId && ship.model.overlay.ranges) {
-        console.log('yours');
         const modelCopy = utilities.deepObjectMerge.call({}, ship.model);
         const key2s = Object.keys(modelCopy.overlay.ranges);
         for (let n = 0; n < key2s.length; n++) {
@@ -115,13 +114,11 @@ const constructors = {
           if (r) r = r.range;
           if (r) modelCopy.overlay.ranges[key2] = r;
         }
-        console.log(modelCopy);
         socket.emit('ship', { id: ship.id, model: modelCopy });
       } else { socket.emit('ship', { id: ship.id, model: ship.model }); }
     });
 
     // this.updatables.push(ship);
-
     return ship;
   },
 

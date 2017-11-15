@@ -39,7 +39,6 @@ const collisions = {
   },
 
   targetingLaserCollision: (hitscan, obj) => {
-    const ts = hitscan.owner.targetingSystem;
     for (let c = 0; c < ts.targets.length; c++) {
       if (ts.targets[c].obj === obj) { return; }
     }

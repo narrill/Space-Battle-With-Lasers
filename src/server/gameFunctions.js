@@ -209,126 +209,124 @@ const gameFunctions = {
     // hitscan collisions
     for (let n = 0; n < game.hitscans.length; n++) {
       const hitscan = game.hitscans[n];
-      if (hitscan.power > 0) {
-        let obj; // the chosen object
-        let tValOfObj = Number.MAX_VALUE;
-        const xInv = hitscan.endX < hitscan.startX;
-        const yInv = hitscan.endY < hitscan.startY;
-        const start = [
-          (xInv) ? hitscan.endX : hitscan.startX,
-          (yInv) ? hitscan.endY : hitscan.startY,
-        ];
-        const end = [
-          (xInv) ? hitscan.startX : hitscan.endX,
-          (yInv) ? hitscan.startY : hitscan.endY,
-        ];
-        const hitscanVertices = [
-          [hitscan.startX, hitscan.startY],
-          [hitscan.endX, hitscan.endY],
-          [hitscan.endX + (hitscan.velocityX * dt), hitscan.endY + (hitscan.velocityY * dt)],
-          [hitscan.startX + (hitscan.velocityX * dt), hitscan.startY + (hitscan.velocityY * dt)],
-        ];
+      let obj; // the chosen object
+      let tValOfObj = Number.MAX_VALUE;
+      const xInv = hitscan.endX < hitscan.startX;
+      const yInv = hitscan.endY < hitscan.startY;
+      const start = [
+        (xInv) ? hitscan.endX : hitscan.startX,
+        (yInv) ? hitscan.endY : hitscan.startY,
+      ];
+      const end = [
+        (xInv) ? hitscan.startX : hitscan.endX,
+        (yInv) ? hitscan.startY : hitscan.endY,
+      ];
+      const hitscanVertices = [
+        [hitscan.startX, hitscan.startY],
+        [hitscan.endX, hitscan.endY],
+        [hitscan.endX + (hitscan.velocityX * dt), hitscan.endY + (hitscan.velocityY * dt)],
+        [hitscan.startX + (hitscan.velocityX * dt), hitscan.startY + (hitscan.velocityY * dt)],
+      ];
 
-        // hitscan-asteroid
-        for (let c = 0; c < game.asteroids.objs.length; c++) {
-          const gameObj = game.asteroids.objs[c];
-          if (!(gameObj.x + gameObj.destructible.radius < start[0]
-            || gameObj.x - gameObj.destructible.radius > end[0]
-            || gameObj.y + gameObj.destructible.radius < start[1]
-            || gameObj.y - gameObj.destructible.radius > end[1])) {
-            const gameDistance = utilities.distanceFromPointToLine(
-              gameObj.x,
-              gameObj.y,
-              hitscan.startX,
-              hitscan.startY,
-              hitscan.endX,
-              hitscan.endY,
-            );
-            if (gameDistance[0] < gameObj.destructible.radius && gameDistance[1] < tValOfObj) {
-              obj = gameObj;
-              tValOfObj = gameDistance[1];
-            }
+      // hitscan-asteroid
+      for (let c = 0; c < game.asteroids.objs.length; c++) {
+        const gameObj = game.asteroids.objs[c];
+        if (!(gameObj.x + gameObj.destructible.radius < start[0]
+          || gameObj.x - gameObj.destructible.radius > end[0]
+          || gameObj.y + gameObj.destructible.radius < start[1]
+          || gameObj.y - gameObj.destructible.radius > end[1])) {
+          const gameDistance = utilities.distanceFromPointToLine(
+            gameObj.x,
+            gameObj.y,
+            hitscan.startX,
+            hitscan.startY,
+            hitscan.endX,
+            hitscan.endY,
+          );
+          if (gameDistance[0] < gameObj.destructible.radius && gameDistance[1] < tValOfObj) {
+            obj = gameObj;
+            tValOfObj = gameDistance[1];
           }
         }
+      }
 
-        // hitscan-ship
-        for (let c = 0; c < game.otherShips.length; c++) {
-          const gameObj = game.otherShips[c]; // lol
-          if (!(gameObj === hitscan.owner
-            || gameObj.x + gameObj.destructible.radius < start[0]
-            || gameObj.x - gameObj.destructible.radius > end[0]
-            || gameObj.y + gameObj.destructible.radius < start[1]
-            || gameObj.y - gameObj.destructible.radius > end[1])) {
-            const gameDistance = utilities.distanceFromPointToLine(
-              gameObj.x,
-              gameObj.y,
-              hitscan.startX,
-              hitscan.startY,
-              hitscan.endX,
-              hitscan.endY,
-            );
-            const objCapsule = {
-              center1: [gameObj.x, gameObj.y],
-              center2: [
-                gameObj.x + (gameObj.velocityX * dt),
-                gameObj.y + (gameObj.velocityY * dt),
-              ],
-              radius: gameObj.destructible.radius,
-            };
-            if (gameDistance[1] < tValOfObj
-              && utilities.polygonCapsuleSAT(hitscanVertices, objCapsule)) {
-              obj = gameObj;
-              tValOfObj = gameDistance[1];
-            }
+      // hitscan-ship
+      for (let c = 0; c < game.otherShips.length; c++) {
+        const gameObj = game.otherShips[c]; // lol
+        if (!(gameObj === hitscan.owner
+          || gameObj.x + gameObj.destructible.radius < start[0]
+          || gameObj.x - gameObj.destructible.radius > end[0]
+          || gameObj.y + gameObj.destructible.radius < start[1]
+          || gameObj.y - gameObj.destructible.radius > end[1])) {
+          const gameDistance = utilities.distanceFromPointToLine(
+            gameObj.x,
+            gameObj.y,
+            hitscan.startX,
+            hitscan.startY,
+            hitscan.endX,
+            hitscan.endY,
+          );
+          const objCapsule = {
+            center1: [gameObj.x, gameObj.y],
+            center2: [
+              gameObj.x + (gameObj.velocityX * dt),
+              gameObj.y + (gameObj.velocityY * dt),
+            ],
+            radius: gameObj.destructible.radius,
+          };
+          if (gameDistance[1] < tValOfObj
+            && utilities.polygonCapsuleSAT(hitscanVertices, objCapsule)) {
+            obj = gameObj;
+            tValOfObj = gameDistance[1];
           }
         }
+      }
 
-        // hitscan-projectile
-        for (let c = 0; c < game.projectiles.length; c++) {
-          const gameObj = game.projectiles[c];
-          const gameObjNext = [
-            gameObj.x + (gameObj.velocityX * dt),
-            gameObj.y + (gameObj.velocityY * dt),
-          ];
-          if (!(gameObj === hitscan.owner
-            || gameObj.x + gameObj.destructible.radius < start[0]
-            || gameObj.x - gameObj.destructible.radius > end[0]
-            || gameObj.y + gameObj.destructible.radius < start[1]
-            || gameObj.y - gameObj.destructible.radius > end[1])) {
-            const gameDistance = utilities.distanceFromPointToLine(
-              gameObj.x,
-              gameObj.y,
-              hitscan.startX,
-              hitscan.startY,
-              hitscan.endX,
-              hitscan.endY,
-            );
-            const objCapsule = {
-              center1: [gameObj.x, gameObj.y],
-              center2: gameObjNext,
-              radius: gameObj.destructible.radius,
-            };
+      // hitscan-projectile
+      for (let c = 0; c < game.projectiles.length; c++) {
+        const gameObj = game.projectiles[c];
+        const gameObjNext = [
+          gameObj.x + (gameObj.velocityX * dt),
+          gameObj.y + (gameObj.velocityY * dt),
+        ];
+        if (!(gameObj === hitscan.owner
+          || gameObj.x + gameObj.destructible.radius < start[0]
+          || gameObj.x - gameObj.destructible.radius > end[0]
+          || gameObj.y + gameObj.destructible.radius < start[1]
+          || gameObj.y - gameObj.destructible.radius > end[1])) {
+          const gameDistance = utilities.distanceFromPointToLine(
+            gameObj.x,
+            gameObj.y,
+            hitscan.startX,
+            hitscan.startY,
+            hitscan.endX,
+            hitscan.endY,
+          );
+          const objCapsule = {
+            center1: [gameObj.x, gameObj.y],
+            center2: gameObjNext,
+            radius: gameObj.destructible.radius,
+          };
 
-            if (gameDistance[1] < tValOfObj
-              && utilities.polygonCapsuleSAT(hitscanVertices, objCapsule)) {
-              obj = gameObj;
-              tValOfObj = gameDistance[1];
-              // console.log('hitscan-projectile collision');
-            }
+          if (gameDistance[1] < tValOfObj
+            && utilities.polygonCapsuleSAT(hitscanVertices, objCapsule)) {
+            obj = gameObj;
+            tValOfObj = gameDistance[1];
+            // console.log('hitscan-projectile collision');
           }
         }
+      }
 
-        // resolve collision
-        if (obj) {
-          hitscan.collisionFunction(hitscan, obj, tValOfObj, dt);
-          const hitscanDir = [hitscan.endX - hitscan.startX, hitscan.endY - hitscan.startY];
-          const newEnd = [
-            hitscan.startX + (tValOfObj * hitscanDir[0]),
-            hitscan.startY + (tValOfObj * hitscanDir[1]),
-          ];
-          hitscan.endX = newEnd[0];
-          hitscan.endY = newEnd[1];
-        }
+      // resolve collision
+      if (obj) {
+        hitscan.collisionFunction(hitscan, obj, tValOfObj, dt);
+        const hitscanDir = [hitscan.endX - hitscan.startX, hitscan.endY - hitscan.startY];
+        const newEnd = [
+          hitscan.startX + (tValOfObj * hitscanDir[0]),
+          hitscan.startY + (tValOfObj * hitscanDir[1]),
+        ];
+        hitscan.endX = newEnd[0];
+        hitscan.endY = newEnd[1];
       }
     }
 

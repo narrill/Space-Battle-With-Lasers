@@ -205,7 +205,7 @@ const updaters = {
     // or they are out of range, drop them
     for (let c = 0; c < ts.targets.length; c++) {
       const targetInfo = ts.targets[c];
-      const target = targetInfo.this;
+      const target = targetInfo.obj;
       const vectorToTarget = [target.x - this.x, target.y - this.y];
       const vectorToRight = [
         vectorToTarget[0] + (rightVector[0] * target.destructible.radius),
@@ -267,7 +267,8 @@ const updaters = {
         this.y + rangeVector[1],
         'rgb(255,0,0)',
         this,
-        collisions.targetingLaserCollision, this.targetingSystem.id,
+        collisions.targetingLaserCollision, {}, 
+        this.targetingSystem.id
       );
       ts.firing = false;
     }
