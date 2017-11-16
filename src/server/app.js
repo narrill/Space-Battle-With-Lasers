@@ -1,35 +1,72 @@
 const http = require('http');
 const fs = require('fs');
 const socketio = require('socket.io');
+const path = require('path');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
-const index = fs.readFileSync(`${__dirname}/../../hosted/client.html`);
-const js = fs.readFileSync(`${__dirname}/../../hosted/bundle.js`);
-const fonts = {
-  '/AROMA-Light.ttf': fs.readFileSync(`${__dirname}/../../hosted/AROMA-Light.ttf`),
-  '/AROMA-Bold.ttf': fs.readFileSync(`${__dirname}/../../hosted/AROMA-Bold.ttf`),
-  '/Prime-Regular.otf': fs.readFileSync(`${__dirname}/../../hosted/Prime-Regular.otf`),
-  '/Orbitron-Light.ttf': fs.readFileSync(`${__dirname}/../../hosted/Orbitron-Light.ttf`),
-  '/Orbitron-Black.ttf': fs.readFileSync(`${__dirname}/../../hosted/Orbitron-Black.ttf`),
+const readHostedFile = (filePath) => {
+  return fs.readFileSync(`${__dirname}/../../hosted/${filePath}`);
 };
-const titleMusic = fs.readFileSync(`${__dirname}/../../hosted/title.mp3`);
+
+// Extension should include leading .
+const getMimeTypeFromExtension = (extension) => {
+  switch(extension) {
+    case('.html'):
+      return 'text/html';
+    case('.js'):
+      return 'text/javascript';
+    case('.ttf'):
+    case('.otf'):
+      return 'application/font-sfnt';
+    case('.mp3'):
+      return 'audio/mpeg';
+    default:
+      return undefined;
+  }
+};
+
+const files = [
+  'client.html',
+  'bundle.js',
+  'Long.min.js',
+  'bytebuffer.min.js',
+  'PSON.min.js',
+  'AROMA-Light.ttf',
+  'AROMA-Bold.ttf',
+  'Prime-Regular.otf',
+  'Orbitron-Light.ttf',
+  'Orbitron-Black.ttf',
+  'title.mp3',
+  'bundle.js'
+];
+
+const hostedFiles = {};
+for(let c = 0; c < files.length; c++) {
+  const fileName = files[c];
+  hostedFiles[fileName] = {
+    data: readHostedFile(fileName),
+    mimeType: getMimeTypeFromExtension(path.extname(fileName))
+  };
+}
 
 const onRequest = (request, response) => {
   console.log(request.url);
-  if (request.url === '/hosted/bundle.js') {
-    response.writeHead(200, { 'content-type': 'text/javascript' });
-    response.end(js);
-  } else if (fonts[request.url]) {
-    response.writeHead(200, { 'content-type': 'application/font-sfnt' });
-    response.end(fonts[request.url]);
-  } else if (request.url === '/hosted/title.mp3') {
-    response.writeHead(200, { 'content-type': 'audio/mpeg'});
-    response.end(titleMusic);
-  } else {
-    response.writeHead(200, { 'content-type': 'text/html' });
-    response.end(index);
+  if(request.url === '/')
+    request.url = '/client.html';
+  const fileNames = Object.keys(hostedFiles);
+  for(let c = 0; c < fileNames.length; c++) {
+    const fileName = fileNames[c];
+    if(request.url === `/${fileName}`) {
+      const fileInfo = hostedFiles[fileName];
+      response.writeHead(200, { 'content-type': fileInfo.mimeType});
+      response.end(fileInfo.data);
+      return;
+    }
   }
+
+  response.writeHead(404);
+  response.end();
 };
 
 const app = http.createServer(onRequest).listen(port);
