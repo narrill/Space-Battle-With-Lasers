@@ -8,7 +8,6 @@ const gridFunctions = require('./gridFunctions.js');
 const ships = require('./ships.js');
 const updaters = dependencyCatch(require('./updaters.js'));
 const missiles = require('./missiles.js');
-const pson = require('pson');
 
 const has = Object.prototype.hasOwnProperty;
 
