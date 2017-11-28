@@ -376,10 +376,28 @@
 	"buffers":
 	[
 		{
-			"file": "/C/Program Files (x86)/UnrealTournament/System/UnrealTournament.ini",
+			"file": "src/server/aiFunctions.js",
 			"settings":
 			{
-				"buffer_size": 13512,
+				"buffer_size": 6017,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/server/constructors.js",
+			"settings":
+			{
+				"buffer_size": 15392,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "/C/Users/Mike/Documents/Cubase 5/17-11-9 swbl bgm2/.gitignore",
+			"settings":
+			{
+				"buffer_size": 11,
+				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		}
@@ -432,6 +450,7 @@
 	],
 	"file_history":
 	[
+		"/C/Program Files (x86)/UnrealTournament/System/UnrealTournament.ini",
 		"/C/Users/Mike/Documents/git/igme-590/project2/src/client/client.js",
 		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/constructors.js",
 		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/updaters.js",
@@ -558,8 +577,7 @@
 		"/C/Users/Mike/Documents/git/NovaTestSuite/NovaTestSuite/Nova/Envelope.cpp",
 		"/C/Users/Mike/Documents/git/NovaTestSuite/NovaTestSuite/Nova/Queue.cpp",
 		"/C/Users/Mike/Documents/git/NovaTestSuite/NovaTestSuite/Nova/WorkerThread.cpp",
-		"/C/Users/Mike/Documents/git/NovaTestSuite/.gitignore",
-		"/C/Users/Mike/Documents/git/NovaTestSuite/NovaTestSuite/ignore.gitignore"
+		"/C/Users/Mike/Documents/git/NovaTestSuite/.gitignore"
 	],
 	"find":
 	{
@@ -692,16 +710,46 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 2,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "/C/Program Files (x86)/UnrealTournament/System/UnrealTournament.ini",
+					"file": "src/server/aiFunctions.js",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 13512,
+						"buffer_size": 6017,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3565,
+								3565
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 720.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "src/server/constructors.js",
+					"semi_transient": true,
+					"settings":
+					{
+						"buffer_size": 15392,
 						"regions":
 						{
 						},
@@ -710,6 +758,36 @@
 							[
 								0,
 								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 540.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "/C/Users/Mike/Documents/Cubase 5/17-11-9 swbl bgm2/.gitignore",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 11,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								11,
+								11
 							]
 						],
 						"settings":

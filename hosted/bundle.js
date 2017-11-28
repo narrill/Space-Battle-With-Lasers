@@ -139,6 +139,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     var titleMusic = void 0;
+    var gameplayMusic = void 0;
     var lastTime = 0;
     var accumulator = 0;
     var socket = void 0;
@@ -341,6 +342,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         entry = "";
         //socket.send({requestShipList:true});
         //game.resetGame();
+      } else if (state === GAME_STATES.DISCONNECTED) {
+        gameplayMusic.pause();
+        gameplayMusic.currentTime = 0;
       } else if (state == GAME_STATES.CHOOSESHIP && myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER]) {
         state = GAME_STATES.WAIT;
         myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER] = false;
@@ -349,6 +353,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         titleMusic.volume = utilities.clamp(0, titleMusic.volume - .2 * dt, 1);
       } else if (state == GAME_STATES.PLAYING) {
         titleMusic.volume = utilities.clamp(0, titleMusic.volume - dt, 1);
+        gameplayMusic.play();
         //camera shenanigans
         //camera zoom controls
         if (myKeys.keydown[myKeys.KEYBOARD.KEY_UP] && camera.zoom <= camera.maxZoom) camera.zoom *= 1 + (3 - 1) * dt;
@@ -490,6 +495,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       });
 
       titleMusic = document.querySelector('#titleMusic');
+      gameplayMusic = document.querySelector('#gameplayMusic');
       canvas = document.querySelector('#mainCanvas');
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;

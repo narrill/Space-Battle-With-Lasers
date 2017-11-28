@@ -81,6 +81,7 @@ class LooseTimer {
 }
 
 let titleMusic;
+let gameplayMusic;
 let lastTime = 0;
 let accumulator = 0;
 let socket;
@@ -301,6 +302,10 @@ const update = (dt) => {
     //socket.send({requestShipList:true});
     //game.resetGame();
   }
+  else if(state === GAME_STATES.DISCONNECTED) {
+    gameplayMusic.pause();
+    gameplayMusic.currentTime = 0;
+  }
   else if(state == GAME_STATES.CHOOSESHIP && myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER])
   {
     state = GAME_STATES.WAIT;
@@ -313,6 +318,7 @@ const update = (dt) => {
   else if(state == GAME_STATES.PLAYING)
   {
     titleMusic.volume = utilities.clamp(0, titleMusic.volume - dt, 1);
+    gameplayMusic.play();
   //camera shenanigans
   //camera zoom controls
     if(myKeys.keydown[myKeys.KEYBOARD.KEY_UP] && camera.zoom<=camera.maxZoom)
@@ -479,6 +485,7 @@ const init = () => {
   });
 
   titleMusic = document.querySelector('#titleMusic');
+  gameplayMusic = document.querySelector('#gameplayMusic');
   canvas = document.querySelector('#mainCanvas');
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;

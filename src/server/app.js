@@ -38,7 +38,8 @@ const files = [
   'Orbitron-Light.ttf',
   'Orbitron-Black.ttf',
   'title.mp3',
-  'bundle.js'
+  'bundle.js',
+  'gameplay1.mp3'
 ];
 
 const hostedFiles = {};
