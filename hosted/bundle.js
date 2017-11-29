@@ -141,6 +141,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var titleMusic = void 0;
     var gameplayMusic = void 0;
     var keyclick = void 0;
+    var titleStinger = void 0;
     var lastTime = 0;
     var accumulator = 0;
     var socket = void 0;
@@ -343,11 +344,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       dependentCamera.zoom = 1 / (cameraDistance + offset);
     };
 
+    var playTitleStinger = function playTitleStinger() {
+      titleStinger.currentTime = 0;
+      titleStinger.play();
+    };
+
     var update = function update(dt) {
       if ((state == GAME_STATES.TITLE || state == GAME_STATES.DISCONNECTED) && myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER]) {
         state = GAME_STATES.CHOOSESHIP;
         myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER] = false;
         entry = "";
+        playTitleStinger();
       } else if (state === GAME_STATES.DISCONNECTED) {
         gameplayMusic.pause();
         gameplayMusic.currentTime = 0;
@@ -503,6 +510,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       titleMusic = document.querySelector('#titleMusic');
       gameplayMusic = document.querySelector('#gameplayMusic');
       keyclick = document.querySelector('#keyclick');
+      titleStinger = document.querySelector('#titlestinger');
       canvas = document.querySelector('#mainCanvas');
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;

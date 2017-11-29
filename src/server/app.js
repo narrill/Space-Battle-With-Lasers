@@ -41,6 +41,7 @@ const files = [
   'bundle.js',
   'gameplay1.mp3',
   'keyclick.wav',
+  'titlestinger.wav'
 ];
 
 const hostedFiles = {};
