@@ -20,7 +20,7 @@ const objControls = {
   },
 
   // rotational stabilizer
-  objRotationalStabilizers(dt) {
+  objRotationalStabilizers() {
     if (!this.stabilizer) { return; }
 
     if (this.thrusterSystem.rotational.targetStrength * this.rotationalVelocity >= -10
@@ -37,7 +37,7 @@ const objControls = {
   },
 
   // medial stabilizer
-  objMedialStabilizers(dt) {
+  objMedialStabilizers() {
     if (!this.stabilizer) { return; }
 
     const medialVelocity = utilities.getMedialVelocity.call(this);
@@ -56,7 +56,7 @@ const objControls = {
   },
 
   // lateral stabilizer
-  objLateralStabilizers(dt) {
+  objLateralStabilizers() {
     if (!this.stabilizer) { return; }
     // see above
     const lateralVelocity = utilities.getLateralVelocity.call(this);

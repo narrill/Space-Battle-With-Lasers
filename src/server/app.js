@@ -5,23 +5,21 @@ const path = require('path');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
-const readHostedFile = (filePath) => {
-  return fs.readFileSync(`${__dirname}/../../hosted/${filePath}`);
-};
+const readHostedFile = filePath => fs.readFileSync(`${__dirname}/../../hosted/${filePath}`);
 
 // Extension should include leading .
 const getMimeTypeFromExtension = (extension) => {
-  switch(extension) {
-    case('.html'):
+  switch (extension) {
+    case ('.html'):
       return 'text/html';
-    case('.js'):
+    case ('.js'):
       return 'text/javascript';
-    case('.ttf'):
-    case('.otf'):
+    case ('.ttf'):
+    case ('.otf'):
       return 'application/font-sfnt';
-    case('.mp3'):
+    case ('.mp3'):
       return 'audio/mpeg';
-    case('.wav'):
+    case ('.wav'):
       return 'audio/wav';
     default:
       return undefined;
@@ -42,28 +40,27 @@ const files = [
   'title.mp3',
   'bundle.js',
   'gameplay1.mp3',
-  'keyclick.wav'
+  'keyclick.wav',
 ];
 
 const hostedFiles = {};
-for(let c = 0; c < files.length; c++) {
+for (let c = 0; c < files.length; c++) {
   const fileName = files[c];
   hostedFiles[fileName] = {
     data: readHostedFile(fileName),
-    mimeType: getMimeTypeFromExtension(path.extname(fileName))
+    mimeType: getMimeTypeFromExtension(path.extname(fileName)),
   };
 }
 
 const onRequest = (request, response) => {
   console.log(request.url);
-  if(request.url === '/')
-    request.url = '/client.html';
+  if (request.url === '/') { request.url = '/client.html'; }
   const fileNames = Object.keys(hostedFiles);
-  for(let c = 0; c < fileNames.length; c++) {
+  for (let c = 0; c < fileNames.length; c++) {
     const fileName = fileNames[c];
-    if(request.url === `/${fileName}`) {
+    if (request.url === `/${fileName}`) {
       const fileInfo = hostedFiles[fileName];
-      response.writeHead(200, { 'content-type': fileInfo.mimeType});
+      response.writeHead(200, { 'content-type': fileInfo.mimeType });
       response.end(fileInfo.data);
       return;
     }

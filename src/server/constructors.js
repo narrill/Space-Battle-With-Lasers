@@ -365,7 +365,7 @@ const constructors = {
       mouseDirection: 0,
       lastSend: 0,
       sendInterval: 66.6666,
-      nonInterp:{}
+      nonInterp: {},
     };
     function mh(data) {
       // console.log(data);
@@ -523,9 +523,9 @@ const constructors = {
         game,
         type: 'asteroid',
         onDestroy: [(asteroid) => {
-          id.returnIdTag(asteroid.id),
+          id.returnIdTag(asteroid.id);
           constructors.makeAsteroids.call(asteroid.game, asteroid.game, asteroid.game.grid);
-        }]
+        }],
       });
     }
   },

@@ -289,7 +289,6 @@ let lastMouseDirection = 0;
 const mouseTimer = new LooseTimer(50, () => {
   if(myMouse.direction !== lastMouseDirection) {
     lastMouseDirection = myMouse.direction;
-    console.log(`mouse report ${myMouse.direction}`);
     socket.emit('input', {md: myMouse.direction});
     resetDirection();
   }
@@ -311,8 +310,6 @@ const update = (dt) => {
     state = GAME_STATES.CHOOSESHIP;
     myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER] = false;
     entry = "";
-    //socket.send({requestShipList:true});
-    //game.resetGame();
   }
   else if(state === GAME_STATES.DISCONNECTED) {
     gameplayMusic.pause();
@@ -1516,21 +1513,19 @@ const utilities = {
 
   // Translates an arbitrary orientation into the range of -180 to 180
   correctOrientation: (orientation) => {
-    while (orientation > 180)
-      orientation -= 360;
-    while (orientation < -180)
-      orientation += 360;
+    let or = orientation;
+    while (or > 180) { or -= 360; }
+    while (or < -180) { or += 360; }
 
-    return orientation;
+    return or;
   },
 
   rotationLerp: (from, to, percent) => {
-    if(Math.abs(to - from) > 180) {
+    if (Math.abs(to - from) > 180) {
       const adjustment = (from > to) ? -360 : 360;
       return utilities.correctOrientation(utilities.lerp(from + adjustment, to, percent));
     }
-    else
-      return utilities.lerp(from, to, percent);
+    return utilities.lerp(from, to, percent);
   },
 
   clamp: (min, val, max) => Math.max(min, Math.min(max, val)),

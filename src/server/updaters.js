@@ -267,8 +267,8 @@ const updaters = {
         this.y + rangeVector[1],
         'rgb(255,0,0)',
         this,
-        collisions.targetingLaserCollision, {}, 
-        this.targetingSystem.id
+        collisions.targetingLaserCollision, {},
+        this.targetingSystem.id,
       );
       ts.firing = false;
     }
@@ -375,7 +375,7 @@ const updaters = {
     aiF.call(this, dt);
   },
 
-  updateRemoteInputComponent(dt) {
+  updateRemoteInputComponent() {
     const stab = this.stabilizer;
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_TAB]
       && !this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_ALT]) {
@@ -397,7 +397,7 @@ const updaters = {
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_S]) {
       objControls.objMedialThrusters.call(this, -ts.medial.maxStrength / stab.thrustRatio);
     }
-    if (stab.enabled) { objControls.objMedialStabilizers.call(this, dt); }
+    if (stab.enabled) { objControls.objMedialStabilizers.call(this); }
 
     // lateral motion
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_A]) {
@@ -406,7 +406,7 @@ const updaters = {
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_D]) {
       objControls.objLateralThrusters.call(this, -ts.lateral.maxStrength / stab.thrustRatio);
     }
-    if (stab.enabled) { objControls.objLateralStabilizers.call(this, dt); }
+    if (stab.enabled) { objControls.objLateralStabilizers.call(this); }
 
     // rotational motion - mouse    
     // console.log(-this.remoteInput.mouseDirection); 
@@ -421,7 +421,7 @@ const updaters = {
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_RIGHT]) {
       objControls.objRotationalThrusters.call(this, -ts.rotational.maxStrength / stab.thrustRatio);
     }
-    if (stab.enabled) { objControls.objRotationalStabilizers.call(this, dt); }
+    if (stab.enabled) { objControls.objRotationalStabilizers.call(this); }
 
     // weapons
     if (this.remoteInput.mouse[myMouse.BUTTONS.LEFT]
@@ -463,11 +463,11 @@ const updaters = {
           d.id = this.id;
           this.remoteInput.sentId = true;
         }
-        
+
         const fetchInfo = gameFunctions.fetchFromTileArray(this.game, [this.x, this.y], 15000);
         const worldInfo = {
           objs: [],
-          asteroids: {}
+          asteroids: {},
         };
         for (let c = 0; c < fetchInfo.obj.length; c++) {
           const o = fetchInfo.obj[c];
@@ -490,7 +490,7 @@ const updaters = {
             thrusterColor: ots.color,
           };
 
-          if(o.id === this.id) {
+          if (o.id === this.id) {
             wi.velX = this.velocityX;
             wi.velY = this.velocityY;
             wi.rotationalVelocity = this.rotationalVelocity;
@@ -500,22 +500,22 @@ const updaters = {
             wi.clampsEnabled = stab.clamps.enabled;
             wi.stabilized = stab.enabled;
             wi.thrusterPower = updaters.getPowerForComponent(
-              this.powerSystem, 
-              enums.SHIP_COMPONENTS.THRUSTERS
+              this.powerSystem,
+              enums.SHIP_COMPONENTS.THRUSTERS,
             );
             wi.weaponPower = updaters.getPowerForComponent(
-              this.powerSystem, 
-              enums.SHIP_COMPONENTS.LASERS
+              this.powerSystem,
+              enums.SHIP_COMPONENTS.LASERS,
             );
             wi.shieldPower = updaters.getPowerForComponent(
-              this.powerSystem, 
-              enums.SHIP_COMPONENTS.SHIELDS
+              this.powerSystem,
+              enums.SHIP_COMPONENTS.SHIELDS,
             );
           }
           worldInfo.objs.push(wi);
         }
 
-        if(!this.remoteInput.sentAsteroidColors) {
+        if (!this.remoteInput.sentAsteroidColors) {
           worldInfo.asteroids.colors = [];
           for (let c = 0; c < this.game.asteroids.colors.length; c++) {
             worldInfo.asteroids.colors.push(this.game.asteroids.colors[c]);
@@ -530,11 +530,10 @@ const updaters = {
         }
         const previousAsteroidsById = this.remoteInput.nonInterp.asteroids || {};
         const newKeys = Object.keys(newAsteroidsById);
-        for(let c = 0; c < newKeys.length; c++) {
+        for (let c = 0; c < newKeys.length; c++) {
           const id = newKeys[c];
-          if(!previousAsteroidsById[id]) {
-            if(!worldInfo.asteroids.objs)
-              worldInfo.asteroids.objs = [];
+          if (!previousAsteroidsById[id]) {
+            if (!worldInfo.asteroids.objs) { worldInfo.asteroids.objs = []; }
             const a = newAsteroidsById[id];
             worldInfo.asteroids.objs.push({
               id: a.id,
@@ -546,20 +545,18 @@ const updaters = {
           }
         }
         const prevKeys = Object.keys(previousAsteroidsById);
-        for(let c = 0; c < prevKeys.length; c++) {
+        for (let c = 0; c < prevKeys.length; c++) {
           const id = prevKeys[c];
-          if(!newAsteroidsById[id]) {
-            if(!worldInfo.asteroids.objs)
-              worldInfo.asteroids.objs = [];
+          if (!newAsteroidsById[id]) {
+            if (!worldInfo.asteroids.objs) { worldInfo.asteroids.objs = []; }
             worldInfo.asteroids.objs.push({
-              destroyed: id
+              destroyed: id,
             });
           }
         }
         this.remoteInput.nonInterp.asteroids = newAsteroidsById;
 
-        if(fetchInfo.prj.length)
-          worldInfo.prjs = [];
+        if (fetchInfo.prj.length) { worldInfo.prjs = []; }
         for (let c = 0; c < fetchInfo.prj.length; c++) {
           const p = fetchInfo.prj[c];
           if (p.visible) {
@@ -575,8 +572,7 @@ const updaters = {
           }
         }
 
-        if(fetchInfo.hitscan.length)
-          worldInfo.hitscans = [];
+        if (fetchInfo.hitscan.length) { worldInfo.hitscans = []; }
         for (let c = 0; c < fetchInfo.hitscan.length; c++) {
           const h = fetchInfo.hitscan[c];
           worldInfo.hitscans.push({
@@ -591,8 +587,7 @@ const updaters = {
           });
         }
 
-        if(fetchInfo.radial.length)
-          worldInfo.radials = [];
+        if (fetchInfo.radial.length) { worldInfo.radials = []; }
         for (let c = 0; c < fetchInfo.radial.length; c++) {
           const r = fetchInfo.radial[c];
           worldInfo.radials.push({

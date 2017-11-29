@@ -51,7 +51,7 @@ const aiFunctions = {
 
     const distanceSqr = utilities.vectorMagnitudeSqr(vectorToTarget[0], vectorToTarget[1]);
 
-    const myRange = (has.call(this, 'laser')) ? this.laser.range/2 : 10000;
+    const myRange = (has.call(this, 'laser')) ? this.laser.range / 2 : 10000;
 
     if (relativeAngleToTarget < this.ai.fireSpread / 2
       && relativeAngleToTarget > (-this.ai.fireSpread) / 2) {
@@ -97,9 +97,9 @@ const aiFunctions = {
       objControls.objLateralThrusters.call(this, -latMaxStrength / stabRatio);
     }
 
-    objControls.objMedialStabilizers.call(this, dt);
-    objControls.objLateralStabilizers.call(this, dt);
-    objControls.objRotationalStabilizers.call(this, dt);
+    objControls.objMedialStabilizers.call(this);
+    objControls.objLateralStabilizers.call(this);
+    objControls.objRotationalStabilizers.call(this);
   },
 
   basicMissile(dt) {

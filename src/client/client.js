@@ -288,7 +288,6 @@ let lastMouseDirection = 0;
 const mouseTimer = new LooseTimer(50, () => {
   if(myMouse.direction !== lastMouseDirection) {
     lastMouseDirection = myMouse.direction;
-    console.log(`mouse report ${myMouse.direction}`);
     socket.emit('input', {md: myMouse.direction});
     resetDirection();
   }
@@ -310,8 +309,6 @@ const update = (dt) => {
     state = GAME_STATES.CHOOSESHIP;
     myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER] = false;
     entry = "";
-    //socket.send({requestShipList:true});
-    //game.resetGame();
   }
   else if(state === GAME_STATES.DISCONNECTED) {
     gameplayMusic.pause();
