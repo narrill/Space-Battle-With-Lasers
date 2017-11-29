@@ -85,6 +85,8 @@ let titleMusic;
 let gameplayMusic;
 let keyclick;
 let titleStinger;
+let enterGameStinger;
+let deathStinger;
 let lastTime = 0;
 let accumulator = 0;
 let socket;
@@ -184,15 +186,15 @@ const pointerInit = (c) => {
   canvas.onselectstart = function(){ return false; };
 }
 
-const playKeyClick = () => {
-  keyclick.currentTime = 0;
-  keyclick.play();
+const playStinger = (stingerElem) => {
+  stingerElem.currentTime = 0;
+  stingerElem.play();
 }
 
 window.addEventListener("keydown",function(e){
+  if((state === GAME_STATES.TITLE || state === GAME_STATES.CHOOSESHIP || state === GAME_STATES.DISCONNECTED) && !e.repeat)
+    playStinger(keyclick);
   if(state==GAME_STATES.CHOOSESHIP){
-    if(e.keyCode !== 13 && !e.repeat)
-      playKeyClick();
     if(e.keyCode == 8){
       if(entry.length > 0)
         entry = entry.slice(0,-1);
@@ -305,18 +307,13 @@ const linkCameraWithOffset = (mainCamera, dependentCamera, offset) => {
   dependentCamera.zoom = 1/(cameraDistance+offset);
 };
 
-const playTitleStinger = () => {
-  titleStinger.currentTime = 0;
-  titleStinger.play();
-};
-
 const update = (dt) => {
   if((state == GAME_STATES.TITLE || state == GAME_STATES.DISCONNECTED) && myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER])
   {
+    if(state === GAME_STATES.TITLE) playStinger(titleStinger);
     state = GAME_STATES.CHOOSESHIP;
     myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER] = false;
     entry = "";
-    playTitleStinger();
   }
   else if(state === GAME_STATES.DISCONNECTED) {
     gameplayMusic.pause();
@@ -350,12 +347,12 @@ const update = (dt) => {
     resetWheel();
 
     mouseTimer.check();
-    if(myMouse[myMouse.BUTTONS.LEFT] != null)
+    if(myMouse[myMouse.BUTTONS.LEFT] != undefined)
     {
       socket.emit('input', {mb:myMouse.BUTTONS.LEFT,pos:myMouse[myMouse.BUTTONS.LEFT]});
       myMouse[myMouse.BUTTONS.LEFT] = undefined;
     }
-    if(myMouse[myMouse.BUTTONS.RIGHT] != null)
+    if(myMouse[myMouse.BUTTONS.RIGHT] != undefined)
     {
       socket.emit('input', {mb:myMouse.BUTTONS.RIGHT,pos:myMouse[myMouse.BUTTONS.RIGHT]});
       myMouse[myMouse.BUTTONS.RIGHT] = undefined;
@@ -481,6 +478,7 @@ const init = () => {
 
   socket.on('destroyed', () => {
     state = GAME_STATES.DISCONNECTED;
+    playStinger(deathStinger);
   });
 
   socket.on('badShipError', () => {
@@ -491,8 +489,10 @@ const init = () => {
   });
 
   socket.on('worldInfo', (data) => {
-    if(state === GAME_STATES.WAIT)
-      state = GAME_STATES.PLAYING;
+    if(state === GAME_STATES.WAIT) {
+      state = GAME_STATES.PLAYING;      
+      playStinger(enterGameStinger);
+    }
     if(report) {
       console.log(data);
       report = false;
@@ -504,6 +504,8 @@ const init = () => {
   gameplayMusic = document.querySelector('#gameplayMusic');
   keyclick = document.querySelector('#keyclick');
   titleStinger = document.querySelector('#titlestinger');
+  enterGameStinger = document.querySelector('#entergamestinger');
+  deathStinger = document.querySelector('#deathstinger');
   canvas = document.querySelector('#mainCanvas');
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
