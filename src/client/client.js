@@ -82,6 +82,7 @@ class LooseTimer {
 
 let titleMusic;
 let gameplayMusic;
+let keyclick;
 let lastTime = 0;
 let accumulator = 0;
 let socket;
@@ -181,11 +182,21 @@ const pointerInit = (c) => {
   canvas.onselectstart = function(){ return false; };
 }
 
+const playKeyClick = () => {
+  keyclick.currentTime = 0;
+  keyclick.play();
+}
+
 window.addEventListener("keydown",function(e){
   if(state==GAME_STATES.CHOOSESHIP){
-    if(e.keyCode == 8 && entry.length>0)
-      entry = entry.slice(0,-1);
-    else if(e.keyCode!=13) entry+=String.fromCharCode(e.keyCode);
+    if(e.keyCode !== 13 && !e.repeat)
+      playKeyClick();
+    if(e.keyCode == 8){
+      if(entry.length > 0)
+        entry = entry.slice(0,-1);
+    }
+    else if(e.keyCode!=13)
+      entry+=String.fromCharCode(e.keyCode);
   }
   else if(state === GAME_STATES.PLAYING) {
     socket.emit('input', {keyCode:e.keyCode,pos:1});
@@ -486,6 +497,7 @@ const init = () => {
 
   titleMusic = document.querySelector('#titleMusic');
   gameplayMusic = document.querySelector('#gameplayMusic');
+  keyclick = document.querySelector('#keyclick');
   canvas = document.querySelector('#mainCanvas');
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;

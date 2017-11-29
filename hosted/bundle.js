@@ -140,6 +140,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var titleMusic = void 0;
     var gameplayMusic = void 0;
+    var keyclick = void 0;
     var lastTime = 0;
     var accumulator = 0;
     var socket = void 0;
@@ -230,9 +231,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       };
     };
 
+    var playKeyClick = function playKeyClick() {
+      keyclick.currentTime = 0;
+      keyclick.play();
+    };
+
     window.addEventListener("keydown", function (e) {
       if (state == GAME_STATES.CHOOSESHIP) {
-        if (e.keyCode == 8 && entry.length > 0) entry = entry.slice(0, -1);else if (e.keyCode != 13) entry += String.fromCharCode(e.keyCode);
+        if (e.keyCode !== 13 && !e.repeat) playKeyClick();
+        if (e.keyCode == 8) {
+          if (entry.length > 0) entry = entry.slice(0, -1);
+        } else if (e.keyCode != 13) entry += String.fromCharCode(e.keyCode);
       } else if (state === GAME_STATES.PLAYING) {
         socket.emit('input', { keyCode: e.keyCode, pos: 1 });
         if (e.key === 'r') report = true;
@@ -496,6 +505,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       titleMusic = document.querySelector('#titleMusic');
       gameplayMusic = document.querySelector('#gameplayMusic');
+      keyclick = document.querySelector('#keyclick');
       canvas = document.querySelector('#mainCanvas');
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;

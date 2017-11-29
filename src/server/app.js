@@ -21,6 +21,8 @@ const getMimeTypeFromExtension = (extension) => {
       return 'application/font-sfnt';
     case('.mp3'):
       return 'audio/mpeg';
+    case('.wav'):
+      return 'audio/wav';
     default:
       return undefined;
   }
@@ -39,7 +41,8 @@ const files = [
   'Orbitron-Black.ttf',
   'title.mp3',
   'bundle.js',
-  'gameplay1.mp3'
+  'gameplay1.mp3',
+  'keyclick.wav'
 ];
 
 const hostedFiles = {};
