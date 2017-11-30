@@ -147,7 +147,7 @@ const generateStarField = (stars) => {
   const upper = 10000000;
   const maxRadius = 8000;
   const minRadius = 2000;
-  const minZ = 4000;
+  const minZ = 1000;
   const maxZ = 7000;
   for(let c = 0; c < 500; c++){
     const group = Math.floor(Math.random() * stars.colors.length);

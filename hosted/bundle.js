@@ -196,7 +196,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var upper = 10000000;
       var maxRadius = 8000;
       var minRadius = 2000;
-      var minZ = 4000;
+      var minZ = 1000;
       var maxZ = 7000;
       for (var c = 0; c < 500; c++) {
         var group = Math.floor(Math.random() * stars.colors.length);
