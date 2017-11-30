@@ -11,13 +11,64 @@ const updaters = dependencyCatch(require('./updaters.js'));
 const ships = require('./ships.js');
 const collisions = require('./collisions.js');
 
-const gameFunctions = {
-  // initialize the stuff
-  init() {
+class Game {
+  constructor() {
     // initialize properties
-    // constructors.generateStarField.bind(this, this.stars)();
+    this.accumulator = 0;
+    this.timeStep = 0.0167;
+    this.lastTime = 0; // used by calculateDeltaTime()
+    this.runningTime = 0;
+    this.updatables = [];
+    this.otherShips = [];
+    this.otherShipCount = 0;
+    this.maxOtherShips = 6;
+    this.factions = 4;
+    this.respawnQueue = [];
+    this.factionColors = [];
+    this.hitscans = [];
+    this.projectiles = [];
+    this.radials = [];
+    this.reportQueue = undefined;
+    this.functionQueue = [];
+    this.socketSubscriptions = {};
+    this.grid = {
+      gridLines: 500, // number of grid lines
+      gridSpacing: 100, // pixels per grid unit
+      gridStart: [-25000, -25000], // corner anchor in world coordinates
+      colors: [
+        {
+          color: '#1111FF',
+          interval: 1000,
+        },
+        {
+          color: 'blue',
+          interval: 200,
+        },
+        {
+          color: 'mediumblue',
+          interval: 50,
+          minimap: true,
+        },
+        {
+          color: 'darkblue',
+          interval: 10,
+        },
+        {
+          color: 'navyblue',
+          interval: 2,
+        },
+      ]
+    };
+    this.tileArray = undefined;
+    this.asteroids = {
+      total: 60,
+      colors: [
+        '#6B2A06',
+        'sienna',
+      ],
+      objs: []
+    };
     constructors.makeAsteroids.bind(this, this, this.grid)();
-    // this.ship = constructors.createShip(ships.cheetah, this);
     this.reportQueue = new SuperArray();
     this.tileArray = new SuperArray();
     this.tileArray.min = [Number.MAX_VALUE, Number.MAX_VALUE];
@@ -44,18 +95,13 @@ const gameFunctions = {
       newShip.faction = -1;
       newShip.respawnTime = 5;
       this.otherShips.push(constructors.createShip(newShip, this));
-    }
-    // start the this loop    
+    } 
     this.lastTime = Date.now();
     this.elapsedGameTime = 0;
-    gameFunctions.loop.bind(this)();
-    return this;
-  },
+  }
 
-  // the main this function - called once per frame
   loop() {
-    // this.animationID = requestAnimationFrame(gameFunctions.frame.bind(this));
-    this.frameTimeout = setTimeout(gameFunctions.loop.bind(this), this.timeStep * 500);
+    this.frameTimeout = setTimeout(this.loop.bind(this), this.timeStep * 500);
     let dt = utilities.calculateDeltaTime.call(this);
 
     if (dt > this.timeStep * 4) {
@@ -64,11 +110,10 @@ const gameFunctions = {
     }
     this.accumulator += dt;
     while (this.accumulator >= this.timeStep) {
-      gameFunctions.update.call(this, this.timeStep);
+      this.update(this.timeStep);
       this.accumulator -= this.timeStep;
     }
-    // gameFunctions.draw(this, dt);
-  },
+  }
 
   // one game tick
   update(dt) {
@@ -115,9 +160,9 @@ const gameFunctions = {
       updaters.queueReport.call(this.hitscans[i]);
     }
 
-    gameFunctions.processReportQueue.call(this, dt);
+    this.processReportQueue(dt);
 
-    gameFunctions.checkCollisions(this, dt);
+    this.checkCollisions(dt);
 
     for (let c = 0; c < this.functionQueue.length; c++) {
       this.functionQueue[c]();
@@ -128,13 +173,13 @@ const gameFunctions = {
 
     // because we might use the frame count for something at some point
     this.frameCount++;
-  },
+  }
 
-  checkCollisions: (game, dt) => {
+  checkCollisions(dt) {
     // obj collisions
     // var resolvedCollisions = [];
-    for (let i = 0; i < game.otherShips.length; i++) {
-      const currentObj = game.otherShips[i];
+    for (let i = 0; i < this.otherShips.length; i++) {
+      const currentObj = this.otherShips[i];
 
       const currentObjNext = [
         currentObj.x + (currentObj.velocityX * dt),
@@ -147,8 +192,8 @@ const gameFunctions = {
         radius: currentObj.destructible.radius,
       };
 
-      for (let c = i + 1; c < game.otherShips.length; c++) {
-        const gameObj = ((c === -1) ? game.ship : game.otherShips[c]);
+      for (let c = i + 1; c < this.otherShips.length; c++) {
+        const gameObj = this.otherShips[c];
 
         if (!(currentObj.specialProperties && gameObj === currentObj.specialProperties.owner)
           && !(gameObj.specialProperties && currentObj === gameObj.specialProperties.owner)) {
@@ -175,8 +220,7 @@ const gameFunctions = {
           }
         }
       }
-      const projectiles = gameFunctions.fetchFromTileArray(
-        game,
+      const projectiles = this.fetchFromTileArray(
         [currentObj.x, currentObj.y],
         currentObj.destructible.radius,
         { prj: [] },
@@ -207,8 +251,8 @@ const gameFunctions = {
     }
 
     // hitscan collisions
-    for (let n = 0; n < game.hitscans.length; n++) {
-      const hitscan = game.hitscans[n];
+    for (let n = 0; n < this.hitscans.length; n++) {
+      const hitscan = this.hitscans[n];
       let obj; // the chosen object
       let tValOfObj = Number.MAX_VALUE;
       const xInv = hitscan.endX < hitscan.startX;
@@ -229,8 +273,8 @@ const gameFunctions = {
       ];
 
       // hitscan-asteroid
-      for (let c = 0; c < game.asteroids.objs.length; c++) {
-        const gameObj = game.asteroids.objs[c];
+      for (let c = 0; c < this.asteroids.objs.length; c++) {
+        const gameObj = this.asteroids.objs[c];
         if (!(gameObj.x + gameObj.destructible.radius < start[0]
           || gameObj.x - gameObj.destructible.radius > end[0]
           || gameObj.y + gameObj.destructible.radius < start[1]
@@ -251,8 +295,8 @@ const gameFunctions = {
       }
 
       // hitscan-ship
-      for (let c = 0; c < game.otherShips.length; c++) {
-        const gameObj = game.otherShips[c]; // lol
+      for (let c = 0; c < this.otherShips.length; c++) {
+        const gameObj = this.otherShips[c]; // lol
         if (!(gameObj === hitscan.owner
           || gameObj.x + gameObj.destructible.radius < start[0]
           || gameObj.x - gameObj.destructible.radius > end[0]
@@ -283,8 +327,8 @@ const gameFunctions = {
       }
 
       // hitscan-projectile
-      for (let c = 0; c < game.projectiles.length; c++) {
-        const gameObj = game.projectiles[c];
+      for (let c = 0; c < this.projectiles.length; c++) {
+        const gameObj = this.projectiles[c];
         const gameObjNext = [
           gameObj.x + (gameObj.velocityX * dt),
           gameObj.y + (gameObj.velocityY * dt),
@@ -331,8 +375,8 @@ const gameFunctions = {
     }
 
     // projectile collisions
-    for (let n = 0; n < game.projectiles.length; n++) {
-      const prj = game.projectiles[n];
+    for (let n = 0; n < this.projectiles.length; n++) {
+      const prj = this.projectiles[n];
       const prjNext = [prj.x + (prj.velocityX * dt), prj.y + (prj.velocityY * dt)];
       const prjCapsule = {
         center1: [prj.x, prj.y],
@@ -340,8 +384,8 @@ const gameFunctions = {
         radius: prj.destructible.radius,
       };
       // projectile-ship
-      for (let c = 0; c < game.otherShips.length; c++) {
-        const gameObj = game.otherShips[c]; // lol
+      for (let c = 0; c < this.otherShips.length; c++) {
+        const gameObj = this.otherShips[c]; // lol
         const gameObjNext = [
           gameObj.x + (gameObj.velocityX * dt),
           gameObj.y + (gameObj.velocityY * dt),
@@ -364,8 +408,8 @@ const gameFunctions = {
       }
 
       // projectile-asteroid
-      for (let c = 0; c < game.asteroids.objs.length; c++) {
-        const gameObj = game.asteroids.objs[c];
+      for (let c = 0; c < this.asteroids.objs.length; c++) {
+        const gameObj = this.asteroids.objs[c];
         const dotX = (prj.x - gameObj.x) * (prj.x - gameObj.x);
         const dotY = (prj.y - gameObj.y) * (prj.y - gameObj.y);
         const distanceSqr = Math.abs(dotX + dotY);
@@ -377,17 +421,17 @@ const gameFunctions = {
     }
 
     // asteroid collisions
-    for (let c = 0; c < game.otherShips.length; c++) {
-      const ship = game.otherShips[c];
-      for (let n = 0; n < game.asteroids.objs.length; n++) {
-        const asteroid = game.asteroids.objs[n];
+    for (let c = 0; c < this.otherShips.length; c++) {
+      const ship = this.otherShips[c];
+      for (let n = 0; n < this.asteroids.objs.length; n++) {
+        const asteroid = this.asteroids.objs[n];
         const distance = ((ship.x - asteroid.x) * (ship.x - asteroid.x))
           + ((ship.y - asteroid.y) * (ship.y - asteroid.y));
         const overlap = ((ship.destructible.radius + asteroid.radius)
           * (ship.destructible.radius + asteroid.radius))
           - distance;
         if (overlap >= 0) {
-          if (game.frameCount < 25) { asteroid.destructible.hp = -1; } else {
+          if (this.frameCount < 25) { asteroid.destructible.hp = -1; } else {
             const objectSpeed = Math.sqrt((ship.velocityX * ship.velocityX)
               + (ship.velocityY * ship.velocityY));
             ship.destructible.shield.current -= ((c === -1) ? 0.1 : 0.01) * dt * objectSpeed;
@@ -404,10 +448,10 @@ const gameFunctions = {
     }
 
     // radial collisions
-    for (let n = 0; n < game.radials.length; n++) {
-      const rad = game.radials[n];
-      for (let c = 0; c < game.otherShips.length; c++) {
-        const gameObj = game.otherShips[c]; // lol
+    for (let n = 0; n < this.radials.length; n++) {
+      const rad = this.radials[n];
+      for (let c = 0; c < this.otherShips.length; c++) {
+        const gameObj = this.otherShips[c]; // lol
         const gameObjNext = [
           gameObj.x + (gameObj.velocityX * dt),
           gameObj.y + (gameObj.velocityY * dt),
@@ -425,11 +469,11 @@ const gameFunctions = {
         }
       }
     }
-  },
+  }
 
-  queueFunction: (game, f) => {
-    game.functionQueue.push(f);
-  },
+  queueFunction(f) {
+    this.functionQueue.push(f);
+  }
 
   processReportQueue() {
     const map = {};
@@ -464,7 +508,7 @@ const gameFunctions = {
     let item;
     let currentIndex;
     let tiles = [];
-    const mmfo = gameFunctions.getMinMaxFromObject;
+    const mmfo = this.getMinMaxFromObject;
     const taa = this.tileArray.array;
     const p21d = mapFunctions.posTo1dIndex;
     const rqArray = this.reportQueue.array;
@@ -508,12 +552,12 @@ const gameFunctions = {
     this.reportQueue.clear();
     this.tileArray.min = [Number.MAX_VALUE, Number.MAX_VALUE];
     this.tileArray.max = [-Number.MAX_VALUE, -Number.MAX_VALUE];
-  },
+  }
 
-  fetchFromTileArray: (game, pos, radius, objList) => {
+  fetchFromTileArray(pos, radius, objList) {
     const min = [pos[0] - radius, pos[1] - radius];
     const max = [pos[0] + radius, pos[1] + radius];
-    const info = mapFunctions.minMaxToInfo(min, max, game.tileArray.map);
+    const info = mapFunctions.minMaxToInfo(min, max, this.tileArray.map);
     const objectList = (objList) || {
       asteroid: [],
       obj: [],
@@ -523,7 +567,7 @@ const gameFunctions = {
     };
     for (let row = 0; row < info.repetitions; row++) {
       for (let col = 0; col < info.len; col++) {
-        const theTile = game.tileArray.get(info.start + col + (info.offset * row));
+        const theTile = this.tileArray.get(info.start + col + (info.offset * row));
         if (theTile) {
           const keys = Object.keys(objectList);
           for (let n = 0; n < keys.length; n++) {
@@ -536,9 +580,9 @@ const gameFunctions = {
       }
     }
     return objectList;
-  },
+  }
 
-  getMinMaxFromObject: (object, dt) => {
+  getMinMaxFromObject(object, dt) {
     const min = [];
     const max = [];
     if (object.type === 'hitscan') {
@@ -561,7 +605,7 @@ const gameFunctions = {
       max[1] = object.y + object.destructible.radius + velY;
     }
     return [min, max];
-  },
-};
+  }
+}
 
-module.exports.content = gameFunctions;
+module.exports = Game;

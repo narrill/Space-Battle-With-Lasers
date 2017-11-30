@@ -8,7 +8,6 @@ const enums = require('./enums.js');
 const objControls = require('./objControls.js');
 const aiFunctions = require('./aiFunctions.js');
 const destructors = require('./destructors.js');
-const gameFunctions = dependencyCatch(require('./gameFunctions.js'));
 const keys = require('./keys.js');
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/updaters.js
@@ -453,7 +452,7 @@ const updaters = {
     const sinceLastSend = this.game.elapsedGameTime - this.remoteInput.lastSend;
     if (this.remoteInput.remoteSend && sinceLastSend >= this.remoteInput.sendInterval) {
       this.remoteInput.lastSend += this.remoteInput.sendInterval;
-      gameFunctions.queueFunction(this.game, () => {
+      this.game.queueFunction(() => {
         const d = {};
         if (!this.remoteInput.sentInterval) {
           d.interval = this.remoteInput.sendInterval;
@@ -464,7 +463,7 @@ const updaters = {
           this.remoteInput.sentId = true;
         }
 
-        const fetchInfo = gameFunctions.fetchFromTileArray(this.game, [this.x, this.y], 15000);
+        const fetchInfo = this.game.fetchFromTileArray([this.x, this.y], 15000);
         const worldInfo = {
           objs: [],
           asteroids: {},

@@ -79,71 +79,14 @@ const app = http.createServer(onRequest).listen(port);
 console.log(`Listening on port ${port}`);
 
 const dependencyCatch = require('./dependencyCatch.js');
-const gameFunctions = dependencyCatch(require('./gameFunctions.js'));
+const Game = require('./Game.js');
 const ships = require('./ships.js');
 const constructors = dependencyCatch(require('./constructors.js'));
 const utilities = require('./utilities.js');
 
 const shipList = Object.keys(ships);
 
-const BASE_GAME = {
-  accumulator: 0,
-  timeStep: 0.0167,
-  lastTime: 0, // used by calculateDeltaTime()
-  runningTime: 0,
-  updatables: [],
-  otherShips: [],
-  otherShipCount: 0,
-  maxOtherShips: 6,
-  factions: 4,
-  respawnQueue: [],
-  factionColors: [],
-  hitscans: [],
-  projectiles: [],
-  radials: [],
-  reportQueue: undefined,
-  functionQueue: [],
-  socketSubscriptions: {},
-  grid: {
-    gridLines: 500, // number of grid lines
-    gridSpacing: 100, // pixels per grid unit
-    gridStart: [-25000, -25000], // corner anchor in world coordinates
-    colors: [
-      {
-        color: '#1111FF',
-        interval: 1000,
-      },
-      {
-        color: 'blue',
-        interval: 200,
-      },
-      {
-        color: 'mediumblue',
-        interval: 50,
-        minimap: true,
-      },
-      {
-        color: 'darkblue',
-        interval: 10,
-      },
-      {
-        color: 'navyblue',
-        interval: 2,
-      },
-    ],
-  },
-  tileArray: undefined,
-  asteroids: {
-    total: 60,
-    colors: [
-      '#6B2A06',
-      'sienna',
-    ],
-    objs: [],
-  },
-};
-
-const game = gameFunctions.init.call(utilities.deepObjectMerge.call({}, BASE_GAME));
+const game = new Game();
 
 const io = socketio(app);
 // to-do, network protocol
@@ -183,32 +126,4 @@ io.on('connection', (s) => {
   });
 });
 
-// let accumulator = 0;
-// let lastTickTime;
-// const TICK_INTERVAL_MS = 50;
-
-// const simulationLoop = (playerList) => {
-//   const currentTime = Date.now();
-//   const sinceLast = currentTime - lastTickTime;
-//   accumulator += sinceLast;
-//   lastTickTime = currentTime;
-
-//   const playerIds = Object.keys(playerList);
-
-//   while (accumulator >= TICK_INTERVAL_MS) {
-//     accumulator -= TICK_INTERVAL_MS;
-//     const dT = TICK_INTERVAL_MS / 1000;
-
-//     for (let n = 0; n < playerIds.length; n++) {
-//       const player = playerList[playerIds[n]];
-//     }
-//   }
-
-//   for (let n = 0; n < playerIds.length; n++) {
-//     const player = playerList[playerIds[n]];
-//     io.sockets.emit('info', null);
-//   }
-// };
-
-// lastTickTime = Date.now();
-// setInterval(simulationLoop.bind(null, players), TICK_INTERVAL_MS);
+game.loop();
