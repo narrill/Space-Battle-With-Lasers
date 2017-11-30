@@ -83,6 +83,7 @@ class LooseTimer {
 
 let titleMusic;
 let gameplayMusic;
+let ambientLoop;
 let keyclick;
 let titleStinger;
 let enterGameStinger;
@@ -318,6 +319,7 @@ const update = (dt) => {
   else if(state === GAME_STATES.DISCONNECTED) {
     gameplayMusic.pause();
     gameplayMusic.currentTime = 0;
+    ambientLoop.volume = 0;
   }
   else if(state == GAME_STATES.CHOOSESHIP && myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER])
   {
@@ -332,6 +334,7 @@ const update = (dt) => {
   {
     titleMusic.volume = utilities.clamp(0, titleMusic.volume - dt, 1);
     gameplayMusic.play();
+    ambientLoop.volume = utilities.clamp(0, ambientLoop.volume + dt, 1);
   //camera shenanigans
   //camera zoom controls
     if(myKeys.keydown[myKeys.KEYBOARD.KEY_UP] && camera.zoom<=camera.maxZoom)
@@ -506,6 +509,8 @@ const init = () => {
   titleStinger = document.querySelector('#titlestinger');
   enterGameStinger = document.querySelector('#entergamestinger');
   deathStinger = document.querySelector('#deathstinger');
+  ambientLoop = document. querySelector('#ambientloop');
+  ambientLoop.volume = 0;
   canvas = document.querySelector('#mainCanvas');
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;

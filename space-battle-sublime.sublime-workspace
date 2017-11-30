@@ -458,15 +458,6 @@
 			}
 		},
 		{
-			"file": "/C/Users/Mike/Documents/Cubase 5/17-11-9 swbl bgm2/.gitignore",
-			"settings":
-			{
-				"buffer_size": 13,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
 			"file": "src/server/constructors.js",
 			"settings":
 			{
@@ -543,10 +534,6 @@
 	},
 	"expanded_folders":
 	[
-		"/C/Users/Mike/Documents/git/igme-590/project2/src",
-		"/C/Users/Mike/Documents/git/igme-590/project2/src/client",
-		"/C/Users/Mike/Documents/git/igme-590/project2/src/server",
-		"/C/Users/Mike/Documents/git/igme-590/project2/hosted"
 	],
 	"file_history":
 	[
@@ -841,7 +828,7 @@
 						"translation.y": 720.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 9,
+					"stack_index": 8,
 					"type": "text"
 				},
 				{
@@ -959,7 +946,7 @@
 						"translation.y": 1305.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 8,
+					"stack_index": 7,
 					"type": "text"
 				},
 				{
@@ -989,7 +976,7 @@
 						"translation.y": 360.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 6,
+					"stack_index": 5,
 					"type": "text"
 				},
 				{
@@ -1053,34 +1040,6 @@
 				},
 				{
 					"buffer": 8,
-					"file": "/C/Users/Mike/Documents/Cubase 5/17-11-9 swbl bgm2/.gitignore",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 13,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								13,
-								13
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Text/Plain text.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 5,
-					"type": "text"
-				},
-				{
-					"buffer": 9,
 					"file": "src/server/constructors.js",
 					"semi_transient": false,
 					"settings":
@@ -1106,11 +1065,11 @@
 						"translation.y": 7061.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 12,
+					"stack_index": 11,
 					"type": "text"
 				},
 				{
-					"buffer": 10,
+					"buffer": 9,
 					"file": "src/server/collisions.js",
 					"semi_transient": false,
 					"settings":
@@ -1136,11 +1095,11 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 11,
+					"stack_index": 10,
 					"type": "text"
 				},
 				{
-					"buffer": 11,
+					"buffer": 10,
 					"file": "src/server/objControls.js",
 					"semi_transient": false,
 					"settings":
@@ -1166,11 +1125,11 @@
 						"translation.y": 180.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 10,
+					"stack_index": 9,
 					"type": "text"
 				},
 				{
-					"buffer": 12,
+					"buffer": 11,
 					"file": "hosted/client.html",
 					"semi_transient": false,
 					"settings":
@@ -1195,7 +1154,7 @@
 						"translation.y": 450.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 7,
+					"stack_index": 6,
 					"type": "text"
 				}
 			]

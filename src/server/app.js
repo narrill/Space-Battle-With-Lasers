@@ -43,7 +43,8 @@ const files = [
   'keyclick.wav',
   'titlestinger.wav',
   'entergamestinger.wav',
-  'deathstinger.wav'
+  'deathstinger.wav',
+  'ambientloop.wav'
 ];
 
 const hostedFiles = {};
