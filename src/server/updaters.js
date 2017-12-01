@@ -463,7 +463,8 @@ const updaters = {
           this.remoteInput.sentId = true;
         }
 
-        const fetchInfo = this.game.fetchFromTileArray([this.x, this.y], 15000);
+        const fetchInfo = this.game.spatialHash.fetch([this.x, this.y], 15000);
+        //console.log(fetchInfo);
         const worldInfo = {
           objs: [],
           asteroids: {},
@@ -612,10 +613,10 @@ const updaters = {
 
   queueReport() {
     const game = (this.game) ? this.game : this.owner.game;
-    if (this.x < game.tileArray.min[0]) { game.tileArray.min[0] = this.x; }
-    if (this.y < game.tileArray.min[1]) { game.tileArray.min[1] = this.y; }
-    if (this.x > game.tileArray.max[0]) { game.tileArray.max[0] = this.x; }
-    if (this.y > game.tileArray.max[1]) { game.tileArray.max[1] = this.y; }
+    // if (this.x < game.tileArray.min[0]) { game.tileArray.min[0] = this.x; }
+    // if (this.y < game.tileArray.min[1]) { game.tileArray.min[1] = this.y; }
+    // if (this.x > game.tileArray.max[0]) { game.tileArray.max[0] = this.x; }
+    // if (this.y > game.tileArray.max[1]) { game.tileArray.max[1] = this.y; }
     game.reportQueue.push(this);
   },
 

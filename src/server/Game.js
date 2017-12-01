@@ -3,10 +3,11 @@
 
 const dependencyCatch = require('./dependencyCatch.js');
 const constructors = dependencyCatch(require('./constructors.js'));
-const SuperArray = require('./SuperArray.js');
 const utilities = require('./utilities.js');
 const clearFunctions = require('./clearFunctions.js');
-const mapFunctions = require('./mapFunctions.js');
+const Map = require('./Map.js');
+const SpatialHash = require('./SpatialHash.js');
+const ReportQueue = require('./ReportQueue.js');
 const updaters = dependencyCatch(require('./updaters.js'));
 const ships = require('./ships.js');
 const collisions = require('./collisions.js');
@@ -21,14 +22,14 @@ class Game {
     this.updatables = [];
     this.otherShips = [];
     this.otherShipCount = 0;
-    this.maxOtherShips = 6;
+    this.maxOtherShips = 20;
     this.factions = 4;
     this.respawnQueue = [];
     this.factionColors = [];
     this.hitscans = [];
     this.projectiles = [];
     this.radials = [];
-    this.reportQueue = undefined;
+    this.reportQueue = new ReportQueue();
     this.functionQueue = [];
     this.socketSubscriptions = {};
     this.grid = {
@@ -59,7 +60,7 @@ class Game {
         },
       ]
     };
-    this.tileArray = undefined;
+    this.spatialHash = new SpatialHash();
     this.asteroids = {
       total: 60,
       colors: [
@@ -69,11 +70,6 @@ class Game {
       objs: []
     };
     constructors.makeAsteroids.bind(this, this, this.grid)();
-    this.reportQueue = new SuperArray();
-    this.tileArray = new SuperArray();
-    this.tileArray.min = [Number.MAX_VALUE, Number.MAX_VALUE];
-    this.tileArray.max = [-Number.MAX_VALUE, -Number.MAX_VALUE];
-    this.tileArray.map = { position: [0, 0], size: [0, 0], precision: 0 };
     let hue = Math.round(Math.random() * 360);
     for (let c = 0; c < this.factions; c++) {
       this.factionColors[c] = `hsl(${hue},100%,65%)`;
@@ -220,7 +216,7 @@ class Game {
           }
         }
       }
-      const projectiles = this.fetchFromTileArray(
+      const projectiles = this.spatialHash.fetch(
         [currentObj.x, currentObj.y],
         currentObj.destructible.radius,
         { prj: [] },
@@ -475,136 +471,9 @@ class Game {
     this.functionQueue.push(f);
   }
 
-  processReportQueue() {
-    const map = {};
-    map.position = [this.tileArray.min[0] - 2, this.tileArray.min[1] - 2];
-    map.size = [
-      (this.tileArray.max[0] - this.tileArray.min[0]) + 4,
-      (this.tileArray.max[1] - this.tileArray.min[1]) + 4,
-    ];
-    map.precision = 30000;
-    const taSize = mapFunctions.posTo1dIndex(
-      [map.position[0] + map.size[0], map.position[1] + map.size[1]],
-      map,
-    );
-    for (let c = 0; c <= taSize; c++) {
-      // console.log('adding tile '+c);
-      if (c >= this.tileArray.count) {
-        this.tileArray.push({
-          asteroid: new SuperArray(),
-          obj: new SuperArray(),
-          prj: new SuperArray(),
-          hitscan: new SuperArray(),
-          radial: new SuperArray(),
-        });
-      } else {
-        this.tileArray.get(c).asteroid.clear();
-        this.tileArray.get(c).obj.clear();
-        this.tileArray.get(c).prj.clear();
-        this.tileArray.get(c).hitscan.clear();
-        this.tileArray.get(c).radial.clear();
-      }
-    }
-    let item;
-    let currentIndex;
-    let tiles = [];
-    const mmfo = this.getMinMaxFromObject;
-    const taa = this.tileArray.array;
-    const p21d = mapFunctions.posTo1dIndex;
-    const rqArray = this.reportQueue.array;
-
-    for (let c = 0, counter = this.reportQueue.count; c < counter; c++) {
-      item = rqArray[c];
-      const minMax = mmfo(item);
-      const min = minMax[0];
-      const max = minMax[1];
-      tiles = [];
-      if (item.x && item.y) {
-        currentIndex = p21d(
-          [(item.x) ? item.x : item.startX, (item.y) ? item.y : item.startY],
-          map,
-        );
-        tiles[0] = currentIndex;
-        taa[currentIndex][item.type].push(item);
-      }
-      currentIndex = p21d([min[0], min[1]], map);
-      if (currentIndex <= taSize && currentIndex >= 0 && !tiles.includes(currentIndex)) {
-        tiles[1] = currentIndex;
-        taa[currentIndex][item.type].push(item);
-      }
-      currentIndex = p21d([min[0], max[1]], map);
-      if (currentIndex <= taSize && currentIndex >= 0 && !tiles.includes(currentIndex)) {
-        tiles[2] = currentIndex;
-        taa[currentIndex][item.type].push(item);
-      }
-      currentIndex = p21d([max[0], min[1]], map);
-      if (currentIndex <= taSize && currentIndex >= 0 && !tiles.includes(currentIndex)) {
-        tiles[3] = currentIndex;
-        taa[currentIndex][item.type].push(item);
-      }
-      currentIndex = p21d([max[0], max[1]], map);
-      if (currentIndex <= taSize && currentIndex >= 0 && !tiles.includes(currentIndex)) {
-        tiles[4] = currentIndex;
-        taa[currentIndex][item.type].push(item);
-      }
-    }
-    this.tileArray.map = map;
+  processReportQueue(dt) {
+    this.spatialHash.processReportQueue(this.reportQueue, dt);
     this.reportQueue.clear();
-    this.tileArray.min = [Number.MAX_VALUE, Number.MAX_VALUE];
-    this.tileArray.max = [-Number.MAX_VALUE, -Number.MAX_VALUE];
-  }
-
-  fetchFromTileArray(pos, radius, objList) {
-    const min = [pos[0] - radius, pos[1] - radius];
-    const max = [pos[0] + radius, pos[1] + radius];
-    const info = mapFunctions.minMaxToInfo(min, max, this.tileArray.map);
-    const objectList = (objList) || {
-      asteroid: [],
-      obj: [],
-      prj: [],
-      hitscan: [],
-      radial: [],
-    };
-    for (let row = 0; row < info.repetitions; row++) {
-      for (let col = 0; col < info.len; col++) {
-        const theTile = this.tileArray.get(info.start + col + (info.offset * row));
-        if (theTile) {
-          const keys = Object.keys(objectList);
-          for (let n = 0; n < keys.length; n++) {
-            const key = keys[n];
-            for (let c = 0; c < theTile[key].count; c++) {
-              objectList[key].push(theTile[key].get(c));
-            }
-          }
-        }
-      }
-    }
-    return objectList;
-  }
-
-  getMinMaxFromObject(object, dt) {
-    const min = [];
-    const max = [];
-    if (object.type === 'hitscan') {
-      min[0] = (object.startX < object.endX) ? object.startX : object.endX;
-      min[1] = (object.startY < object.endY) ? object.startY : object.endY;
-      max[0] = (object.startX > object.endX) ? object.startX : object.endX;
-      max[1] = (object.startY > object.endY) ? object.startY : object.endY;
-    } else if (object.type === 'radial') {
-      const vel = Math.abs(object.velocity) * dt;
-      min[0] = object.x - object.radius - vel;
-      min[1] = object.y - object.radius - vel;
-      max[0] = object.x + object.radius + vel;
-      max[1] = object.y + object.radius + vel;
-    } else {
-      const velX = (object.velocityX) ? Math.abs(object.velocityX) * dt : 0;
-      const velY = (object.velocityY) ? Math.abs(object.velocityY) * dt : 0;
-      min[0] = object.x - object.destructible.radius - velX;
-      min[1] = object.y - object.destructible.radius - velY;
-      max[0] = object.x + object.destructible.radius + velX;
-      max[1] = object.y + object.destructible.radius + velY;
-    }
-    return [min, max];
   }
 }
 
