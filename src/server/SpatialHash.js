@@ -1,4 +1,4 @@
-const Map = require('./Map.js');
+const Grid = require('./Map.js');
 const SWBLTypedGroup = require('./SWBLTypedGroup.js');
 
 const getMinMaxFromObject = (object, dt) => {
@@ -29,16 +29,16 @@ const getMinMaxFromObject = (object, dt) => {
 class SpatialHash {
   constructor() {
     this.tiles = [];
-    this.map = new Map();
+    this.map = new Grid();
   }
 
   processReportQueue(reportQueue, dt) {
-    const map = new Map(
+    const map = new Grid(
       reportQueue.min[0] - 2,
       reportQueue.min[1] - 2,
       (reportQueue.max[0] - reportQueue.min[0]) + 4,
       (reportQueue.max[1] - reportQueue.min[1]) + 4,
-      30000
+      3000
     );    
     const taSize = map.length;
     this.map = map;    
@@ -47,14 +47,13 @@ class SpatialHash {
     let item;
     let currentIndex;
     let tiles = [];
-    const mmfo = getMinMaxFromObject;
     const taa = this.tiles;
     const p21d = map.posTo1dIndex.bind(map);
     const rqArray = reportQueue.objects;
 
     for (let c = 0, counter = reportQueue.count; c < counter; c++) {
       item = rqArray[c];
-      const minMax = mmfo(item, dt);
+      const minMax = getMinMaxFromObject(item, dt);
       const min = minMax[0];
       const max = minMax[1];
       tiles = [];
@@ -63,26 +62,26 @@ class SpatialHash {
         tiles[0] = currentIndex;
         taa[currentIndex][item.type].push(item);
       }
-      currentIndex = p21d([min[0], min[1]]);
-      if (currentIndex <= taSize && currentIndex >= 0 && !tiles.includes(currentIndex)) {
-        tiles[1] = currentIndex;
-        taa[currentIndex][item.type].push(item);
-      }
-      currentIndex = p21d([min[0], max[1]]);
-      if (currentIndex <= taSize && currentIndex >= 0 && !tiles.includes(currentIndex)) {
-        tiles[2] = currentIndex;
-        taa[currentIndex][item.type].push(item);
-      }
-      currentIndex = p21d([max[0], min[1]]);
-      if (currentIndex <= taSize && currentIndex >= 0 && !tiles.includes(currentIndex)) {
-        tiles[3] = currentIndex;
-        taa[currentIndex][item.type].push(item);
-      }
-      currentIndex = p21d([max[0], max[1]]);
-      if (currentIndex <= taSize && currentIndex >= 0 && !tiles.includes(currentIndex)) {
-        tiles[4] = currentIndex;
-        taa[currentIndex][item.type].push(item);
-      }
+      // currentIndex = p21d([min[0], min[1]]);
+      // if (currentIndex <= taSize && currentIndex >= 0 && !tiles.includes(currentIndex)) {
+      //   tiles[1] = currentIndex;
+      //   taa[currentIndex][item.type].push(item);
+      // }
+      // currentIndex = p21d([min[0], max[1]]);
+      // if (currentIndex <= taSize && currentIndex >= 0 && !tiles.includes(currentIndex)) {
+      //   tiles[2] = currentIndex;
+      //   taa[currentIndex][item.type].push(item);
+      // }
+      // currentIndex = p21d([max[0], min[1]]);
+      // if (currentIndex <= taSize && currentIndex >= 0 && !tiles.includes(currentIndex)) {
+      //   tiles[3] = currentIndex;
+      //   taa[currentIndex][item.type].push(item);
+      // }
+      // currentIndex = p21d([max[0], max[1]]);
+      // if (currentIndex <= taSize && currentIndex >= 0 && !tiles.includes(currentIndex)) {
+      //   tiles[4] = currentIndex;
+      //   taa[currentIndex][item.type].push(item);
+      // }
     }
   }
 

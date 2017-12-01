@@ -464,7 +464,6 @@ const updaters = {
         }
 
         const fetchInfo = this.game.spatialHash.fetch([this.x, this.y], 15000);
-        //console.log(fetchInfo);
         const worldInfo = {
           objs: [],
           asteroids: {},
@@ -483,7 +482,6 @@ const updaters = {
             shc: dest.shield.max / dest.shield.efficiency,
             hp: dest.hp / dest.maxHp,
             color: o.color,
-            // model: utilities.deepObjectMerge.call({}, o.model),
             medial: ots.medial.currentStrength / ots.medial.efficiency,
             lateral: ots.lateral.currentStrength / ots.lateral.efficiency,
             rotational: ots.rotational.currentStrength / ots.rotational.efficiency,

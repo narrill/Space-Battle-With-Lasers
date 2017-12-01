@@ -1,7 +1,7 @@
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
-class Map {
+class Grid {
   constructor(x = 0, y = 0, width = 0, height = 0, precision = 0) {
     this.position = [x, y];
     this.size = [width, height];
@@ -45,8 +45,8 @@ class Map {
   }
 
   get length() {
-    return this.posTo1dIndex(this.size);
+    return this.posTo1dIndex([this.position[0] + this.size[0], this.position[1] + this.size[1]]);
   }
 }
 
-module.exports = Map;
+module.exports = Grid;

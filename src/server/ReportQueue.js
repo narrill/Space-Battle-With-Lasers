@@ -6,7 +6,7 @@ class ReportQueue {
   clear() {
     this._objects.length = 0;
     this.min = [Number.MAX_VALUE, Number.MAX_VALUE];
-      this.max = [-Number.MAX_VALUE, -Number.MAX_VALUE];
+    this.max = [-Number.MAX_VALUE, -Number.MAX_VALUE];
   }
   push(object) {
     if (object.x < this.min[0]) { this.min[0] = object.x; }

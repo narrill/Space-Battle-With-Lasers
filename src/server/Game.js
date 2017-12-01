@@ -5,7 +5,6 @@ const dependencyCatch = require('./dependencyCatch.js');
 const constructors = dependencyCatch(require('./constructors.js'));
 const utilities = require('./utilities.js');
 const clearFunctions = require('./clearFunctions.js');
-const Map = require('./Map.js');
 const SpatialHash = require('./SpatialHash.js');
 const ReportQueue = require('./ReportQueue.js');
 const updaters = dependencyCatch(require('./updaters.js'));
@@ -19,7 +18,7 @@ class Game {
     this.timeStep = 0.0167;
     this.lastTime = 0; // used by calculateDeltaTime()
     this.objs = [];
-    this.maxNPCs = 0;
+    this.maxNPCs = 20;
     this.factions = 4;
     this.respawnQueue = [];
     this.factionColors = [];
@@ -59,7 +58,7 @@ class Game {
     };
     this.spatialHash = new SpatialHash();
     this.asteroids = {
-      total: 60,
+      total: 0,
       colors: [
         '#6B2A06',
         'sienna',
@@ -197,6 +196,8 @@ class Game {
         { prj: [] },
       );
 
+      //console.log(`ID ${currentObj.id}, ${projectiles.prj.length} prjs`);
+
       for (let c = 0; c < projectiles.prj.length; c++) {
         const prj = projectiles.prj[c];
         if (currentObj !== prj.owner) {
@@ -322,22 +323,6 @@ class Game {
     for (let n = 0; n < this.projectiles.length; n++) {
       const prj = this.projectiles[n];
       const prjCapsule = new utilities.VelocityCapsule(prj, dt);
-      // projectile-ship
-      for (let c = 0; c < this.objs.length; c++) {
-        const gameObj = this.objs[c];
-        if (gameObj !== prj.owner) {
-          const dotX = (prj.x - gameObj.x) * (prj.x - gameObj.x);
-          const dotY = (prj.y - gameObj.y) * (prj.y - gameObj.y);
-          const distanceSqr = Math.abs(dotX + dotY);
-          const radiiSum = prj.destructible.radius + gameObj.destructible.radius;
-          if (distanceSqr <= 5 * radiiSum * radiiSum) {
-            const objCapsule = new utilities.VelocityCapsule(gameObj, dt);
-            if (utilities.capsuleCapsuleSAT(objCapsule, prjCapsule)) {
-              prj.collisionFunction(prj, gameObj, dt);
-            }
-          }
-        }
-      }
 
       // projectile-asteroid
       for (let c = 0; c < this.asteroids.objs.length; c++) {
