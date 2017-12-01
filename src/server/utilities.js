@@ -1,6 +1,26 @@
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
+class Capsule {
+  constructor(x1, y1, x2, y2, r) {
+    this.center1 = [x1, y1];
+    this.center2 = [x2, y2];
+    this.radius = r;
+  }
+}
+
+class VelocityCapsule extends Capsule {
+  constructor(object, dt) {
+    super(
+      object.x, 
+      object.y,
+      object.x + object.velocityX * dt,
+      object.y + object.velocityY * dt,
+      object.destructible.radius
+    );
+  }
+}
+
 const utilities = {
   getForwardVector() {
     // console.log(this.rotation);
@@ -216,6 +236,10 @@ const utilities = {
     const thc = Math.sqrt((r * r) - (d * d));
     return tca - thc;
   },
+
+  Capsule,
+
+  VelocityCapsule,
 
   isCapsuleWithinCircle: (circle, capsule) => {
     let capsuleAxis = [

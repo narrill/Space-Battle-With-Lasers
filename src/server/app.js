@@ -102,13 +102,13 @@ io.on('connection', (s) => {
       game.socketSubscriptions[s.id] = s;
       chosenShip.remoteInput = {};
       const shipModels = {};
-      Object.values(game.otherShips).forEach((sh) => {
+      Object.values(game.objs).forEach((sh) => {
         shipModels[sh.id] = sh.model;
       });
       ship = constructors.createShip(chosenShip, game, s.id);
       ship.remoteInput.remoteSend = (data, msg) => { s.emit((msg) || 'worldInfo', data); };
       sendToShip = ship.remoteInput.messageHandler;
-      game.otherShips.push(ship);
+      game.objs.push(ship);
       s.emit('grid', game.grid);
       s.emit('ships', shipModels);
     } else {

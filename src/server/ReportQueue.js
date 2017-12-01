@@ -10,10 +10,10 @@ class ReportQueue {
   }
   push(object) {
     if (object.x < this.min[0]) { this.min[0] = object.x; }
-      if (object.y < this.min[1]) { this.min[1] = object.y; }
-      if (object.x > this.max[0]) { this.max[0] = object.x; }
-      if (object.y > this.max[1]) { this.max[1] = object.y; }
-      this._objects.push(object);
+    if (object.y < this.min[1]) { this.min[1] = object.y; }
+    if (object.x > this.max[0]) { this.max[0] = object.x; }
+    if (object.y > this.max[1]) { this.max[1] = object.y; }
+    this._objects.push(object);
   }
   get objects() {
     return this._objects;

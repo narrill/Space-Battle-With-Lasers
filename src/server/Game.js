@@ -18,11 +18,8 @@ class Game {
     this.accumulator = 0;
     this.timeStep = 0.0167;
     this.lastTime = 0; // used by calculateDeltaTime()
-    this.runningTime = 0;
-    this.updatables = [];
-    this.otherShips = [];
-    this.otherShipCount = 0;
-    this.maxOtherShips = 20;
+    this.objs = [];
+    this.maxNPCs = 0;
     this.factions = 4;
     this.respawnQueue = [];
     this.factionColors = [];
@@ -76,7 +73,7 @@ class Game {
       hue += 360 / this.factions;
       if (hue >= 360) { hue -= 360; }
     }
-    for (let c = 0; c < this.maxOtherShips; c++) {
+    for (let c = 0; c < this.maxNPCs; c++) {
       const newShip = utilities.deepObjectMerge.call(
         {},
         (Math.random() >= 0.5) ? ships.gull : ships.cheetah,
@@ -90,7 +87,7 @@ class Game {
       };
       newShip.faction = -1;
       newShip.respawnTime = 5;
-      this.otherShips.push(constructors.createShip(newShip, this));
+      this.objs.push(constructors.createShip(newShip, this));
     } 
     this.lastTime = Date.now();
     this.elapsedGameTime = 0;
@@ -116,22 +113,20 @@ class Game {
     // clear values
     this.hitscans.length = 0;
     clearFunctions.clearDestructibles(this.asteroids.objs);
-    clearFunctions.clearDestructibles(this.otherShips);
-    clearFunctions.clearDestructibles(this.updatables);
+    clearFunctions.clearDestructibles(this.objs);
     clearFunctions.clearDestructibles(this.projectiles);
-    clearFunctions.cullDestructibles(this.projectiles, this.grid);
-    clearFunctions.cullDestructibles(this.otherShips, this.grid);
+    clearFunctions.cullDestructibles(this.objs, this.grid);
     clearFunctions.clearRadials(this.radials);
 
     for (let c = 0; c < this.respawnQueue.length; c++) {
       const rs = this.respawnQueue[c];
       if (this.elapsedGameTime >= rs.time) {
-        this.otherShips.push(constructors.createShip(rs.params, this));
+        this.objs.push(constructors.createShip(rs.params, this));
         this.respawnQueue.splice(c--, 1);
       }
     }
     for (let c = 0; c < this.asteroids.objs.length; c++) {
-      updaters.queueReport.call(this.asteroids.objs[c]);
+      this.reportQueue.push(this.asteroids.objs[c]);
     }
 
     // update ship, center main camera on ship
@@ -139,21 +134,19 @@ class Game {
     for (let i = 0; i < this.projectiles.length; i++) {
       updaters.updateMobile.call(this.projectiles[i], dt);
       updaters.updatePrj.call(this.projectiles[i], dt);
-      updaters.queueReport.call(this.projectiles[i]);
+      this.reportQueue.push(this.projectiles[i]);
     }
     for (let i = 0; i < this.radials.length; i++) {
       updaters.updateRadial.call(this.radials[i], dt);
-      updaters.queueReport.call(this.radials[i]);
+      this.reportQueue.push(this.radials[i]);
     }
-    // updaters.updateUpdatable(this.ship,dt);
-    // console.log(this.otherShips.length);
-    this.otherShips.forEach((ship) => {
+    this.objs.forEach((ship) => {
       updaters.updateUpdatable.call(ship, dt);
     }, this);
 
 
     for (let i = 0; i < this.hitscans.length; i++) {
-      updaters.queueReport.call(this.hitscans[i]);
+      this.reportQueue.push(this.hitscans[i]);
     }
 
     this.processReportQueue(dt);
@@ -173,30 +166,15 @@ class Game {
 
   checkCollisions(dt) {
     // obj collisions
-    // var resolvedCollisions = [];
-    for (let i = 0; i < this.otherShips.length; i++) {
-      const currentObj = this.otherShips[i];
+    for (let i = 0; i < this.objs.length; i++) {
+      const currentObj = this.objs[i];
+      const currentObjCapsule = new utilities.VelocityCapsule(currentObj, dt);
 
-      const currentObjNext = [
-        currentObj.x + (currentObj.velocityX * dt),
-        currentObj.y + (currentObj.velocityY * dt),
-      ];
-
-      const currentObjCapsule = {
-        center1: [currentObj.x, currentObj.y],
-        center2: currentObjNext,
-        radius: currentObj.destructible.radius,
-      };
-
-      for (let c = i + 1; c < this.otherShips.length; c++) {
-        const gameObj = this.otherShips[c];
+      for (let c = i + 1; c < this.objs.length; c++) {
+        const gameObj = this.objs[c];
 
         if (!(currentObj.specialProperties && gameObj === currentObj.specialProperties.owner)
           && !(gameObj.specialProperties && currentObj === gameObj.specialProperties.owner)) {
-          const gameObjNext = [
-            gameObj.x + (gameObj.velocityX * dt),
-            gameObj.y + (gameObj.velocityY * dt),
-          ];
           const distanceSqr = Math.abs(
             ((currentObj.x - gameObj.x) * (currentObj.x - gameObj.x))
             + ((currentObj.y - gameObj.y) * (currentObj.y - gameObj.y)),
@@ -205,41 +183,25 @@ class Game {
           if (distanceSqr <= 5
             * (currentObj.destructible.radius + gameObj.destructible.radius)
             * (currentObj.destructible.radius + gameObj.destructible.radius)) {
-            const objCapsule = {
-              center1: [gameObj.x, gameObj.y],
-              center2: gameObjNext,
-              radius: gameObj.destructible.radius,
-            };
+            const objCapsule = new utilities.VelocityCapsule(gameObj, dt);
             if (utilities.capsuleCapsuleSAT(objCapsule, currentObjCapsule)) {
               collisions.basicKineticCollision(currentObj, gameObj, dt);
             }
           }
         }
       }
+
       const projectiles = this.spatialHash.fetch(
         [currentObj.x, currentObj.y],
         currentObj.destructible.radius,
         { prj: [] },
       );
-      let prj;
-      const prjNext = [];
-      let prjCapsule;
+
       for (let c = 0; c < projectiles.prj.length; c++) {
-        prj = projectiles.prj[c];
+        const prj = projectiles.prj[c];
         if (currentObj !== prj.owner) {
-          prjNext[0] = prj.x + (prj.velocityX * dt);
-          prjNext[1] = prj.y + (prj.velocityY * dt);
-          prjCapsule = {
-            center1: [prj.x, prj.y],
-            center2: prjNext,
-            radius: prj.destructible.radius,
-          };
-          const objCapsule = {
-            center1: [currentObj.x, currentObj.y],
-            center2: currentObjNext,
-            radius: currentObj.destructible.radius,
-          };
-          if (utilities.capsuleCapsuleSAT(objCapsule, prjCapsule)) {
+          const prjCapsule = new utilities.VelocityCapsule(prj, dt);
+          if (utilities.capsuleCapsuleSAT(currentObjCapsule, prjCapsule)) {
             prj.collisionFunction(prj, currentObj, dt);
           }
         }
@@ -291,8 +253,8 @@ class Game {
       }
 
       // hitscan-ship
-      for (let c = 0; c < this.otherShips.length; c++) {
-        const gameObj = this.otherShips[c]; // lol
+      for (let c = 0; c < this.objs.length; c++) {
+        const gameObj = this.objs[c];
         if (!(gameObj === hitscan.owner
           || gameObj.x + gameObj.destructible.radius < start[0]
           || gameObj.x - gameObj.destructible.radius > end[0]
@@ -306,14 +268,7 @@ class Game {
             hitscan.endX,
             hitscan.endY,
           );
-          const objCapsule = {
-            center1: [gameObj.x, gameObj.y],
-            center2: [
-              gameObj.x + (gameObj.velocityX * dt),
-              gameObj.y + (gameObj.velocityY * dt),
-            ],
-            radius: gameObj.destructible.radius,
-          };
+          const objCapsule = new utilities.VelocityCapsule(gameObj, dt);
           if (gameDistance[1] < tValOfObj
             && utilities.polygonCapsuleSAT(hitscanVertices, objCapsule)) {
             obj = gameObj;
@@ -325,10 +280,6 @@ class Game {
       // hitscan-projectile
       for (let c = 0; c < this.projectiles.length; c++) {
         const gameObj = this.projectiles[c];
-        const gameObjNext = [
-          gameObj.x + (gameObj.velocityX * dt),
-          gameObj.y + (gameObj.velocityY * dt),
-        ];
         if (!(gameObj === hitscan.owner
           || gameObj.x + gameObj.destructible.radius < start[0]
           || gameObj.x - gameObj.destructible.radius > end[0]
@@ -342,11 +293,8 @@ class Game {
             hitscan.endX,
             hitscan.endY,
           );
-          const objCapsule = {
-            center1: [gameObj.x, gameObj.y],
-            center2: gameObjNext,
-            radius: gameObj.destructible.radius,
-          };
+    
+          const objCapsule = new utilities.VelocityCapsule(gameObj, dt);
 
           if (gameDistance[1] < tValOfObj
             && utilities.polygonCapsuleSAT(hitscanVertices, objCapsule)) {
@@ -373,30 +321,18 @@ class Game {
     // projectile collisions
     for (let n = 0; n < this.projectiles.length; n++) {
       const prj = this.projectiles[n];
-      const prjNext = [prj.x + (prj.velocityX * dt), prj.y + (prj.velocityY * dt)];
-      const prjCapsule = {
-        center1: [prj.x, prj.y],
-        center2: prjNext,
-        radius: prj.destructible.radius,
-      };
+      const prjCapsule = new utilities.VelocityCapsule(prj, dt);
       // projectile-ship
-      for (let c = 0; c < this.otherShips.length; c++) {
-        const gameObj = this.otherShips[c]; // lol
-        const gameObjNext = [
-          gameObj.x + (gameObj.velocityX * dt),
-          gameObj.y + (gameObj.velocityY * dt),
-        ];
+      for (let c = 0; c < this.objs.length; c++) {
+        const gameObj = this.objs[c];
         if (gameObj !== prj.owner) {
           const dotX = (prj.x - gameObj.x) * (prj.x - gameObj.x);
           const dotY = (prj.y - gameObj.y) * (prj.y - gameObj.y);
           const distanceSqr = Math.abs(dotX + dotY);
           const radiiSum = prj.destructible.radius + gameObj.destructible.radius;
           if (distanceSqr <= 5 * radiiSum * radiiSum) {
-            if (utilities.capsuleCapsuleSAT({
-              center1: [gameObj.x, gameObj.y],
-              center2: gameObjNext,
-              radius: gameObj.destructible.radius,
-            }, prjCapsule)) {
+            const objCapsule = new utilities.VelocityCapsule(gameObj, dt);
+            if (utilities.capsuleCapsuleSAT(objCapsule, prjCapsule)) {
               prj.collisionFunction(prj, gameObj, dt);
             }
           }
@@ -417,8 +353,8 @@ class Game {
     }
 
     // asteroid collisions
-    for (let c = 0; c < this.otherShips.length; c++) {
-      const ship = this.otherShips[c];
+    for (let c = 0; c < this.objs.length; c++) {
+      const ship = this.objs[c];
       for (let n = 0; n < this.asteroids.objs.length; n++) {
         const asteroid = this.asteroids.objs[n];
         const distance = ((ship.x - asteroid.x) * (ship.x - asteroid.x))
@@ -430,7 +366,7 @@ class Game {
           if (this.frameCount < 25) { asteroid.destructible.hp = -1; } else {
             const objectSpeed = Math.sqrt((ship.velocityX * ship.velocityX)
               + (ship.velocityY * ship.velocityY));
-            ship.destructible.shield.current -= ((c === -1) ? 0.1 : 0.01) * dt * objectSpeed;
+            ship.destructible.shield.current -= 0.1 * dt * objectSpeed;
             asteroid.destructible.hp -= 0.2 * dt * objectSpeed;
             if (ship.destructible.shield.current < 0) {
               ship.destructible.hp += ship.destructible.shield.current;
@@ -446,19 +382,13 @@ class Game {
     // radial collisions
     for (let n = 0; n < this.radials.length; n++) {
       const rad = this.radials[n];
-      for (let c = 0; c < this.otherShips.length; c++) {
-        const gameObj = this.otherShips[c]; // lol
-        const gameObjNext = [
-          gameObj.x + (gameObj.velocityX * dt),
-          gameObj.y + (gameObj.velocityY * dt),
-        ];
+      for (let c = 0; c < this.objs.length; c++) {
+        const gameObj = this.objs[c]; // lol
+        
         const circleInner = { center: [rad.x, rad.y], radius: rad.radius };
         const circleOuter = { center: [rad.x, rad.y], radius: rad.radius + (rad.velocity * dt) };
-        const capsule = {
-          center1: [gameObj.x, gameObj.y],
-          center2: gameObjNext,
-          radius: gameObj.destructible.radius,
-        };
+        
+        const capsule = new utilities.VelocityCapsule(gameObj, dt);
         if (utilities.circleCapsuleSAT(circleOuter, capsule)
           && !utilities.isCapsuleWithinCircle(circleInner, capsule)) {
           rad.collisionFunction(rad, gameObj, dt);

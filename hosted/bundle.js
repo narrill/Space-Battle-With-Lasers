@@ -2,6 +2,10 @@
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 (function e(t, n, r) {
@@ -1420,6 +1424,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
+    var Capsule = function Capsule(x1, y1, x2, y2, r) {
+      _classCallCheck(this, Capsule);
+
+      this.center1 = [x1, y1];
+      this.center2 = [x2, y2];
+      this.radius = r;
+    };
+
+    var VelocityCapsule = function (_Capsule) {
+      _inherits(VelocityCapsule, _Capsule);
+
+      function VelocityCapsule(object, dt) {
+        _classCallCheck(this, VelocityCapsule);
+
+        return _possibleConstructorReturn(this, (VelocityCapsule.__proto__ || Object.getPrototypeOf(VelocityCapsule)).call(this, object.x, object.y, object.x + object.velocityX * dt, object.y + object.velocityY * dt, object.destructible.radius));
+      }
+
+      return VelocityCapsule;
+    }(Capsule);
+
     var utilities = {
       getForwardVector: function getForwardVector() {
         // console.log(this.rotation);
@@ -1650,6 +1674,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var thc = Math.sqrt(r * r - d * d);
         return tca - thc;
       },
+
+      Capsule: Capsule,
+
+      VelocityCapsule: VelocityCapsule,
 
       isCapsuleWithinCircle: function isCapsuleWithinCircle(circle, capsule) {
         var capsuleAxis = [capsule.center2[0] - capsule.center1[0], capsule.center2[1] - capsule.center1[1]];
@@ -1922,7 +1950,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       },
 
       deepObjectMerge: function deepObjectMerge(src) {
-        var _this = this;
+        var _this2 = this;
 
         if (!src) {
           return this;
@@ -1932,25 +1960,25 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           // if the current attribute is an object in the source
           if (src[key] instanceof Object && !(src[key] instanceof Array)) {
             // if the current attribute isn't in the this, or isn't an object in the this
-            if (!_this[key] || !(_this[key] instanceof Object && !(_this[key] instanceof Array))) {
+            if (!_this2[key] || !(_this2[key] instanceof Object && !(_this2[key] instanceof Array))) {
               // make it an empty object
-              _this[key] = {};
+              _this2[key] = {};
             }
             // then deep merge the two
             if (key === 'specialProperties') {
-              if (!_this[key]) {
-                _this[key] = {};
+              if (!_this2[key]) {
+                _this2[key] = {};
               }
-              utilities.shallowObjectMerge.call(_this[key], src[key]);
+              utilities.shallowObjectMerge.call(_this2[key], src[key]);
             } else {
-              utilities.deepObjectMerge.call(_this[key], src[key]);
+              utilities.deepObjectMerge.call(_this2[key], src[key]);
             }
           } else {
             // if current attribute is an array in the source, give this a copy of it
             // this[key] = (Array.isArray(src[key])) ? src[key].slice() : src[key];
 
             // we'll worry about referencing bugs later
-            _this[key] = src[key];
+            _this2[key] = src[key];
           }
         });
 
@@ -1967,7 +1995,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       // }
 
       veryShallowObjectMerge: function veryShallowObjectMerge(src) {
-        var _this2 = this;
+        var _this3 = this;
 
         if (!src) {
           return this;
@@ -1975,28 +2003,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         // loop through source's attributes
         Object.keys(src).forEach(function (key) {
           if (key === 'specialProperties') {
-            if (!_this2[key]) {
-              _this2[key] = {};
+            if (!_this3[key]) {
+              _this3[key] = {};
             }
-            utilities.shallowObjectMerge.call(_this2[key], src[key]);
+            utilities.shallowObjectMerge.call(_this3[key], src[key]);
             return;
           }
           // if the current attribute is an object in the source
           if (!(src[key] instanceof Object) || src[key] instanceof Array) {
-            _this2[key] = src[key];
+            _this3[key] = src[key];
           }
         });
 
         return this;
       },
       shallowObjectMerge: function shallowObjectMerge(src) {
-        var _this3 = this;
+        var _this4 = this;
 
         if (!src) {
           return this;
         }
         Object.keys(src).forEach(function (key) {
-          _this3[key] = src[key];
+          _this4[key] = src[key];
         });
 
         return this;

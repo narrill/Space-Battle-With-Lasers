@@ -94,7 +94,7 @@ const constructors = {
     // updaters.populateUpdaters(ship);
     ship.updaters = [];
     ship.updaters.push(updaters.updateMobile);
-    ship.updaters.push(updaters.queueReport);
+    ship.updaters.push(function() { this.game.reportQueue.push(this); });
     Object.keys(ship).forEach((key) => {
       const capitalized = key.charAt(0).toUpperCase() + key.slice(1);
       const updater = updaters[`update${capitalized}Component`];
@@ -117,7 +117,6 @@ const constructors = {
       } else { socket.emit('ship', { id: ship.id, model: ship.model }); }
     });
 
-    // this.updatables.push(ship);
     return ship;
   },
 

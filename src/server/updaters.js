@@ -187,7 +187,7 @@ const updaters = {
           target: this.targetingSystem.lockedTargets[0],
         };
       }
-      this.game.otherShips.push(constructors.createShip(launchee, this.game));
+      this.game.objs.push(constructors.createShip(launchee, this.game));
       this.launcher.firing = false;
     }
   },
@@ -609,15 +609,6 @@ const updaters = {
 
   updatePrj(dt) {
     this.destructible.hp -= this.destructible.maxHp * 2.5 * dt;
-  },
-
-  queueReport() {
-    const game = (this.game) ? this.game : this.owner.game;
-    // if (this.x < game.tileArray.min[0]) { game.tileArray.min[0] = this.x; }
-    // if (this.y < game.tileArray.min[1]) { game.tileArray.min[1] = this.y; }
-    // if (this.x > game.tileArray.max[0]) { game.tileArray.max[0] = this.x; }
-    // if (this.y > game.tileArray.max[1]) { game.tileArray.max[1] = this.y; }
-    game.reportQueue.push(this);
   },
 
   updateUpdatable(dt) {
