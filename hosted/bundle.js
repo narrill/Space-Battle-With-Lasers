@@ -17,11 +17,78 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     s(r[o]);
   }return s;
 })({ 1: [function (require, module, exports) {
+    var utilities = require('../server/utilities.js');
+
+    var TrackShuffler = function () {
+      function TrackShuffler(tracks) {
+        var overlapSeconds = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+
+        _classCallCheck(this, TrackShuffler);
+
+        this.tracks = tracks;
+        this.currentTrack = tracks[0];
+        this.currentTrackIndex = 0;
+        this.previousTrack = undefined;
+        this.overlapSeconds = overlapSeconds;
+        this._playing = false;
+      }
+
+      _createClass(TrackShuffler, [{
+        key: "play",
+        value: function play() {
+          this._playing = true;
+          this.currentTrack.play();
+          if (this.previousTrack) this.previousTrack.play();
+        }
+      }, {
+        key: "pause",
+        value: function pause() {
+          this._playing = false;
+          this.currentTrack.pause();
+          if (this.previousTrack) this.previousTrack.pause();
+        }
+      }, {
+        key: "update",
+        value: function update() {
+          if (this.currentTrack.currentTime >= this.currentTrack.duration - this.overlapSeconds) {
+            this.previousTrack = this.currentTrack;
+            this.currentTrack = this.tracks[(utilities.getRandomIntInclusive(1, this.tracks.length - 1) + this.currentTrackIndex) % this.tracks.length];
+            if (this._playing) this.currentTrack.play();
+          }
+          if (this.previousTrack && this.previousTrack.currentTime >= this.previousTrack.duration) {
+            this.previousTrack.currentTime = 0;
+            this.previousTrack.pause();
+            this.previousTrack = undefined;
+          }
+        }
+      }, {
+        key: "playing",
+        get: function get() {
+          return this._playing;
+        }
+      }, {
+        key: "volume",
+        get: function get() {
+          return this.tracks[0].volume;
+        },
+        set: function set(val) {
+          for (var c = 0; c < this.tracks.length; c++) {
+            this.tracks[c].volume = val;
+          }
+        }
+      }]);
+
+      return TrackShuffler;
+    }();
+
+    module.exports = TrackShuffler;
+  }, { "../server/utilities.js": 6 }], 2: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
     var utilities = require('../server/utilities.js');
     var drawing = require('./drawing.js');
+    var TrackShuffler = require('./TrackShuffler.js');
 
     var GAME_STATES = {
       TITLE: 0,
@@ -139,7 +206,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     var titleMusic = void 0;
-    var gameplayMusic = void 0;
+    var musicShuffler = void 0;
     var ambientLoop = void 0;
     var keyclick = void 0;
     var titleStinger = void 0;
@@ -354,8 +421,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER] = false;
         entry = "";
       } else if (state === GAME_STATES.DISCONNECTED) {
-        gameplayMusic.pause();
-        gameplayMusic.currentTime = 0;
+        musicShuffler.pause();
         ambientLoop.volume = 0;
       } else if (state == GAME_STATES.CHOOSESHIP && myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER]) {
         state = GAME_STATES.WAIT;
@@ -365,7 +431,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         titleMusic.volume = utilities.clamp(0, titleMusic.volume - .2 * dt, 1);
       } else if (state == GAME_STATES.PLAYING) {
         titleMusic.volume = utilities.clamp(0, titleMusic.volume - dt, 1);
-        gameplayMusic.play();
+        musicShuffler.update();
         ambientLoop.volume = utilities.clamp(0, ambientLoop.volume + dt, 1);
         //camera shenanigans
         //camera zoom controls
@@ -503,6 +569,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         if (state === GAME_STATES.WAIT) {
           state = GAME_STATES.PLAYING;
           playStinger(enterGameStinger);
+          musicShuffler.play();
         }
         if (report) {
           console.log(data);
@@ -512,7 +579,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       });
 
       titleMusic = document.querySelector('#titleMusic');
-      gameplayMusic = document.querySelector('#gameplayMusic');
+      var gameplayMusic1 = document.querySelector('#gameplayMusic1');
+      var gameplayMusic2 = document.querySelector('#gameplayMusic2');
+      var gameplayMusic3 = document.querySelector('#gameplayMusic3');
+      musicShuffler = new TrackShuffler([gameplayMusic1, gameplayMusic2, gameplayMusic3], 15);
       keyclick = document.querySelector('#keyclick');
       titleStinger = document.querySelector('#titlestinger');
       enterGameStinger = document.querySelector('#entergamestinger');
@@ -557,7 +627,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     window.onload = init;
-  }, { "../server/keys.js": 4, "../server/utilities.js": 5, "./drawing.js": 2, "./worldInfo.js": 3 }], 2: [function (require, module, exports) {
+  }, { "../server/keys.js": 5, "../server/utilities.js": 6, "./TrackShuffler.js": 1, "./drawing.js": 3, "./worldInfo.js": 4 }], 3: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/drawing.js
 
@@ -1185,7 +1255,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     module.exports = drawing;
-  }, { "../server/utilities.js": 5, "./worldInfo.js": 3 }], 3: [function (require, module, exports) {
+  }, { "../server/utilities.js": 6, "./worldInfo.js": 4 }], 4: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
@@ -1375,7 +1445,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       worldInfo: worldInfo,
       modelInfo: modelInfo
     };
-  }, { "../server/utilities.js": 5 }], 4: [function (require, module, exports) {
+  }, { "../server/utilities.js": 6 }], 5: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/keys.js
 
@@ -1416,7 +1486,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     });
 
     module.exports = { myKeys: myKeys, myMouse: myMouse };
-  }, {}], 5: [function (require, module, exports) {
+  }, {}], 6: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
@@ -2004,4 +2074,4 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     module.exports = utilities;
-  }, {}] }, {}, [1]);
+  }, {}] }, {}, [2]);

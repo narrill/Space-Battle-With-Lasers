@@ -3,6 +3,7 @@
 
 const utilities = require('../server/utilities.js');
 const drawing = require('./drawing.js');
+const TrackShuffler = require('./TrackShuffler.js');
 
 const GAME_STATES = {
   TITLE:0,
@@ -81,7 +82,7 @@ class LooseTimer {
 }
 
 let titleMusic;
-let gameplayMusic;
+let musicShuffler;
 let ambientLoop;
 let keyclick;
 let titleStinger;
@@ -316,8 +317,7 @@ const update = (dt) => {
     entry = "";
   }
   else if(state === GAME_STATES.DISCONNECTED) {
-    gameplayMusic.pause();
-    gameplayMusic.currentTime = 0;
+    musicShuffler.pause();
     ambientLoop.volume = 0;
   }
   else if(state == GAME_STATES.CHOOSESHIP && myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER])
@@ -332,7 +332,7 @@ const update = (dt) => {
   else if(state == GAME_STATES.PLAYING)
   {
     titleMusic.volume = utilities.clamp(0, titleMusic.volume - dt, 1);
-    gameplayMusic.play();
+    musicShuffler.update();
     ambientLoop.volume = utilities.clamp(0, ambientLoop.volume + dt, 1);
   //camera shenanigans
   //camera zoom controls
@@ -494,6 +494,7 @@ const init = () => {
     if(state === GAME_STATES.WAIT) {
       state = GAME_STATES.PLAYING;      
       playStinger(enterGameStinger);
+      musicShuffler.play();
     }
     if(report) {
       console.log(data);
@@ -503,7 +504,10 @@ const init = () => {
   });
 
   titleMusic = document.querySelector('#titleMusic');
-  gameplayMusic = document.querySelector('#gameplayMusic');
+  const gameplayMusic1 = document.querySelector('#gameplayMusic1');
+  const gameplayMusic2 = document.querySelector('#gameplayMusic2');
+  const gameplayMusic3 = document.querySelector('#gameplayMusic3');
+  musicShuffler = new TrackShuffler([gameplayMusic1, gameplayMusic2, gameplayMusic3], 15);
   keyclick = document.querySelector('#keyclick');
   titleStinger = document.querySelector('#titlestinger');
   enterGameStinger = document.querySelector('#entergamestinger');

@@ -40,6 +40,8 @@ const files = [
   'title.mp3',
   'bundle.js',
   'gameplay1.mp3',
+  'gameplay2.mp3',
+  'gameplay3.mp3',
   'keyclick.wav',
   'titlestinger.wav',
   'entergamestinger.wav',

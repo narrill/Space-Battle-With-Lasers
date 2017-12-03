@@ -1,9 +1,67 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+const utilities = require('../server/utilities.js');
+
+class TrackShuffler {
+	constructor(tracks, overlapSeconds = 0) {
+		this.tracks = tracks;
+		this.currentTrack = tracks[0];
+		this.currentTrackIndex = 0;
+		this.previousTrack = undefined;
+		this.overlapSeconds = overlapSeconds;
+		this._playing = false;
+	}
+
+	play() {
+		this._playing = true;
+		this.currentTrack.play();
+		if(this.previousTrack)
+			this.previousTrack.play();
+	}
+
+	pause() {
+		this._playing = false;
+		this.currentTrack.pause();
+		if(this.previousTrack)
+			this.previousTrack.pause();
+	}
+
+	get playing() {
+		return this._playing;
+	}
+
+	update() {
+		if(this.currentTrack.currentTime >= this.currentTrack.duration - this.overlapSeconds) {
+			this.previousTrack = this.currentTrack;
+			this.currentTrack = this.tracks[(utilities.getRandomIntInclusive(1, this.tracks.length - 1) + this.currentTrackIndex) % this.tracks.length];
+			if(this._playing)
+				this.currentTrack.play();
+		}
+		if(this.previousTrack && this.previousTrack.currentTime >= this.previousTrack.duration) {
+			this.previousTrack.currentTime = 0;
+			this.previousTrack.pause();
+			this.previousTrack = undefined;
+		}
+	}
+
+	get volume() {
+		return this.tracks[0].volume;
+	}
+
+	set volume(val) {
+		for(let c = 0; c < this.tracks.length; c++) {
+			this.tracks[c].volume = val;
+		}
+	}
+}
+
+module.exports = TrackShuffler;
+},{"../server/utilities.js":6}],2:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
 const utilities = require('../server/utilities.js');
 const drawing = require('./drawing.js');
+const TrackShuffler = require('./TrackShuffler.js');
 
 const GAME_STATES = {
   TITLE:0,
@@ -82,7 +140,7 @@ class LooseTimer {
 }
 
 let titleMusic;
-let gameplayMusic;
+let musicShuffler;
 let ambientLoop;
 let keyclick;
 let titleStinger;
@@ -317,8 +375,7 @@ const update = (dt) => {
     entry = "";
   }
   else if(state === GAME_STATES.DISCONNECTED) {
-    gameplayMusic.pause();
-    gameplayMusic.currentTime = 0;
+    musicShuffler.pause();
     ambientLoop.volume = 0;
   }
   else if(state == GAME_STATES.CHOOSESHIP && myKeys.keydown[myKeys.KEYBOARD.KEY_ENTER])
@@ -333,7 +390,7 @@ const update = (dt) => {
   else if(state == GAME_STATES.PLAYING)
   {
     titleMusic.volume = utilities.clamp(0, titleMusic.volume - dt, 1);
-    gameplayMusic.play();
+    musicShuffler.update();
     ambientLoop.volume = utilities.clamp(0, ambientLoop.volume + dt, 1);
   //camera shenanigans
   //camera zoom controls
@@ -495,6 +552,7 @@ const init = () => {
     if(state === GAME_STATES.WAIT) {
       state = GAME_STATES.PLAYING;      
       playStinger(enterGameStinger);
+      musicShuffler.play();
     }
     if(report) {
       console.log(data);
@@ -504,7 +562,10 @@ const init = () => {
   });
 
   titleMusic = document.querySelector('#titleMusic');
-  gameplayMusic = document.querySelector('#gameplayMusic');
+  const gameplayMusic1 = document.querySelector('#gameplayMusic1');
+  const gameplayMusic2 = document.querySelector('#gameplayMusic2');
+  const gameplayMusic3 = document.querySelector('#gameplayMusic3');
+  musicShuffler = new TrackShuffler([gameplayMusic1, gameplayMusic2, gameplayMusic3], 15);
   keyclick = document.querySelector('#keyclick');
   titleStinger = document.querySelector('#titlestinger');
   enterGameStinger = document.querySelector('#entergamestinger');
@@ -550,7 +611,7 @@ const init = () => {
 
 window.onload = init;
 
-},{"../server/keys.js":4,"../server/utilities.js":5,"./drawing.js":2,"./worldInfo.js":3}],2:[function(require,module,exports){
+},{"../server/keys.js":5,"../server/utilities.js":6,"./TrackShuffler.js":1,"./drawing.js":3,"./worldInfo.js":4}],3:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/drawing.js
 
@@ -1211,7 +1272,7 @@ const drawing = {
 };
 
 module.exports = drawing;
-},{"../server/utilities.js":5,"./worldInfo.js":3}],3:[function(require,module,exports){
+},{"../server/utilities.js":6,"./worldInfo.js":4}],4:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
@@ -1365,7 +1426,7 @@ module.exports = {
 	worldInfo,
 	modelInfo
 };
-},{"../server/utilities.js":5}],4:[function(require,module,exports){
+},{"../server/utilities.js":6}],5:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/keys.js
 
@@ -1407,7 +1468,7 @@ myMouse.BUTTONS = Object.freeze({
 
 module.exports = { myKeys, myMouse };
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
@@ -1989,4 +2050,4 @@ const utilities = {
 
 module.exports = utilities;
 
-},{}]},{},[1]);
+},{}]},{},[2]);
