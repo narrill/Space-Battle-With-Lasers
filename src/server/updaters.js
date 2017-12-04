@@ -10,6 +10,7 @@ const objControls = require('./objControls.js');
 const aiFunctions = require('./aiFunctions.js');
 const destructors = require('./destructors.js');
 const keys = require('./keys.js');
+const componentClasses = require('./ComponentTypes.js').classes;
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/updaters.js
 
@@ -162,7 +163,7 @@ const updaters = {
         this.y + (forwardVector[1] * 30),
         prjVelocity[0] + this.velocityX,
         prjVelocity[1] + this.velocityY,
-        constructors.createComponentDestructible(ammo.destructible),
+        new componentClasses.Destructible(ammo.destructible),
         ammo.color,
         this,
         ammo.tracerSeed % ammo.tracerInterval === 0,

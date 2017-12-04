@@ -33,7 +33,7 @@ class Obj {
     this.rightVectorY = undefined;
     this.medialVelocity = undefined; // component form, used by stabilizers
     this.lateralVelocity = undefined;
-    this.destructible = constructors.createComponentDestructible(utilities.deepObjectMerge.call({
+    this.destructible = new componentClasses.Destructible(utilities.deepObjectMerge.call({
       hp: 100,
       radius: 25,
       shield: {

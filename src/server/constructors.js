@@ -8,6 +8,7 @@ const gridFunctions = require('./gridFunctions.js');
 const ships = require('./ships.js');
 const updaters = dependencyCatch(require('./updaters.js'));
 const missiles = require('./missiles.js');
+const componentClasses = require('./ComponentTypes.js').classes;
 
 const has = Object.prototype.hasOwnProperty;
 
@@ -248,7 +249,7 @@ const constructors = {
   createComponentAmmo(objectParams = {}) {
     const am = {
       id: id.takeIdTag(),
-      destructible: constructors.createComponentDestructible(utilities.deepObjectMerge.call({
+      destructible: new componentClasses.Destructible(utilities.deepObjectMerge.call({
         hp: 25,
         radius: 10,
       }, objectParams.destructible)),
@@ -314,21 +315,21 @@ const constructors = {
   },
 
   // constructor for the destructible component - stores hp, shields, and collider radius
-  createComponentDestructible(objectParams = {}) {
-    const ds = {
-      id: id.takeIdTag(),
-      hp: 500,
-      maxHp: (objectParams.hp) ? objectParams.hp : 500,
-      radius: 500,
-      shield: constructors.createComponentDestructibleShield(
-        utilities.deepObjectMerge.call({}, objectParams.shield),
-      ),
-    };
+  // createComponentDestructible(objectParams = {}) {
+  //   const ds = {
+  //     id: id.takeIdTag(),
+  //     hp: 500,
+  //     maxHp: (objectParams.hp) ? objectParams.hp : 500,
+  //     radius: 500,
+  //     shield: constructors.createComponentDestructibleShield(
+  //       utilities.deepObjectMerge.call({}, objectParams.shield),
+  //     ),
+  //   };
 
-    utilities.veryShallowObjectMerge.call(ds, objectParams);
+  //   utilities.veryShallowObjectMerge.call(ds, objectParams);
 
-    return ds;
-  },
+  //   return ds;
+  // },
 
   // constructor for the shield sub-component
   createComponentDestructibleShield(objectParams = {}) {
@@ -514,7 +515,7 @@ const constructors = {
         x: (Math.random() * (upper[0] - lower[0])) + lower[0],
         y: (Math.random() * (upper[1] - lower[1])) + lower[1],
         radius, // graphical radius
-        destructible: constructors.createComponentDestructible({
+        destructible: new componentClasses.Destructible({
           hp: (radius * radius) / 300,
           radius, // collider radius
         }),
