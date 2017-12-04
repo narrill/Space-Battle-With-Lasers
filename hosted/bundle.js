@@ -500,7 +500,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         drawing.drawAsteroids(worldInfo.asteroids, camera);
         drawing.drawHUD(camera, now);
         drawing.drawMinimap(minimapCamera, grid, now);
-        utilities.fillText(camera.ctx, 'prjs: ' + worldInfo.prjs.length, 15, 30, "8pt Orbitron", 'white');
 
         if (Date.now().valueOf() - startTime < 15000) drawing.drawTutorialGraphics(camera);
       } else if (state == GAME_STATES.TITLE) {

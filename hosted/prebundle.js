@@ -474,7 +474,6 @@ const draw = (camera, minimapCamera, dt) => {
     drawing.drawAsteroids(worldInfo.asteroids, camera);
     drawing.drawHUD(camera, now);
     drawing.drawMinimap(minimapCamera, grid, now);
-    utilities.fillText(camera.ctx,'prjs: ' + worldInfo.prjs.length, 15, 30, "8pt Orbitron", 'white');
 
     if(Date.now().valueOf() - startTime < 15000)
       drawing.drawTutorialGraphics(camera);
