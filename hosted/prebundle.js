@@ -32,7 +32,8 @@ class TrackShuffler {
 	update() {
 		if(this.currentTrack.currentTime >= this.currentTrack.duration - this.overlapSeconds) {
 			this.previousTrack = this.currentTrack;
-			this.currentTrack = this.tracks[(utilities.getRandomIntInclusive(1, this.tracks.length - 1) + this.currentTrackIndex) % this.tracks.length];
+			this.currentTrackIndex = (utilities.getRandomIntInclusive(1, this.tracks.length - 1) + this.currentTrackIndex) % this.tracks.length;
+			this.currentTrack = this.tracks[this.currentTrackIndex];
 			if(this._playing)
 				this.currentTrack.play();
 		}
