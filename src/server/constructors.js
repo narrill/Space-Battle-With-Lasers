@@ -121,46 +121,46 @@ const constructors = {
   // },
 
   // constructor for the thruster system component
-  createComponentThrusterSystem(objectParams = {}) {
-    const ts = {
-      id: id.takeIdTag(),
-      color: utilities.getRandomBrightColor(),
-      noiseLevel: 0,
-      medial: constructors.createComponentThruster(utilities.deepObjectMerge.call({
-        maxStrength: 1000,
-        efficiency: 300,
-      }, objectParams.medial)),
-      lateral: constructors.createComponentThruster(utilities.deepObjectMerge.call({
-        maxStrength: 660,
-        efficiency: 300,
-      }, objectParams.lateral)),
-      rotational: constructors.createComponentThruster(utilities.deepObjectMerge.call({
-        maxStrength: 250,
-        efficiency: 100,
-      }, objectParams.rotational)),
-    };
+  // createComponentThrusterSystem(objectParams = {}) {
+  //   const ts = {
+  //     id: id.takeIdTag(),
+  //     color: utilities.getRandomBrightColor(),
+  //     noiseLevel: 0,
+  //     medial: constructors.createComponentThruster(utilities.deepObjectMerge.call({
+  //       maxStrength: 1000,
+  //       efficiency: 300,
+  //     }, objectParams.medial)),
+  //     lateral: constructors.createComponentThruster(utilities.deepObjectMerge.call({
+  //       maxStrength: 660,
+  //       efficiency: 300,
+  //     }, objectParams.lateral)),
+  //     rotational: constructors.createComponentThruster(utilities.deepObjectMerge.call({
+  //       maxStrength: 250,
+  //       efficiency: 100,
+  //     }, objectParams.rotational)),
+  //   };
 
-    utilities.veryShallowObjectMerge.call(ts, objectParams);
+  //   utilities.veryShallowObjectMerge.call(ts, objectParams);
 
-    return ts;
-  },
+  //   return ts;
+  // },
 
   // constructor for the thruster component
-  createComponentThruster(objectParams = {}) {
-    const t = {
-      id: id.takeIdTag(),
-      currentStrength: 0,
-      targetStrength: 0,
-      maxStrength: 1000,
-      efficiency: 1000,
-      powerRampPercentage: 20,
-      powerRampLimit: 6000,
-    };
+  // createComponentThruster(objectParams = {}) {
+  //   const t = {
+  //     id: id.takeIdTag(),
+  //     currentStrength: 0,
+  //     targetStrength: 0,
+  //     maxStrength: 1000,
+  //     efficiency: 1000,
+  //     powerRampPercentage: 20,
+  //     powerRampLimit: 6000,
+  //   };
 
-    utilities.veryShallowObjectMerge.call(t, objectParams);
+  //   utilities.veryShallowObjectMerge.call(t, objectParams);
 
-    return t;
-  },
+  //   return t;
+  // },
 
   // constructor for the power system component
   createComponentPowerSystem(objectParams = {}) {
