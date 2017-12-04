@@ -378,6 +378,7 @@ const updaters = {
 
   updateRemoteInputComponent() {
     const stab = this.stabilizer;
+    console.log(this.remoteInput);
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_TAB]
       && !this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_ALT]) {
       stab.enabled = !stab.enabled;

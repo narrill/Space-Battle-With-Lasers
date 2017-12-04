@@ -59,11 +59,11 @@ class Obj {
       if (!has.call(this, key)) {
         // capitalize the first letter and try to find a constructor for it
         const capitalized = key.charAt(0).toUpperCase() + key.slice(1);
-        const constructor = constructors[`createComponent${capitalized}`];
+        const Component = componentClasses[capitalized];
         // if a constructor was found, call it
-        if (constructor) {
+        if (Component) {
           const newParams = objectParams[key];
-          this[key] = constructor(utilities.deepObjectMerge.call({}, newParams));
+          this[key] = new Component(utilities.deepObjectMerge.call({}, newParams));
         }
       }
     });

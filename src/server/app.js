@@ -93,7 +93,6 @@ const io = socketio(app);
 
 io.on('connection', (s) => {
   let ship;
-  let sendToShip;
   s.emit('shipList', shipList);
 
   s.on('ship', (shipName) => {
@@ -107,7 +106,6 @@ io.on('connection', (s) => {
       });
       ship = new Obj(chosenShip, game, s.id);
       ship.remoteInput.remoteSend = (data, msg) => { s.emit((msg) || 'worldInfo', data); };
-      sendToShip = ship.remoteInput.messageHandler;
       game.objs.push(ship);
       s.emit('grid', game.grid);
       s.emit('ships', shipModels);
@@ -117,11 +115,10 @@ io.on('connection', (s) => {
   });
 
   s.on('input', (data) => {
-    if (sendToShip) sendToShip(data);
+    if (ship && ship.remoteInput) ship.remoteInput.messageHandler(data);
   });
 
   s.on('disconnect', () => {
-    sendToShip = undefined;
     delete game.socketSubscriptions[s.id];
   });
 });
