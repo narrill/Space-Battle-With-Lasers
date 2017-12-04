@@ -24,101 +24,101 @@ const constructors = {
   },
 
   // constructor for ship objects
-  createShip(objectParams = {}, game, ownerId) {
-    const gridPosition = gridFunctions.randomGridPosition(game.grid);
-    const ship = {
-      id: id.takeIdTag(),
-      game,
-      faction: -1,
-      // position/rotation
-      x: gridPosition.x,
-      y: gridPosition.y,
-      rotation: 0,
-      prevX: (has.call(objectParams, 'x')) ? objectParams.x : gridPosition.x,
-      prevY: (has.call(objectParams, 'y')) ? objectParams.y : gridPosition.y,
-      // velocities
-      velocityX: 0, // in absolute form, used for movement
-      velocityY: 0,
-      accelerationX: 0,
-      accelerationY: 0,
-      rotationalVelocity: 0,
-      rotationalAcceleration: 0,
-      forwardVectorX: undefined,
-      forwardVectorY: undefined,
-      rightVectorX: undefined,
-      rightVectorY: undefined,
-      medialVelocity: undefined, // component form, used by stabilizers
-      lateralVelocity: undefined,
-      destructible: constructors.createComponentDestructible(utilities.deepObjectMerge.call({
-        hp: 100,
-        radius: 25,
-        shield: {
-          max: 100,
-          recharge: 3,
-          efficiency: 8,
-        },
-      }, objectParams.destructible)),
-      thrusterSystem: constructors.createComponentThrusterSystem(
-        utilities.deepObjectMerge.call({}, objectParams.thrusters),
-      ),
-      // colors
-      color: utilities.getRandomBrightColor(),
-      // model
-      model: (has.call(objectParams, 'model')) ? objectParams.model : ships.cheetah.model,
-      weaponToggle: true,
-      constructionObject: utilities.deepObjectMerge.call({}, objectParams),
-      type: 'obj',
-    };
+  // createShip(objectParams = {}, game, ownerId) {
+  //   const gridPosition = gridFunctions.randomGridPosition(game.grid);
+  //   const ship = {
+  //     id: id.takeIdTag(),
+  //     game,
+  //     faction: -1,
+  //     // position/rotation
+  //     x: gridPosition.x,
+  //     y: gridPosition.y,
+  //     rotation: 0,
+  //     prevX: (has.call(objectParams, 'x')) ? objectParams.x : gridPosition.x,
+  //     prevY: (has.call(objectParams, 'y')) ? objectParams.y : gridPosition.y,
+  //     // velocities
+  //     velocityX: 0, // in absolute form, used for movement
+  //     velocityY: 0,
+  //     accelerationX: 0,
+  //     accelerationY: 0,
+  //     rotationalVelocity: 0,
+  //     rotationalAcceleration: 0,
+  //     forwardVectorX: undefined,
+  //     forwardVectorY: undefined,
+  //     rightVectorX: undefined,
+  //     rightVectorY: undefined,
+  //     medialVelocity: undefined, // component form, used by stabilizers
+  //     lateralVelocity: undefined,
+  //     destructible: constructors.createComponentDestructible(utilities.deepObjectMerge.call({
+  //       hp: 100,
+  //       radius: 25,
+  //       shield: {
+  //         max: 100,
+  //         recharge: 3,
+  //         efficiency: 8,
+  //       },
+  //     }, objectParams.destructible)),
+  //     thrusterSystem: constructors.createComponentThrusterSystem(
+  //       utilities.deepObjectMerge.call({}, objectParams.thrusters),
+  //     ),
+  //     // colors
+  //     color: utilities.getRandomBrightColor(),
+  //     // model
+  //     model: (has.call(objectParams, 'model')) ? objectParams.model : ships.cheetah.model,
+  //     weaponToggle: true,
+  //     constructionObject: utilities.deepObjectMerge.call({}, objectParams),
+  //     type: 'obj',
+  //   };
 
-    // this is for adding additional components. also it's super janky
-    // iterate through params
-    Object.keys(objectParams).forEach((key) => {
-      // if params contains something ship doesn't
-      if (!has.call(ship, key)) {
-        // capitalize the first letter and try to find a constructor for it
-        const capitalized = key.charAt(0).toUpperCase() + key.slice(1);
-        const constructor = constructors[`createComponent${capitalized}`];
-        // if a constructor was found, call it
-        if (constructor) {
-          const newParams = objectParams[key];
-          ship[key] = constructor(utilities.deepObjectMerge.call({}, newParams));
-        }
-      }
-    });
+  //   // this is for adding additional components. also it's super janky
+  //   // iterate through params
+  //   Object.keys(objectParams).forEach((key) => {
+  //     // if params contains something ship doesn't
+  //     if (!has.call(ship, key)) {
+  //       // capitalize the first letter and try to find a constructor for it
+  //       const capitalized = key.charAt(0).toUpperCase() + key.slice(1);
+  //       const constructor = constructors[`createComponent${capitalized}`];
+  //       // if a constructor was found, call it
+  //       if (constructor) {
+  //         const newParams = objectParams[key];
+  //         ship[key] = constructor(utilities.deepObjectMerge.call({}, newParams));
+  //       }
+  //     }
+  //   });
 
-    // utilities.deepObjectMerge(ship, defaults);
-    utilities.veryShallowObjectMerge.call(ship, objectParams);
+  //   // utilities.deepObjectMerge(ship, defaults);
+  //   utilities.veryShallowObjectMerge.call(ship, objectParams);
 
-    if (ship.faction !== -1) { ship.color = game.factionColors[ship.faction]; }
+  //   if (ship.faction !== -1) { ship.color = game.factionColors[ship.faction]; }
 
-    // updaters.populateUpdaters(ship);
-    ship.updaters = [];
-    ship.updaters.push(updaters.updateMobile);
-    ship.updaters.push(function() { this.game.reportQueue.push(this); });
-    Object.keys(ship).forEach((key) => {
-      const capitalized = key.charAt(0).toUpperCase() + key.slice(1);
-      const updater = updaters[`update${capitalized}Component`];
-      if (updater) { ship.updaters.push(updater); }
-    });
+  //   // updaters.populateUpdaters(ship);
+  //   ship.updaters = [];
+  //   ship.updaters.push(updaters.updateMobile);
+  //   ship.updaters.push(function() { this.game.reportQueue.push(this); });
+  //   Object.keys(ship).forEach((key) => {
+  //     const capitalized = key.charAt(0).toUpperCase() + key.slice(1);
+  //     const updater = updaters[`update${capitalized}Component`];
+  //     if (updater) { ship.updaters.push(updater); }
+  //   });
 
-    updaters.populateOnDestroy.call(ship);
+  //   updaters.populateOnDestroy.call(ship);
 
-    Object.values(game.socketSubscriptions).forEach((socket) => {
-      if (ownerId && socket.id === ownerId && ship.model.overlay.ranges) {
-        const modelCopy = utilities.deepObjectMerge.call({}, ship.model);
-        const key2s = Object.keys(modelCopy.overlay.ranges);
-        for (let n = 0; n < key2s.length; n++) {
-          const key2 = key2s[n];
-          let r = ship[key2];
-          if (r) r = r.range;
-          if (r) modelCopy.overlay.ranges[key2] = r;
-        }
-        socket.emit('ship', { id: ship.id, model: modelCopy });
-      } else { socket.emit('ship', { id: ship.id, model: ship.model }); }
-    });
+  //   Object.values(game.socketSubscriptions).forEach((socket) => {
+  //     if (ownerId && socket.id === ownerId && ship.model.overlay.ranges) {
+  //       const modelCopy = utilities.deepObjectMerge.call({}, ship.model);
+  //       const key2s = Object.keys(modelCopy.overlay.ranges);
+  //       for (let n = 0; n < key2s.length; n++) {
+  //         const key2 = key2s[n];
+  //         let r = ship[key2];
+  //         if (r) r = r.range;
+  //         if (r) modelCopy.overlay.ranges[key2] = r;
+  //       }
+  //       socket.emit('ship', { id: ship.id, model: modelCopy });
+  //     } else { socket.emit('ship', { id: ship.id, model: ship.model }); }
+  //   });
 
-    return ship;
-  },
+  //   return ship;
+  // },
 
   // constructor for the thruster system component
   createComponentThrusterSystem(objectParams = {}) {

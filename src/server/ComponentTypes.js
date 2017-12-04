@@ -1,7 +1,8 @@
 const fs = require('fs');
 
-const types = {};
+const TYPES = {};
 let counter = 0;
+const classes = {};
 
 fs.readdir(`${__dirname}/Systems`, (err, filenames) => {
   if (err) {
@@ -9,8 +10,10 @@ fs.readdir(`${__dirname}/Systems`, (err, filenames) => {
     return;
   }
   filenames.forEach((filename) => {
-    types[filename.toUpperCase()] = counter++;
+  	const className = /(.+).js$/.exec(filename)[1];
+    types[className.toUpperCase()] = counter++;
+    classes[className] = require(`./Systems/${filename}`);
   });
 });
 
-module.exports = types;
+module.exports = { TYPES, classes };

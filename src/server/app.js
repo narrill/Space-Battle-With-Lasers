@@ -81,7 +81,7 @@ console.log(`Listening on port ${port}`);
 const dependencyCatch = require('./dependencyCatch.js');
 const Game = require('./Game.js');
 const ships = require('./ships.js');
-const constructors = dependencyCatch(require('./constructors.js'));
+const Obj = require('./Obj.js');
 const utilities = require('./utilities.js');
 
 const shipList = Object.keys(ships);
@@ -105,7 +105,7 @@ io.on('connection', (s) => {
       Object.values(game.objs).forEach((sh) => {
         shipModels[sh.id] = sh.model;
       });
-      ship = constructors.createShip(chosenShip, game, s.id);
+      ship = new Obj(chosenShip, game, s.id);
       ship.remoteInput.remoteSend = (data, msg) => { s.emit((msg) || 'worldInfo', data); };
       sendToShip = ship.remoteInput.messageHandler;
       game.objs.push(ship);

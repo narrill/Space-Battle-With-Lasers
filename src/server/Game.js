@@ -3,6 +3,7 @@
 
 const dependencyCatch = require('./dependencyCatch.js');
 const constructors = dependencyCatch(require('./constructors.js'));
+const Obj = require('./Obj.js');
 const utilities = require('./utilities.js');
 const clearFunctions = require('./clearFunctions.js');
 const SpatialHash = require('./SpatialHash.js');
@@ -86,7 +87,7 @@ class Game {
       };
       newShip.faction = -1;
       newShip.respawnTime = 5;
-      this.objs.push(constructors.createShip(newShip, this));
+      this.objs.push(new Obj(newShip, this));
     } 
     this.lastTime = Date.now();
     this.elapsedGameTime = 0;
@@ -120,7 +121,7 @@ class Game {
     for (let c = 0; c < this.respawnQueue.length; c++) {
       const rs = this.respawnQueue[c];
       if (this.elapsedGameTime >= rs.time) {
-        this.objs.push(constructors.createShip(rs.params, this));
+        this.objs.push(new Obj(rs.params, this));
         this.respawnQueue.splice(c--, 1);
       }
     }
