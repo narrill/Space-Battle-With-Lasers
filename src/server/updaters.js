@@ -6,7 +6,6 @@ const constructors = dependencyCatch(require('./constructors.js'));
 const Obj = require('./Obj.js');
 const collisions = require('./collisions.js');
 const enums = require('./enums.js');
-const objControls = require('./objControls.js');
 const aiFunctions = require('./aiFunctions.js');
 const destructors = require('./destructors.js');
 const keys = require('./keys.js');

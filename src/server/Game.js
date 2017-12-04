@@ -55,7 +55,7 @@ class Game {
           color: 'navyblue',
           interval: 2,
         },
-      ]
+      ],
     };
     this.spatialHash = new SpatialHash();
     this.asteroids = {
@@ -64,7 +64,7 @@ class Game {
         '#6B2A06',
         'sienna',
       ],
-      objs: []
+      objs: [],
     };
     constructors.makeAsteroids.bind(this, this, this.grid)();
     let hue = Math.round(Math.random() * 360);
@@ -88,7 +88,7 @@ class Game {
       newShip.faction = -1;
       newShip.respawnTime = 5;
       this.objs.push(new Obj(newShip, this));
-    } 
+    }
     this.lastTime = Date.now();
     this.elapsedGameTime = 0;
   }
@@ -197,7 +197,7 @@ class Game {
         { prj: [] },
       );
 
-      //console.log(`ID ${currentObj.id}, ${projectiles.prj.length} prjs`);
+      // console.log(`ID ${currentObj.id}, ${projectiles.prj.length} prjs`);
 
       for (let c = 0; c < projectiles.prj.length; c++) {
         const prj = projectiles.prj[c];
@@ -295,7 +295,7 @@ class Game {
             hitscan.endX,
             hitscan.endY,
           );
-    
+
           const objCapsule = new utilities.VelocityCapsule(gameObj, dt);
 
           if (gameDistance[1] < tValOfObj
@@ -323,7 +323,6 @@ class Game {
     // projectile collisions
     for (let n = 0; n < this.projectiles.length; n++) {
       const prj = this.projectiles[n];
-      const prjCapsule = new utilities.VelocityCapsule(prj, dt);
 
       // projectile-asteroid
       for (let c = 0; c < this.asteroids.objs.length; c++) {
@@ -370,10 +369,10 @@ class Game {
       const rad = this.radials[n];
       for (let c = 0; c < this.objs.length; c++) {
         const gameObj = this.objs[c]; // lol
-        
+
         const circleInner = { center: [rad.x, rad.y], radius: rad.radius };
         const circleOuter = { center: [rad.x, rad.y], radius: rad.radius + (rad.velocity * dt) };
-        
+
         const capsule = new utilities.VelocityCapsule(gameObj, dt);
         if (utilities.circleCapsuleSAT(circleOuter, capsule)
           && !utilities.isCapsuleWithinCircle(circleInner, capsule)) {

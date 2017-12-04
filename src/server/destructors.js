@@ -34,7 +34,7 @@ const destructors = {
     if (!src) { return; }
     // loop through source's attributes
     Object.keys(src).forEach((key) => {
-      if (key !== 'game' && key!== 'owner' && src[key] instanceof Object && !(src[key] instanceof Array)) {
+      if (key !== 'game' && key !== 'owner' && src[key] instanceof Object && !(src[key] instanceof Array)) {
         destructors.returnIdTag(src[key]);
       } else if (key === 'id') {
         id.returnIdTag(src[key]);

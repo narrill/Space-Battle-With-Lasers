@@ -5,8 +5,6 @@ const id = require('./id.js');
 const utilities = require('./utilities.js');
 const componentClasses = require('./ComponentTypes.js').classes;
 
-const has = Object.prototype.hasOwnProperty;
-
 const constructors = {
   // constructor for laser object
   createHitscan(game,

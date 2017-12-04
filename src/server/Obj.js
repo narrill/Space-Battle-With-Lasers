@@ -2,9 +2,8 @@ const dependencyCatch = require('./dependencyCatch.js');
 const utilities = require('./utilities.js');
 const id = require('./id.js');
 const gridFunctions = require('./gridFunctions.js');
+
 const has = Object.prototype.hasOwnProperty;
-const constructors = dependencyCatch(require('./constructors.js'));
-const COMPONENT_TYPES = require('./ComponentTypes.js').TYPES;
 const componentClasses = require('./ComponentTypes.js').classes;
 const updaters = dependencyCatch(require('./updaters.js'));
 
@@ -37,18 +36,18 @@ class Obj {
       hp: 100,
       radius: 25,
       shield: {
-      max: 100,
-      recharge: 3,
-      efficiency: 8,
+        max: 100,
+        recharge: 3,
+        efficiency: 8,
       },
     }, objectParams.destructible));
     this.thrusterSystem = new componentClasses.ThrusterSystem(
       this, utilities.deepObjectMerge.call({}, objectParams.thrusters),
-    ),
+    );
     // colors
     this.color = utilities.getRandomBrightColor();
     // model
-    this.model = (has.call(objectParams, 'model')) ? objectParams.model : ships.cheetah.model;
+    this.model = objectParams.model;
     this.constructionObject = utilities.deepObjectMerge.call({}, objectParams);
     this.type = 'obj';
 
@@ -74,7 +73,7 @@ class Obj {
 
     this.updaters = [];
     this.updaters.push(updaters.updateMobile);
-    this.updaters.push(function() { this.game.reportQueue.push(this); });
+    this.updaters.push(function () { this.game.reportQueue.push(this); });
     Object.keys(this).forEach((key) => {
       const capitalized = key.charAt(0).toUpperCase() + key.slice(1);
       const updater = updaters[`update${capitalized}Component`];

@@ -44,7 +44,7 @@ const files = [
   'titlestinger.wav',
   'entergamestinger.wav',
   'deathstinger.wav',
-  'ambientloop.wav'
+  'ambientloop.wav',
 ];
 
 const hostedFiles = {};
@@ -78,11 +78,9 @@ const app = http.createServer(onRequest).listen(port);
 
 console.log(`Listening on port ${port}`);
 
-const dependencyCatch = require('./dependencyCatch.js');
 const Game = require('./Game.js');
 const ships = require('./ships.js');
 const Obj = require('./Obj.js');
-const utilities = require('./utilities.js');
 
 const shipList = Object.keys(ships);
 

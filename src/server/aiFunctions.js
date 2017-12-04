@@ -2,7 +2,6 @@
 // https://github.com/narrill/Space-Battle/blob/dev/js/ships.js
 
 const utilities = require('./utilities.js');
-const objControls = require('./objControls.js');
 
 const has = Object.prototype.hasOwnProperty;
 
@@ -145,7 +144,6 @@ const aiFunctions = {
 
       this.objLateralThrusters(utilities.getLateralVelocity(this) * 1200 * dt);
       this.objMedialThrusters(this.thrusterSystem.medial.maxStrength);
-
     } else this.objMedialThrusters(this.thrusterSystem.medial.maxStrength);
   },
 };

@@ -1,7 +1,5 @@
-const dependencyCatch = require('../dependencyCatch.js');
 const utilities = require('../utilities.js');
 const id = require('../id.js');
-const constructors = dependencyCatch(require('../constructors.js'));
 const Thruster = require('./Thruster.js');
 
 class ThrusterSystem {

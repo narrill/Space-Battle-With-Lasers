@@ -1,30 +1,30 @@
 const Grid = require('./Map.js');
 const SWBLTypedGroup = require('./SWBLTypedGroup.js');
 
-const getMinMaxFromObject = (object, dt) => {
-  const min = [];
-  const max = [];
-  if (object.type === 'hitscan') {
-    min[0] = (object.startX < object.endX) ? object.startX : object.endX;
-    min[1] = (object.startY < object.endY) ? object.startY : object.endY;
-    max[0] = (object.startX > object.endX) ? object.startX : object.endX;
-    max[1] = (object.startY > object.endY) ? object.startY : object.endY;
-  } else if (object.type === 'radial') {
-    const vel = Math.abs(object.velocity) * dt;
-    min[0] = object.x - object.radius - vel;
-    min[1] = object.y - object.radius - vel;
-    max[0] = object.x + object.radius + vel;
-    max[1] = object.y + object.radius + vel;
-  } else {
-    const velX = (object.velocityX) ? Math.abs(object.velocityX) * dt : 0;
-    const velY = (object.velocityY) ? Math.abs(object.velocityY) * dt : 0;
-    min[0] = object.x - object.destructible.radius - velX;
-    min[1] = object.y - object.destructible.radius - velY;
-    max[0] = object.x + object.destructible.radius + velX;
-    max[1] = object.y + object.destructible.radius + velY;
-  }
-  return [min, max];
-}
+// const getMinMaxFromObject = (object, dt) => {
+//   const min = [];
+//   const max = [];
+//   if (object.type === 'hitscan') {
+//     min[0] = (object.startX < object.endX) ? object.startX : object.endX;
+//     min[1] = (object.startY < object.endY) ? object.startY : object.endY;
+//     max[0] = (object.startX > object.endX) ? object.startX : object.endX;
+//     max[1] = (object.startY > object.endY) ? object.startY : object.endY;
+//   } else if (object.type === 'radial') {
+//     const vel = Math.abs(object.velocity) * dt;
+//     min[0] = object.x - object.radius - vel;
+//     min[1] = object.y - object.radius - vel;
+//     max[0] = object.x + object.radius + vel;
+//     max[1] = object.y + object.radius + vel;
+//   } else {
+//     const velX = (object.velocityX) ? Math.abs(object.velocityX) * dt : 0;
+//     const velY = (object.velocityY) ? Math.abs(object.velocityY) * dt : 0;
+//     min[0] = object.x - object.destructible.radius - velX;
+//     min[1] = object.y - object.destructible.radius - velY;
+//     max[0] = object.x + object.destructible.radius + velX;
+//     max[1] = object.y + object.destructible.radius + velY;
+//   }
+//   return [min, max];
+// };
 
 class SpatialHash {
   constructor() {
@@ -32,16 +32,16 @@ class SpatialHash {
     this.map = new Grid();
   }
 
-  processReportQueue(reportQueue, dt) {
+  processReportQueue(reportQueue) {
     const map = new Grid(
       reportQueue.min[0] - 2,
       reportQueue.min[1] - 2,
       (reportQueue.max[0] - reportQueue.min[0]) + 4,
       (reportQueue.max[1] - reportQueue.min[1]) + 4,
-      3000
-    );    
-    const taSize = map.length;
-    this.map = map;    
+      3000,
+    );
+    // const taSize = map.length;
+    this.map = map;
     this.clear();
 
     let item;
@@ -53,9 +53,9 @@ class SpatialHash {
 
     for (let c = 0, counter = reportQueue.count; c < counter; c++) {
       item = rqArray[c];
-      const minMax = getMinMaxFromObject(item, dt);
-      const min = minMax[0];
-      const max = minMax[1];
+      // const minMax = getMinMaxFromObject(item, dt);
+      // const min = minMax[0];
+      // const max = minMax[1];
       tiles = [];
       if (item.x && item.y) {
         currentIndex = p21d([(item.x) ? item.x : item.startX, (item.y) ? item.y : item.startY]);

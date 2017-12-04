@@ -12,11 +12,11 @@ class Capsule {
 class VelocityCapsule extends Capsule {
   constructor(object, dt) {
     super(
-      object.x, 
+      object.x,
       object.y,
-      object.x + object.velocityX * dt,
-      object.y + object.velocityY * dt,
-      object.destructible.radius
+      object.x + (object.velocityX * dt),
+      object.y + (object.velocityY * dt),
+      object.destructible.radius,
     );
   }
 }

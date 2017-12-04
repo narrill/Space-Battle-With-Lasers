@@ -10,7 +10,7 @@ class Cannon {
     this.cd = 0.12;
     this.power = 10000;
     this.ammo = new Ammo(
-      utilities.deepObjectMerge.call({}, objectParams.ammo)
+      utilities.deepObjectMerge.call({}, objectParams.ammo),
     );
 
     utilities.veryShallowObjectMerge.call(this, objectParams);

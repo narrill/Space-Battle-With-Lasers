@@ -5,7 +5,7 @@ class Ai {
   constructor(objectParams = {}) {
     this.id = id.takeIdTag();
     this.aiFunction = undefined;
-    
+
     utilities.veryShallowObjectMerge.call(this, objectParams);
   }
 }

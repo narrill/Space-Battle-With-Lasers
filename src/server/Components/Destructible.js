@@ -1,5 +1,3 @@
-const dependencyCatch = require('../dependencyCatch.js');
-const constructors = dependencyCatch(require('../constructors.js'));
 const utilities = require('../utilities.js');
 const id = require('../id.js');
 const Shield = require('./Shield.js');
@@ -11,7 +9,7 @@ class Destructible {
     this.maxHp = (objectParams.hp) ? objectParams.hp : 500;
     this.radius = 500;
     this.shield = new Shield(
-      utilities.deepObjectMerge.call({}, objectParams.shield)
+      utilities.deepObjectMerge.call({}, objectParams.shield),
     );
 
     utilities.veryShallowObjectMerge.call(this, objectParams);

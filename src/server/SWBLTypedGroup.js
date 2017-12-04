@@ -12,7 +12,7 @@ class SWBLTypedGroup {
     this.hitscan.length = 0;
     this.prj.length = 0;
     this.radial.length = 0;
-    this.asteroid.length = 0;  
+    this.asteroid.length = 0;
   }
 }
 
