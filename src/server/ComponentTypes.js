@@ -4,7 +4,7 @@ const TYPES = {};
 let counter = 0;
 const classes = {};
 
-fs.readdir(`${__dirname}/Systems`, (err, filenames) => {
+fs.readdir(`${__dirname}/Components`, (err, filenames) => {
   if (err) {
     console.error(err);
     return;

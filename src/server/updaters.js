@@ -3,6 +3,7 @@ module.exports = {};
 const dependencyCatch = require('./dependencyCatch.js');
 const utilities = require('./utilities.js');
 const constructors = dependencyCatch(require('./constructors.js'));
+const Obj = require('./Obj.js');
 const collisions = require('./collisions.js');
 const enums = require('./enums.js');
 const objControls = require('./objControls.js');
@@ -187,7 +188,7 @@ const updaters = {
           target: this.targetingSystem.lockedTargets[0],
         };
       }
-      this.game.objs.push(constructors.createShip(launchee, this.game));
+      this.game.objs.push(new Obj(launchee, this.game));
       this.launcher.firing = false;
     }
   },
@@ -391,51 +392,51 @@ const updaters = {
     const ts = this.thrusterSystem;
     // medial motion
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_W]) {
-      objControls.objMedialThrusters.call(this, ts.medial.maxStrength / stab.thrustRatio);
+      this.objMedialThrusters(ts.medial.maxStrength / stab.thrustRatio);
     }
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_S]) {
-      objControls.objMedialThrusters.call(this, -ts.medial.maxStrength / stab.thrustRatio);
+      this.objMedialThrusters(-ts.medial.maxStrength / stab.thrustRatio);
     }
-    if (stab.enabled) { objControls.objMedialStabilizers.call(this); }
+    if (stab.enabled) { this.objMedialStabilizers(); }
 
     // lateral motion
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_A]) {
-      objControls.objLateralThrusters.call(this, ts.lateral.maxStrength / stab.thrustRatio);
+      this.objLateralThrusters(ts.lateral.maxStrength / stab.thrustRatio);
     }
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_D]) {
-      objControls.objLateralThrusters.call(this, -ts.lateral.maxStrength / stab.thrustRatio);
+      this.objLateralThrusters(-ts.lateral.maxStrength / stab.thrustRatio);
     }
-    if (stab.enabled) { objControls.objLateralStabilizers.call(this); }
+    if (stab.enabled) { this.objLateralStabilizers(); }
 
     // rotational motion - mouse    
     // console.log(-this.remoteInput.mouseDirection); 
     const mouseDirection = this.remoteInput.mouseDirection;
     const mouseSensitivity = 150;
-    objControls.objRotationalThrusters.call(this,
+    this.objRotationalThrusters(
       (((-mouseDirection) / mouseSensitivity) * ts.rotational.maxStrength) / stab.thrustRatio,
     );
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_LEFT]) {
-      objControls.objRotationalThrusters.call(this, ts.rotational.maxStrength / stab.thrustRatio);
+      this.objRotationalThrusters(ts.rotational.maxStrength / stab.thrustRatio);
     }
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_RIGHT]) {
-      objControls.objRotationalThrusters.call(this, -ts.rotational.maxStrength / stab.thrustRatio);
+      this.objRotationalThrusters(-ts.rotational.maxStrength / stab.thrustRatio);
     }
-    if (stab.enabled) { objControls.objRotationalStabilizers.call(this); }
+    if (stab.enabled) { this.objRotationalStabilizers(); }
 
     // weapons
     if (this.remoteInput.mouse[myMouse.BUTTONS.LEFT]
       || this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_SPACE]) {
       if (has.call(this, 'laser')) {
-        objControls.objFireLaser.call(this);
+        this.objFireLaser();
       } else if (has.call(this, 'cannon')) {
-        objControls.objFireCannon.call(this);
+        this.objFireCannon();
       }
     }
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_Q]) {
-      objControls.objFireLauncher.call(this);
+      this.objFireLauncher();
     }
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_E]) {
-      objControls.objFireTargetingSystem.call(this);
+      this.objFireTargetingSystem();
     }
 
     // power system

@@ -38,13 +38,11 @@ const aiFunctions = {
     const rotMaxStrength = this.thrusterSystem.rotational.maxStrength;
     const stabRatio = this.stabilizer.thrustRatio;
     if (relativeAngleToTarget > 0) {
-      objControls.objRotationalThrusters.call(
-        this,
+      this.objRotationalThrusters(
         ((-relativeAngleToTarget) * dt * this.ai.accuracy * rotMaxStrength) / stabRatio,
       );
     } else if (relativeAngleToTarget < 0) {
-      objControls.objRotationalThrusters.call(
-        this,
+      this.objRotationalThrusters(
         ((relativeAngleToTarget) * dt * this.ai.accuracy * -rotMaxStrength) / stabRatio,
       );
     }
@@ -57,20 +55,18 @@ const aiFunctions = {
       && relativeAngleToTarget > (-this.ai.fireSpread) / 2) {
       if (distanceSqr < (myRange * myRange)
         && has.call(this, 'laser')) {
-        objControls.objFireLaser.call(this);
+        this.objFireLaser();
       } else if (has.call(this, 'cannon')) {
-        objControls.objFireCannon.call(this);
+        this.objFireCannon();
       }
     }
 
     if (distanceSqr > this.ai.followMax * this.ai.followMax || distanceSqr > myRange * myRange) {
-      objControls.objMedialThrusters.call(
-        this,
+      this.objMedialThrusters(
         this.thrusterSystem.medial.maxStrength / this.stabilizer.thrustRatio,
       );
     } else if (distanceSqr < this.ai.followMin * this.ai.followMin) {
-      objControls.objMedialThrusters.call(
-        this,
+      this.objMedialThrusters(
         (-this.thrusterSystem.medial.maxStrength) / this.stabilizer.thrustRatio,
       );
     }
@@ -90,16 +86,16 @@ const aiFunctions = {
     if (distanceSqr < 2 * (targetRange * targetRange)
       && relativeAngleToMe < 90
       && relativeAngleToMe > 0) {
-      objControls.objLateralThrusters.call(this, latMaxStrength / stabRatio);
+      this.objLateralThrusters(latMaxStrength / stabRatio);
     } else if (distanceSqr < 2 * (targetRange * targetRange)
       && relativeAngleToMe > -90
       && relativeAngleToMe < 0) {
-      objControls.objLateralThrusters.call(this, -latMaxStrength / stabRatio);
+      this.objLateralThrusters.call(this, -latMaxStrength / stabRatio);
     }
 
-    objControls.objMedialStabilizers.call(this);
-    objControls.objLateralStabilizers.call(this);
-    objControls.objRotationalStabilizers.call(this);
+    this.objMedialStabilizers();
+    this.objLateralStabilizers();
+    this.objRotationalStabilizers();
   },
 
   basicMissile(dt) {
@@ -132,29 +128,25 @@ const aiFunctions = {
       const timeTillStop = Math.abs(rotVel / rotMaxStrength);
 
       if (this.rotationalVelocity === 0) {
-        objControls.objRotationalThrusters.call(
-          this,
+        this.objRotationalThrusters(
           (-relativeAngleToTarget) * this.thrusterSystem.rotational.maxStrength);
         return;
       }
 
       if (timeTillAligned < 0 || timeTillAligned < timeTillStop) {
-        objControls.objRotationalThrusters.call(
-          this,
+        this.objRotationalThrusters(
           (rotVel / Math.abs(rotVel)) * rotMaxStrength * timeTillStop * 10,
         );
       } else if (timeTillAligned > timeTillStop) {
-        objControls.objRotationalThrusters.call(
-          this,
+        this.objRotationalThrusters(
           (-(rotVel / Math.abs(rotVel))) * rotMaxStrength * timeTillStop * 10,
         );
       }
 
-      objControls.objLateralThrusters.call(this, utilities.getLateralVelocity(this) * 1200 * dt);
-      objControls.objMedialThrusters.call(this, this.thrusterSystem.medial.maxStrength);
+      this.objLateralThrusters(utilities.getLateralVelocity(this) * 1200 * dt);
+      this.objMedialThrusters(this.thrusterSystem.medial.maxStrength);
 
-      // objControls.objLateralStabilizers(obj, dt);
-    } else objControls.objMedialThrusters.call(this, this.thrusterSystem.medial.maxStrength);
+    } else this.objMedialThrusters(this.thrusterSystem.medial.maxStrength);
   },
 };
 
