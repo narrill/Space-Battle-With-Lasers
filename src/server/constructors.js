@@ -332,19 +332,19 @@ const constructors = {
   // },
 
   // constructor for the shield sub-component
-  createComponentDestructibleShield(objectParams = {}) {
-    const sh = {
-      id: id.takeIdTag(),
-      current: (objectParams.max) ? objectParams.max : 0,
-      max: 0,
-      efficiency: 0,
-      recharge: 0,
-    };
+  // createComponentDestructibleShield(objectParams = {}) {
+  //   const sh = {
+  //     id: id.takeIdTag(),
+  //     current: (objectParams.max) ? objectParams.max : 0,
+  //     max: 0,
+  //     efficiency: 0,
+  //     recharge: 0,
+  //   };
 
-    utilities.veryShallowObjectMerge.call(sh, objectParams);
+  //   utilities.veryShallowObjectMerge.call(sh, objectParams);
 
-    return sh;
-  },
+  //   return sh;
+  // },
 
   // constructor for the AI component
   createComponentAi(objectParams = {}) {

@@ -59,7 +59,7 @@ class Game {
     };
     this.spatialHash = new SpatialHash();
     this.asteroids = {
-      total: 0,
+      total: 60,
       colors: [
         '#6B2A06',
         'sienna',
