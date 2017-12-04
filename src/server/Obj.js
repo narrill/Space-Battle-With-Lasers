@@ -42,14 +42,13 @@ class Obj {
       efficiency: 8,
       },
     }, objectParams.destructible));
-    this.thrusterSystem = constructors.createComponentThrusterSystem(
-      utilities.deepObjectMerge.call({}, objectParams.thrusters),
+    this.thrusterSystem = new componentClasses.ThrusterSystem(
+      this, utilities.deepObjectMerge.call({}, objectParams.thrusters),
     ),
     // colors
     this.color = utilities.getRandomBrightColor();
     // model
     this.model = (has.call(objectParams, 'model')) ? objectParams.model : ships.cheetah.model;
-    this.weaponToggle = true;
     this.constructionObject = utilities.deepObjectMerge.call({}, objectParams);
     this.type = 'obj';
 
