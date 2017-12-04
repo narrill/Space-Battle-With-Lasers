@@ -29,9 +29,6 @@ const getMimeTypeFromExtension = (extension) => {
 const files = [
   'client.html',
   'bundle.js',
-  'Long.min.js',
-  'bytebuffer.min.js',
-  'PSON.min.js',
   'AROMA-Light.ttf',
   'AROMA-Bold.ttf',
   'Prime-Regular.otf',
