@@ -45,7 +45,7 @@ class Grid {
   }
 
   get length() {
-    return this.posTo1dIndex([this.position[0] + this.size[0], this.position[1] + this.size[1]]);
+    return this.posTo1dIndex([this.position[0] + this.size[0], this.position[1] + this.size[1]]) + 1;
   }
 }
 

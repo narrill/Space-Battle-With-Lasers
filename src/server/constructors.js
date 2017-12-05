@@ -21,6 +21,12 @@ const constructors = {
     const hitscan = {
       startX,
       startY,
+      get x() {
+        return startX;
+      },
+      get y() {
+        return startY;
+      },
       endX,
       endY,
       color,

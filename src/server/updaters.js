@@ -377,7 +377,6 @@ const updaters = {
 
   updateRemoteInputComponent() {
     const stab = this.stabilizer;
-    console.log(this.remoteInput);
     if (this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_TAB]
       && !this.remoteInput.keyboard[myKeys.KEYBOARD.KEY_ALT]) {
       stab.enabled = !stab.enabled;
@@ -466,6 +465,7 @@ const updaters = {
         }
 
         const fetchInfo = this.game.spatialHash.fetch([this.x, this.y], 15000);
+        //console.log(`objs in fetch: ${fetchInfo.obj.length}`);
         const worldInfo = {
           objs: [],
           asteroids: {},

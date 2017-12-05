@@ -58,7 +58,7 @@ class SpatialHash {
       // const max = minMax[1];
       tiles = [];
       if (item.x && item.y) {
-        currentIndex = p21d([(item.x) ? item.x : item.startX, (item.y) ? item.y : item.startY]);
+        currentIndex = p21d([item.x, item.y]);
         tiles[0] = currentIndex;
         taa[currentIndex][item.type].push(item);
       }
@@ -101,15 +101,20 @@ class SpatialHash {
     const min = [pos[0] - radius, pos[1] - radius];
     const max = [pos[0] + radius, pos[1] + radius];
     const info = this.map.minMaxToInfo(min, max);
+    //console.log('starting fetch');
     for (let row = 0; row < info.repetitions; row++) {
       for (let col = 0; col < info.len; col++) {
-        const theTile = this.tiles[info.start + col + (info.offset * row)];
-        if (theTile) {
-          const keys = Object.keys(objectList);
-          for (let n = 0; n < keys.length; n++) {
-            const key = keys[n];
-            for (let c = 0; c < theTile[key].length; c++) {
-              objectList[key].push(theTile[key][c]);
+        const tileIndex = info.start + col + (info.offset * row);
+        if(tileIndex < this.map.length && tileIndex >= 0) {
+          const theTile = this.tiles[tileIndex];
+          if (theTile) {
+            //console.log(`checking tile ${tileIndex}`);
+            const keys = Object.keys(objectList);
+            for (let n = 0; n < keys.length; n++) {
+              const key = keys[n];
+              for (let c = 0; c < theTile[key].length; c++) {
+                objectList[key].push(theTile[key][c]);
+              }
             }
           }
         }
