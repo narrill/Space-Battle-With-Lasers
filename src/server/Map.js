@@ -1,6 +1,31 @@
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
+class MinMaxInfo {
+  constructor(map, min, max) {
+    const minIndex = map.posTo2dIndex(min);
+    const maxIndex = map.posTo2dIndex(max);
+    const mmWidth = maxIndex[0] - minIndex[0];
+    const mmHeight = maxIndex[1] - minIndex[1];
+    const mapWidth = Math.ceil(Math.ceil(map.size[0] / map.precision));
+    const mmiWidth = Math.max(mmWidth, mapWidth);
+    
+    this.len = mmWidth + 1;
+    this.offset = mmiWidth;
+    this.repetitions = mmHeight + 1;
+    this.start = (minIndex[1] * mmiWidth) + minIndex[0];
+  }
+
+  iterateUnbounded(f) {
+    for (let row = 0; row < this.repetitions; row++) {
+      for (let col = 0; col < this.len; col++) {
+        const tileIndex = this.start + col + (this.offset * row);
+        f(tileIndex);
+      }
+    }
+  }
+}
+
 class Grid {
   constructor(x = 0, y = 0, width = 0, height = 0, precision = 0) {
     this.position = [x, y];
@@ -33,15 +58,9 @@ class Grid {
     return [Math.floor(gridSpace[0]), Math.floor(gridSpace[1])];
   }
 
-  minMaxToInfo(min, max) {
-    const minIndex = this.posTo2dIndex(min);
-    const maxIndex = this.posTo2dIndex(max);
-    return {
-      len: (maxIndex[0] - minIndex[0]) + 1,
-      offset: Math.ceil(this.size[0] / this.precision),
-      repetitions: (maxIndex[1] - minIndex[1]) + 1,
-      start: ((minIndex[1] * Math.ceil(this.size[0] / this.precision))) + minIndex[0],
-    };
+  iterate(min2d, max2d, f) {
+    const mmi = new MinMaxInfo(this, min2d, max2d);
+    mmi.iterateUnbounded(f);
   }
 
   get length() {

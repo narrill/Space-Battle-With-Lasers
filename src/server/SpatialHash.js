@@ -100,26 +100,20 @@ class SpatialHash {
   fetch(pos, radius, objectList = new SWBLTypedGroup()) {
     const min = [pos[0] - radius, pos[1] - radius];
     const max = [pos[0] + radius, pos[1] + radius];
-    const info = this.map.minMaxToInfo(min, max);
-    //console.log('starting fetch');
-    for (let row = 0; row < info.repetitions; row++) {
-      for (let col = 0; col < info.len; col++) {
-        const tileIndex = info.start + col + (info.offset * row);
-        if(tileIndex < this.map.length && tileIndex >= 0) {
-          const theTile = this.tiles[tileIndex];
-          if (theTile) {
-            //console.log(`checking tile ${tileIndex}`);
-            const keys = Object.keys(objectList);
-            for (let n = 0; n < keys.length; n++) {
-              const key = keys[n];
-              for (let c = 0; c < theTile[key].length; c++) {
-                objectList[key].push(theTile[key][c]);
-              }
-            }
+    
+    this.map.iterate(min, max, (tileIndex) => {
+      const theTile = this.tiles[tileIndex];
+      if (theTile) {
+        const keys = Object.keys(objectList);
+        for (let n = 0; n < keys.length; n++) {
+          const key = keys[n];
+          for (let c = 0; c < theTile[key].length; c++) {
+            objectList[key].push(theTile[key][c]);
           }
         }
       }
-    }
+    });
+
     return objectList;
   }
 }
