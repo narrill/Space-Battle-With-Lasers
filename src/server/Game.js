@@ -19,7 +19,7 @@ class Game {
     this.timeStep = 0.0167;
     this.lastTime = 0; // used by calculateDeltaTime()
     this.objs = [];
-    this.maxNPCs = 0;
+    this.maxNPCs = 50;
     this.factions = 4;
     this.respawnQueue = [];
     this.factionColors = [];
@@ -59,7 +59,7 @@ class Game {
     };
     this.spatialHash = new SpatialHash();
     this.asteroids = {
-      total: 0,
+      total: 60,
       colors: [
         '#6B2A06',
         'sienna',

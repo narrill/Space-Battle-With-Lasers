@@ -1,13 +1,23 @@
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
-class MinMaxInfo {
+const utilities = require('./utilities.js');
+
+class BoundedGridIterable {
   constructor(map, min, max) {
-    const minIndex = map.posTo2dIndex(min);
-    const maxIndex = map.posTo2dIndex(max);
+    const clampedMin = [
+      utilities.clamp(map.position[0], min[0], map.size[0] + map.position[0]),
+      utilities.clamp(map.position[1], min[1], map.size[1] + map.position[1])
+    ];
+    const clampedMax = [
+      utilities.clamp(map.position[0], max[0], map.size[0] + map.position[0]),
+      utilities.clamp(map.position[1], max[1], map.size[1] + map.position[1])
+    ];
+    const minIndex = map.posTo2dIndex(clampedMin);
+    const maxIndex = map.posTo2dIndex(clampedMax);
     const mmWidth = maxIndex[0] - minIndex[0];
     const mmHeight = maxIndex[1] - minIndex[1];
-    const mapWidth = Math.ceil(Math.ceil(map.size[0] / map.precision));
+    const mapWidth = Math.ceil(map.size[0] / map.precision);
     const mmiWidth = Math.max(mmWidth, mapWidth);
     
     this.len = mmWidth + 1;
@@ -16,7 +26,7 @@ class MinMaxInfo {
     this.start = (minIndex[1] * mmiWidth) + minIndex[0];
   }
 
-  iterateUnbounded(f) {
+  iterate(f) {
     for (let row = 0; row < this.repetitions; row++) {
       for (let col = 0; col < this.len; col++) {
         const tileIndex = this.start + col + (this.offset * row);
@@ -31,6 +41,11 @@ class Grid {
     this.position = [x, y];
     this.size = [width, height];
     this.precision = precision;
+    this._dimensions = [
+      Math.max(Math.ceil(this.size[0]/this.precision), 1), 
+      Math.max(Math.ceil(this.size[1]/this.precision), 1)
+    ];
+    this._length = this.posTo1dIndex([this.position[0] + this.size[0], this.position[1] + this.size[1]]) + 1;
   }
 
   worldToGridSpace(worldPos) {
@@ -59,12 +74,20 @@ class Grid {
   }
 
   iterate(min2d, max2d, f) {
-    const mmi = new MinMaxInfo(this, min2d, max2d);
-    mmi.iterateUnbounded(f);
+    const mmi = new BoundedGridIterable(this, min2d, max2d);
+    mmi.iterate(f);
+  }
+
+  get width() {
+    return this._dimensions[0];
+  }
+
+  get height() {
+    return this._dimensions[1];
   }
 
   get length() {
-    return this.posTo1dIndex([this.position[0] + this.size[0], this.position[1] + this.size[1]]) + 1;
+    return this._length;
   }
 }
 
