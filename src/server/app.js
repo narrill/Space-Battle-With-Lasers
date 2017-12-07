@@ -43,7 +43,7 @@ const files = [
   'titlestinger.wav',
   'entergamestinger.wav',
   'deathstinger.wav',
-  'ambientloop.wav'
+  'ambientloop.wav',
 ];
 
 const hostedFiles = {};
@@ -77,79 +77,19 @@ const app = http.createServer(onRequest).listen(port);
 
 console.log(`Listening on port ${port}`);
 
-const dependencyCatch = require('./dependencyCatch.js');
-const gameFunctions = dependencyCatch(require('./gameFunctions.js'));
+const Game = require('./Game.js');
 const ships = require('./ships.js');
-const constructors = dependencyCatch(require('./constructors.js'));
-const utilities = require('./utilities.js');
+const Obj = require('./Obj.js');
 
 const shipList = Object.keys(ships);
 
-const BASE_GAME = {
-  accumulator: 0,
-  timeStep: 0.0167,
-  lastTime: 0, // used by calculateDeltaTime()
-  runningTime: 0,
-  updatables: [],
-  otherShips: [],
-  otherShipCount: 0,
-  maxOtherShips: 6,
-  factions: 4,
-  respawnQueue: [],
-  factionColors: [],
-  hitscans: [],
-  projectiles: [],
-  radials: [],
-  reportQueue: undefined,
-  functionQueue: [],
-  socketSubscriptions: {},
-  grid: {
-    gridLines: 500, // number of grid lines
-    gridSpacing: 100, // pixels per grid unit
-    gridStart: [-25000, -25000], // corner anchor in world coordinates
-    colors: [
-      {
-        color: '#1111FF',
-        interval: 1000,
-      },
-      {
-        color: 'blue',
-        interval: 200,
-      },
-      {
-        color: 'mediumblue',
-        interval: 50,
-        minimap: true,
-      },
-      {
-        color: 'darkblue',
-        interval: 10,
-      },
-      {
-        color: 'navyblue',
-        interval: 2,
-      },
-    ],
-  },
-  tileArray: undefined,
-  asteroids: {
-    total: 60,
-    colors: [
-      '#6B2A06',
-      'sienna',
-    ],
-    objs: [],
-  },
-};
-
-const game = gameFunctions.init.call(utilities.deepObjectMerge.call({}, BASE_GAME));
+const game = new Game();
 
 const io = socketio(app);
 // to-do, network protocol
 
 io.on('connection', (s) => {
   let ship;
-  let sendToShip;
   s.emit('shipList', shipList);
 
   s.on('ship', (shipName) => {
@@ -158,13 +98,12 @@ io.on('connection', (s) => {
       game.socketSubscriptions[s.id] = s;
       chosenShip.remoteInput = {};
       const shipModels = {};
-      Object.values(game.otherShips).forEach((sh) => {
+      Object.values(game.objs).forEach((sh) => {
         shipModels[sh.id] = sh.model;
       });
-      ship = constructors.createShip(chosenShip, game, s.id);
-      ship.remoteInput.remoteSend = (data, msg) => { s.emit((msg) || 'worldInfo', data); };
-      sendToShip = ship.remoteInput.messageHandler;
-      game.otherShips.push(ship);
+      ship = new Obj(chosenShip, game, s.id);
+      ship.remoteInput.remoteSend = (data, msg = 'worldInfo') => { s.emit(msg, data); };
+      game.objs.push(ship);
       s.emit('grid', game.grid);
       s.emit('ships', shipModels);
     } else {
@@ -173,41 +112,12 @@ io.on('connection', (s) => {
   });
 
   s.on('input', (data) => {
-    if (sendToShip) sendToShip(data);
+    if (ship && ship.remoteInput) ship.remoteInput.messageHandler(data);
   });
 
   s.on('disconnect', () => {
-    sendToShip = undefined;
     delete game.socketSubscriptions[s.id];
   });
 });
 
-// let accumulator = 0;
-// let lastTickTime;
-// const TICK_INTERVAL_MS = 50;
-
-// const simulationLoop = (playerList) => {
-//   const currentTime = Date.now();
-//   const sinceLast = currentTime - lastTickTime;
-//   accumulator += sinceLast;
-//   lastTickTime = currentTime;
-
-//   const playerIds = Object.keys(playerList);
-
-//   while (accumulator >= TICK_INTERVAL_MS) {
-//     accumulator -= TICK_INTERVAL_MS;
-//     const dT = TICK_INTERVAL_MS / 1000;
-
-//     for (let n = 0; n < playerIds.length; n++) {
-//       const player = playerList[playerIds[n]];
-//     }
-//   }
-
-//   for (let n = 0; n < playerIds.length; n++) {
-//     const player = playerList[playerIds[n]];
-//     io.sockets.emit('info', null);
-//   }
-// };
-
-// lastTickTime = Date.now();
-// setInterval(simulationLoop.bind(null, players), TICK_INTERVAL_MS);
+game.loop();

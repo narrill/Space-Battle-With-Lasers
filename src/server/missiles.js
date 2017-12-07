@@ -36,6 +36,7 @@ const missiles = {
         max: 0,
       },
     },
+    thrusterSystem: {},
     warhead: {},
     ai: {
       aiFunction: 'basicMissile',
