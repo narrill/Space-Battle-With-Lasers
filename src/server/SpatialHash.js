@@ -100,7 +100,7 @@ class SpatialHash {
   fetch(pos, radius, objectList = new SWBLTypedGroup()) {
     const min = [pos[0] - radius, pos[1] - radius];
     const max = [pos[0] + radius, pos[1] + radius];
-    
+
     this.map.iterate(min, max, (tileIndex) => {
       const theTile = this.tiles[tileIndex];
       if (theTile) {

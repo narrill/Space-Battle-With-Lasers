@@ -1,14 +1,14 @@
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/gameFunctions.js
 
-const dependencyCatch = require('./dependencyCatch.js');
-const constructors = dependencyCatch(require('./constructors.js'));
+const Radial = require('./Radial.js');
+const Prj = require('./Prj.js');
+const Hitscan = require('./Hitscan.js');
 const Obj = require('./Obj.js');
+const Asteroid = require('./Asteroid.js');
 const utilities = require('./utilities.js');
-const clearFunctions = require('./clearFunctions.js');
 const SpatialHash = require('./SpatialHash.js');
 const ReportQueue = require('./ReportQueue.js');
-const updaters = dependencyCatch(require('./updaters.js'));
 const ships = require('./ships.js');
 const collisions = require('./collisions.js');
 
@@ -66,7 +66,7 @@ class Game {
       ],
       objs: [],
     };
-    constructors.makeAsteroids.bind(this, this, this.grid)();
+    Asteroid.makeAsteroids(this);
     let hue = Math.round(Math.random() * 360);
     for (let c = 0; c < this.factions; c++) {
       this.factionColors[c] = `hsl(${hue},100%,65%)`;
@@ -80,8 +80,8 @@ class Game {
       );
       newShip.ai = {
         aiFunction: 'basic',
-        followMin: 2500,
-        followMax: 3000,
+        followMin: 1500,
+        followMax: 2000,
         accuracy: 0.5,
         fireSpread: 5,
       };
@@ -110,44 +110,40 @@ class Game {
 
   // one game tick
   update(dt) {
+    const checkForDestruction = (collection) => {
+      for (let c = 0; c < collection.length; c++) {
+        if (collection[c].shouldDestroy) {
+          collection[c].destroy();
+          collection.splice(c--, 1);
+        }
+      }
+    };
+
     // clear values
-    this.hitscans.length = 0;
-    clearFunctions.clearDestructibles(this.asteroids.objs);
-    clearFunctions.clearDestructibles(this.objs);
-    clearFunctions.clearDestructibles(this.projectiles);
-    clearFunctions.cullDestructibles(this.objs, this.grid);
-    clearFunctions.clearRadials(this.radials);
+    this.hitscans.length = 0; // Hitscans only exist for one tick
+    checkForDestruction(this.asteroids.objs);
+    checkForDestruction(this.objs);
+    checkForDestruction(this.projectiles);
+    checkForDestruction(this.radials);
 
     for (let c = 0; c < this.respawnQueue.length; c++) {
       const rs = this.respawnQueue[c];
       if (this.elapsedGameTime >= rs.time) {
-        this.objs.push(new Obj(rs.params, this));
+        this.createObj(rs.params, this);
         this.respawnQueue.splice(c--, 1);
       }
     }
-    for (let c = 0; c < this.asteroids.objs.length; c++) {
-      this.reportQueue.push(this.asteroids.objs[c]);
-    }
 
-    // update ship, center main camera on ship
-    // this.updateShip(this.ship,dt);
-    for (let i = 0; i < this.projectiles.length; i++) {
-      updaters.updateMobile.call(this.projectiles[i], dt);
-      updaters.updatePrj.call(this.projectiles[i], dt);
-      this.reportQueue.push(this.projectiles[i]);
-    }
-    for (let i = 0; i < this.radials.length; i++) {
-      updaters.updateRadial.call(this.radials[i], dt);
-      this.reportQueue.push(this.radials[i]);
-    }
-    this.objs.forEach((ship) => {
-      updaters.updateUpdatable.call(ship, dt);
-    }, this);
+    const updateCollection = (collection) => {
+      for (let i = 0; i < collection.length; i++) { collection[i].update(dt); }
+    };
 
-
-    for (let i = 0; i < this.hitscans.length; i++) {
-      this.reportQueue.push(this.hitscans[i]);
-    }
+    Asteroid.makeAsteroids(this);
+    updateCollection(this.asteroids.objs);
+    updateCollection(this.projectiles);
+    updateCollection(this.radials);
+    updateCollection(this.objs);
+    updateCollection(this.hitscans);
 
     this.processReportQueue(dt);
 
@@ -389,6 +385,26 @@ class Game {
   processReportQueue(dt) {
     this.spatialHash.processReportQueue(this.reportQueue, dt);
     this.reportQueue.clear();
+  }
+
+  createObj(...args) {
+    this.objs.push(new Obj(...args));
+  }
+
+  createPrj(...args) {
+    this.projectiles.push(new Prj(...args));
+  }
+
+  createRadial(...args) {
+    this.radials.push(new Radial(...args));
+  }
+
+  createHitscan(...args) {
+    this.hitscans.push(new Hitscan(...args));
+  }
+
+  createAsteroid(...args) {
+    this.asteroids.objs.push(new Asteroid(...args));
   }
 }
 

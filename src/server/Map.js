@@ -7,11 +7,11 @@ class BoundedGridIterable {
   constructor(map, min, max) {
     const clampedMin = [
       utilities.clamp(map.position[0], min[0], map.size[0] + map.position[0]),
-      utilities.clamp(map.position[1], min[1], map.size[1] + map.position[1])
+      utilities.clamp(map.position[1], min[1], map.size[1] + map.position[1]),
     ];
     const clampedMax = [
       utilities.clamp(map.position[0], max[0], map.size[0] + map.position[0]),
-      utilities.clamp(map.position[1], max[1], map.size[1] + map.position[1])
+      utilities.clamp(map.position[1], max[1], map.size[1] + map.position[1]),
     ];
     const minIndex = map.posTo2dIndex(clampedMin);
     const maxIndex = map.posTo2dIndex(clampedMax);
@@ -19,7 +19,7 @@ class BoundedGridIterable {
     const mmHeight = maxIndex[1] - minIndex[1];
     const mapWidth = Math.ceil(map.size[0] / map.precision);
     const mmiWidth = Math.max(mmWidth, mapWidth);
-    
+
     this.len = mmWidth + 1;
     this.offset = mmiWidth;
     this.repetitions = mmHeight + 1;
@@ -42,10 +42,13 @@ class Grid {
     this.size = [width, height];
     this.precision = precision;
     this._dimensions = [
-      Math.max(Math.ceil(this.size[0]/this.precision), 1), 
-      Math.max(Math.ceil(this.size[1]/this.precision), 1)
+      Math.max(Math.ceil(this.size[0] / this.precision), 1),
+      Math.max(Math.ceil(this.size[1] / this.precision), 1),
     ];
-    this._length = this.posTo1dIndex([this.position[0] + this.size[0], this.position[1] + this.size[1]]) + 1;
+    this._length = this.posTo1dIndex(
+      [this.position[0] + this.size[0],
+        this.position[1] + this.size[1]],
+    ) + 1;
   }
 
   worldToGridSpace(worldPos) {

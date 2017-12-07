@@ -3,7 +3,7 @@ const id = require('../id.js');
 const Thruster = require('./Thruster.js');
 
 class ThrusterSystem {
-  constructor(owner, objectParams = {}) {
+  constructor(objectParams = {}, owner) {
     this.owner = owner;
     this.id = id.takeIdTag();
     this.color = utilities.getRandomBrightColor();
@@ -22,6 +22,25 @@ class ThrusterSystem {
     }, objectParams.rotational));
 
     utilities.veryShallowObjectMerge.call(this, objectParams);
+  }
+
+  update(dt) {
+    // add acceleration from each thruster
+    const medial = this.medial;
+    medial.update(dt);
+    const fv = utilities.getForwardVector.call(this.owner);
+    this.owner.accelerationX += fv[0] * medial.currentStrength;
+    this.owner.accelerationY += fv[1] * medial.currentStrength;
+
+    const lateral = this.lateral;
+    lateral.update(dt);
+    const rv = utilities.getRightVector.call(this.owner);
+    this.owner.accelerationX += rv[0] * lateral.currentStrength;
+    this.owner.accelerationY += rv[1] * lateral.currentStrength;
+
+    const rotational = this.rotational;
+    rotational.update(dt);
+    this.owner.rotationalAcceleration -= rotational.currentStrength;
   }
 }
 

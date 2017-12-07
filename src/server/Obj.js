@@ -1,14 +1,14 @@
-const dependencyCatch = require('./dependencyCatch.js');
 const utilities = require('./utilities.js');
 const id = require('./id.js');
 const gridFunctions = require('./gridFunctions.js');
 
 const has = Object.prototype.hasOwnProperty;
 const componentClasses = require('./ComponentTypes.js').classes;
-const updaters = dependencyCatch(require('./updaters.js'));
+const Mobile = require('./Mobile.js');
 
-class Obj {
+class Obj extends Mobile {
   constructor(objectParams = {}, game, ownerId) {
+    super();
     const gridPosition = gridFunctions.randomGridPosition(game.grid);
     this.id = id.takeIdTag();
     this.game = game;
@@ -32,18 +32,6 @@ class Obj {
     this.rightVectorY = undefined;
     this.medialVelocity = undefined; // component form, used by stabilizers
     this.lateralVelocity = undefined;
-    this.destructible = new componentClasses.Destructible(utilities.deepObjectMerge.call({
-      hp: 100,
-      radius: 25,
-      shield: {
-        max: 100,
-        recharge: 3,
-        efficiency: 8,
-      },
-    }, objectParams.destructible));
-    this.thrusterSystem = new componentClasses.ThrusterSystem(
-      this, utilities.deepObjectMerge.call({}, objectParams.thrusters),
-    );
     // colors
     this.color = utilities.getRandomBrightColor();
     // model
@@ -51,37 +39,48 @@ class Obj {
     this.constructionObject = utilities.deepObjectMerge.call({}, objectParams);
     this.type = 'obj';
 
-    // this is for adding additional components. also it's super janky
-    // iterate through params
+    const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
+
+    // Set defaults
+    const defaults = {
+      destructible: {
+        hp: 100,
+        radius: 25,
+        shield: {
+          max: 100,
+          recharge: 3,
+          efficiency: 8,
+        },
+      },
+    };
+
+    // Populate components
+    this.updatableComponents = [];
+    this.destructibleComponents = [];
     Object.keys(objectParams).forEach((key) => {
-      // if params contains something ship doesn't
       if (!has.call(this, key)) {
-        // capitalize the first letter and try to find a constructor for it
-        const capitalized = key.charAt(0).toUpperCase() + key.slice(1);
-        const Component = componentClasses[capitalized];
-        // if a constructor was found, call it
+        const Component = componentClasses[capitalize(key)];
         if (Component) {
           const newParams = objectParams[key];
-          this[key] = new Component(utilities.deepObjectMerge.call({}, newParams));
+          const defaultParams = defaults[key] || {};
+          const params = utilities.deepObjectMerge.call(defaultParams, newParams);
+          const component = new Component(params, this);
+          if (component.update) { this.updatableComponents.push(component); }
+          if (component.destroy) {
+            this.destructibleComponents.push(component);
+          }
+          this[key] = component;
         }
       }
     });
 
+    // Copy any top-level literal overrides
     utilities.veryShallowObjectMerge.call(this, objectParams);
 
+    // Faction coloring (though factions don't do anything right now)
     if (this.faction !== -1) { this.color = game.factionColors[this.faction]; }
 
-    this.updaters = [];
-    this.updaters.push(updaters.updateMobile);
-    this.updaters.push(function () { this.game.reportQueue.push(this); });
-    Object.keys(this).forEach((key) => {
-      const capitalized = key.charAt(0).toUpperCase() + key.slice(1);
-      const updater = updaters[`update${capitalized}Component`];
-      if (updater) { this.updaters.push(updater); }
-    });
-
-    updaters.populateOnDestroy.call(this);
-
+    // Pass model data to clients - this is a bit of a hack
     Object.values(game.socketSubscriptions).forEach((socket) => {
       if (ownerId && socket.id === ownerId && this.model.overlay.ranges) {
         const modelCopy = utilities.deepObjectMerge.call({}, this.model);
@@ -95,6 +94,58 @@ class Obj {
         socket.emit('ship', { id: this.id, model: modelCopy });
       } else { socket.emit('ship', { id: this.id, model: this.model }); }
     });
+  }
+
+  update(dt) {
+    super.update(dt);
+    this.game.reportQueue.push(this);
+    for (let c = 0; c < this.updatableComponents.length; c++) {
+      this.updatableComponents[c].update(dt);
+    }
+  }
+
+  get shouldDestroy() {
+    // Check culling
+    let shouldCull = false;
+    if (has.call(this, 'cullTolerance')) {
+      const grid = this.game.grid;
+      const gridDimensions = grid.gridLines * grid.gridSpacing;
+      const tolerancePercent = this.cullTolerance;
+      const tolerances = [gridDimensions * tolerancePercent, gridDimensions * tolerancePercent];
+      const position = [this.x, this.y];
+      shouldCull = !gridFunctions.isPositionInGrid(position, grid, tolerances);
+    }
+
+    return shouldCull || (this.destructible && this.destructible.isDead);
+  }
+
+  destroy() {
+    const returnIdTag = (src) => {
+      if (!src) { return; }
+      Object.keys(src).forEach((key) => {
+        const shouldRecurse =
+          key !== 'game'
+          && key !== 'owner'
+          && src[key] instanceof Object
+          && !(src[key] instanceof Array);
+        if (shouldRecurse) {
+          returnIdTag(src[key]);
+        } else if (key === 'id') {
+          id.returnIdTag(src[key]);
+        }
+      });
+    };
+
+    for (let c = 0; c < this.destructibleComponents.length; c++) {
+      this.destructibleComponents[c].destroy();
+    }
+    if (this.respawnTime) {
+      this.game.respawnQueue.push({
+        time: this.game.elapsedGameTime + (this.respawnTime * 1000),
+        params: this.constructionObject,
+      });
+    }
+    returnIdTag(this);
   }
 
   // add given strength to main thruster

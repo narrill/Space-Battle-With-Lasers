@@ -4,16 +4,88 @@
 		"selected_items":
 		[
 			[
+				"clamp",
+				"clampedMax"
+			],
+			[
+				"clam",
+				"clampedMin"
+			],
+			[
+				"tile",
+				"tileIndex"
+			],
+			[
+				"min",
+				"minIndex"
+			],
+			[
+				"object",
+				"objectList"
+			],
+			[
+				"component",
+				"componentClasses"
+			],
+			[
 				"compo",
-				"components"
+				"componentClasses"
 			],
 			[
-				"index",
-				"indexById"
+				"spli",
+				"splitClassName"
 			],
 			[
-				"colla",
-				"collapsedComponents"
+				"class",
+				"className"
+			],
+			[
+				"curre",
+				"currentTrackIndex"
+			],
+			[
+				"current",
+				"currentTrackIndex"
+			],
+			[
+				"game",
+				"gameplayMusic3"
+			],
+			[
+				"objects",
+				"objectsById"
+			],
+			[
+				"curren",
+				"currentObj"
+			],
+			[
+				"hit",
+				"hitscans"
+			],
+			[
+				"vel",
+				"VelocityCapsule"
+			],
+			[
+				"veloc",
+				"VelocityCapsule"
+			],
+			[
+				"velo",
+				"VelocityCapsule"
+			],
+			[
+				"currentO",
+				"currentObjCapsule"
+			],
+			[
+				"objec",
+				"objectList"
+			],
+			[
+				"fetch",
+				"fetchInfo"
 			],
 			[
 				"gamest",
@@ -22,10 +94,6 @@
 			[
 				"play",
 				"playKeyClick"
-			],
-			[
-				"game",
-				"gameplayMusic"
 			],
 			[
 				"targetin",
@@ -100,14 +168,6 @@
 				"getValue"
 			],
 			[
-				"object",
-				"objectParams"
-			],
-			[
-				"objec",
-				"objectParams"
-			],
-			[
 				"Game",
 				"GAME_STATES"
 			],
@@ -174,10 +234,6 @@
 			[
 				"rotationa",
 				"rotational"
-			],
-			[
-				"current",
-				"currentStrength"
 			],
 			[
 				"lerp",
@@ -292,6 +348,10 @@
 				"MAX_SNAPSHOTS"
 			],
 			[
+				"index",
+				"indexOffsets"
+			],
+			[
 				"snap",
 				"snapshots"
 			],
@@ -396,51 +456,6 @@
 	"buffers":
 	[
 		{
-			"file": "src/server/aiFunctions.js",
-			"settings":
-			{
-				"buffer_size": 5995,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/server/updaters.js",
-			"settings":
-			{
-				"buffer_size": 24209,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/server/dependencyCatch.js",
-			"settings":
-			{
-				"buffer_size": 140,
-				"encoding": "UTF-8",
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "src/server/utilities.js",
-			"settings":
-			{
-				"buffer_size": 19883,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/server/app.js",
-			"settings":
-			{
-				"buffer_size": 3274,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
 			"file": "src/client/client.js",
 			"settings":
 			{
@@ -450,63 +465,37 @@
 			}
 		},
 		{
-			"file": "src/server/ComponentTypes.js",
+			"file": "src/server/Map.js",
 			"settings":
 			{
-				"buffer_size": 290,
+				"buffer_size": 2735,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "src/server/System.js",
+			"file": "src/server/app.js",
 			"settings":
 			{
-				"buffer_size": 1379,
+				"buffer_size": 3059,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "src/client/worldInfo.js",
+			"file": "src/server/Game.js",
 			"settings":
 			{
-				"buffer_size": 3624,
+				"buffer_size": 13356,
+				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "src/server/constructors.js",
+			"file": "src/server/SpatialHash.js",
 			"settings":
 			{
-				"buffer_size": 15388,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/server/collisions.js",
-			"settings":
-			{
-				"buffer_size": 2234,
-				"encoding": "UTF-8",
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "src/server/objControls.js",
-			"settings":
-			{
-				"buffer_size": 3594,
-				"encoding": "UTF-8",
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "hosted/client.html",
-			"settings":
-			{
-				"buffer_size": 2217,
-				"encoding": "UTF-8",
+				"buffer_size": 4111,
 				"line_ending": "Windows"
 			}
 		}
@@ -552,33 +541,62 @@
 	},
 	"expanded_folders":
 	[
-		"/C/Users/Mike/Documents/github/igme-590/space-battle-with-lasers/src",
-		"/C/Users/Mike/Documents/github/igme-590/space-battle-with-lasers/src/client",
-		"/C/Users/Mike/Documents/github/igme-590/space-battle-with-lasers/src/server",
-		"/C/Users/Mike/Documents/github/igme-590/space-battle-with-lasers/hosted"
+		"/C/Users/Mike/Documents/git/igme-590/project2/src",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/client",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server",
+		"/C/Users/Mike/Documents/git/igme-590/project2/hosted"
 	],
 	"file_history":
 	[
-		"/C/Users/Mike/Documents/github/igme-590/space-battle-with-lasers/src/server/ObjSystem.js",
-		"/C/Users/Mike/Documents/github/igme-590/space-battle-with-lasers/src/server/gameFunctions.js",
-		"/C/Users/Mike/Documents/Cubase 5/17-11-9 swbl bgm2/.gitignore",
-		"/C/Program Files (x86)/UnrealTournament/System/UnrealTournament.ini",
 		"/C/Users/Mike/Documents/git/igme-590/project2/src/client/client.js",
-		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/constructors.js",
-		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/updaters.js",
-		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/gameFunctions.js",
-		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/collisions.js",
-		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/objControls.js",
-		"/C/Users/Mike/Documents/git/igme-590/project2/space-battle-sublime.sublime-project",
-		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/id.js",
 		"/C/Users/Mike/Documents/git/igme-590/project2/src/client/worldInfo.js",
-		"/C/Users/Mike/Documents/git/igme-590/project2/package.json",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Obj.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Components/Thruster.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Components/ThrusterSystem.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Components/Destructible.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Components/Shield.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Components/PowerSystem.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Components/Stabilizer.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Components/StabilizerClamps.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Components/Laser.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Components/Cannon.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Components/Ammo.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Components/Launcher.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Components/TargetingSystem.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Components/Warhead.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Components/Ai.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Components/RemoteInput.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/ComponentTypes.js",
 		"/C/Users/Mike/Documents/git/igme-590/project2/hosted/client.html",
-		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/utilities.js",
-		"/C/Users/Mike/Documents/git/igme-590/project2/src/client/drawing.js",
 		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/aiFunctions.js",
-		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/ships.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/updaters.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/client/drawing.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/dependencyCatch.js",
 		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/app.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Game.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/id.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/destructors.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/collisions.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/SpatialHash.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/Map.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/ReportQueue.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/utilities.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/constructors.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/objControls.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/client/TrackShuffler.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/.gitignore",
+		"/C/Users/Mike/Documents/Cubase 5/17-11-1 composing for media final project updated/.gitignore",
+		"/C/Users/Mike/Documents/MUSEUM_TRACKS_UNREAL/MUSEUM_TRACKS_UNREAL/MUSEUM_01.uproject",
+		"/C/Users/Mike/Documents/MUSEUM_TRACKS_UNREAL/MUSEUM_TRACKS_UNREAL/Content/ethereal_loop.uasset",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/SWBLTypedGroup.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/mapFunctions.js",
+		"/C/Users/Mike/Documents/Cubase 5/17-11-9 swbl bgm2/.gitignore",
+		"/C/Users/Mike/Documents/git/igme-590/project2/package.json",
+		"/C/Users/Mike/Documents/git/igme-590/project2/hosted/prebundle.js",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/gameFunctions.js",
+		"/C/Program Files (x86)/UnrealTournament/System/UnrealTournament.ini",
+		"/C/Users/Mike/Documents/git/igme-590/project2/space-battle-sublime.sublime-project",
+		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/ships.js",
 		"/C/Users/Mike/Documents/git/Space-Battle/spacebattle.html",
 		"/C/Users/Mike/Documents/git/igme-590/project2/src/client/stackblur.js",
 		"/C/Users/Mike/Documents/git/Space-Battle/js/client.js",
@@ -595,7 +613,6 @@
 		"/C/Users/Mike/Documents/git/igme-590/project1/hosted/client.html",
 		"/C/Users/Mike/Documents/git/igme-590/project1/src/client/client.js",
 		"/C/Users/Mike/Documents/git/igme-590/project2/hosted/bundle.js",
-		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/destructors.js",
 		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/game.js",
 		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/missiles.js",
 		"/C/Users/Mike/Documents/git/igme-590/project2/src/server/classes.js",
@@ -658,45 +675,18 @@
 		"/C/Users/Mike/Documents/git/igme-590/streaming-media-assignment/package.json",
 		"/C/Users/Mike/Documents/git/igme-590/streaming-media-assignment/src/server.js",
 		"/C/Users/Mike/Documents/git/igme-590/streaming-media-assignment/src/mediaResponses.js",
-		"/C/Users/Mike/Documents/git/igme-590/streaming-media-assignment/src/htmlResponses.js",
-		"/C/Users/Mike/Documents/git/igme-590/streaming-media-assignment/client/client2.html",
-		"/C/Users/Mike/Documents/git/igme-590/streaming-media-assignment/client/client.html",
-		"/C/Users/Mike/Documents/git/igme-590/streaming-media-assignment/client/client3.html",
-		"/C/Users/Mike/Documents/git/VulkanTest/VulkanTest/shaders/compile.bat",
-		"/C/Users/Mike/Documents/git/VulkanTest/VulkanTest/shaders/shader.vert",
-		"/C/lib/stb collection/stb_image.h",
-		"/C/lib/tinyobjloader/tiny_obj_loader.h",
-		"/C/Users/Mike/Documents/git/VulkanTest/.gitignore",
-		"/C/Users/Mike/Documents/git/VulkanTest/VulkanTest/models/.gitignore",
-		"/C/Users/Mike/Documents/git/NovaTestSuite/main.cpp",
-		"/C/Users/Mike/Documents/git/NovaTestSuite/Nova/nova.h",
-		"/C/Users/Mike/Documents/git/VulkanTest/VulkanTest/models/cube.obj",
-		"/C/Program Files (x86)/Steam/steamapps/common/Grim Dawn/GrimCam.ini",
-		"/C/Users/Mike/Documents/The Witcher 3/user.settings",
-		"/C/UTServer/RunServer.bat",
-		"/F/Native Instruments Komplete 8 Ultimate/Cracks.Win/_nfo.Win.ASSiGN.Absynth.5.FM8.Massive/ASSiGN.nfo",
-		"/C/Users/Mike/Documents/Cubase 5/scoop/scoop.cpr",
-		"/F/Native Instruments Komplete 8 Ultimate/Cracks.Win/Native Instruments Komplete 8 All Windows x86 x64 Cracks/Kontakt.5.0.2.reg",
-		"/C/Users/Mike/Documents/git/VulkanTest/VulkanTest/shader.vert",
-		"/C/VulkanSDK/1.0.51.0/Lib/shaderc_combined.lib",
-		"/C/Users/Mike/Documents/git/NovaTestSuite/Nova/.git/MERGE_MSG",
-		"/C/Users/Mike/Documents/git/NovaTestSuite/Nova/.git/COMMIT_EDITMSG",
-		"/C/Users/Mike/.profile",
-		"/C/Users/Mike/Documents/git/NovaTestSuite/Nova/Envelope.h",
-		"/C/Users/Mike/Downloads/twitter embed",
-		"/C/Users/Mike/Downloads/twittertest.html",
-		"/C/Users/Mike/Documents/git/NovaTestSuite/NovaTestSuite/Nova/.gitignore",
-		"/C/Users/Mike/Documents/git/NovaTestSuite/NovaTestSuite/Nova/Envelope.cpp"
+		"/C/Users/Mike/Documents/git/igme-590/streaming-media-assignment/src/htmlResponses.js"
 	],
 	"find":
 	{
-		"height": 40.0
+		"height": 23.0
 	},
 	"find_in_files":
 	{
-		"height": 0.0,
+		"height": 104.0,
 		"where_history":
 		[
+			"C:\\Users\\Mike\\Documents\\git\\igme-590\\project2\\src\\server"
 		]
 	},
 	"find_state":
@@ -704,6 +694,23 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"fetch",
+			"minMaxToInfo",
+			"console",
+			"startY",
+			"frameCount",
+			"componentClasses",
+			"destruc",
+			"createShip",
+			"console.log",
+			"prjs",
+			"console.log",
+			"gamepla",
+			"Map",
+			"elapsedGameTime",
+			"otherShips",
+			"fetch",
+			"mapFunctions",
 			"keyclick",
 			"console",
 			"targetInfo",
@@ -820,159 +827,11 @@
 	"groups":
 	[
 		{
-			"selected": 9,
+			"selected": 0,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "src/server/aiFunctions.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 5995,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 720.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 10,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "src/server/updaters.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 24209,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 8106.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 5,
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "src/server/dependencyCatch.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 140,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								97,
-								97
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 4,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "src/server/utilities.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 19883,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 1305.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 9,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "src/server/app.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3274,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 360.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 7,
-					"type": "text"
-				},
-				{
-					"buffer": 5,
 					"file": "src/client/client.js",
 					"semi_transient": false,
 					"settings":
@@ -984,8 +843,8 @@
 						"selection":
 						[
 							[
-								4446,
-								4446
+								0,
+								0
 							]
 						],
 						"settings":
@@ -995,27 +854,87 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 1818.0,
+						"translation.y": 6691.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
+					"stack_index": 0,
 					"type": "text"
 				},
 				{
-					"buffer": 6,
-					"file": "src/server/ComponentTypes.js",
+					"buffer": 1,
+					"file": "src/server/Map.js",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 290,
+						"buffer_size": 2735,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								290,
-								290
+								603,
+								603
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "src/server/app.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3059,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 910.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "src/server/Game.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 13356,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								835,
+								835
 							]
 						],
 						"settings":
@@ -1032,159 +951,12 @@
 					"type": "text"
 				},
 				{
-					"buffer": 7,
-					"file": "src/server/System.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1379,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								990,
-								990
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
-					"type": "text"
-				},
-				{
-					"buffer": 8,
-					"file": "src/client/worldInfo.js",
+					"buffer": 4,
+					"file": "src/server/SpatialHash.js",
 					"semi_transient": true,
 					"settings":
 					{
-						"buffer_size": 3624,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								3432,
-								3459
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 90.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 6,
-					"type": "text"
-				},
-				{
-					"buffer": 9,
-					"file": "src/server/constructors.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 15388,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								3700,
-								3700
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 1098.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 10,
-					"file": "src/server/collisions.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2234,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1772,
-								1772
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 12,
-					"type": "text"
-				},
-				{
-					"buffer": 11,
-					"file": "src/server/objControls.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3594,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1997,
-								1997
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 180.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 11,
-					"type": "text"
-				},
-				{
-					"buffer": 12,
-					"file": "hosted/client.html",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2217,
+						"buffer_size": 4111,
 						"regions":
 						{
 						},
@@ -1197,14 +969,15 @@
 						],
 						"settings":
 						{
-							"syntax": "Packages/HTML/HTML.sublime-syntax",
-							"translate_tabs_to_spaces": false
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 450.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 8,
+					"stack_index": 2,
 					"type": "text"
 				}
 			]
@@ -1216,7 +989,7 @@
 	},
 	"input":
 	{
-		"height": 31.0
+		"height": 35.0
 	},
 	"layout":
 	{

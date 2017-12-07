@@ -103,7 +103,7 @@ io.on('connection', (s) => {
         shipModels[sh.id] = sh.model;
       });
       ship = new Obj(chosenShip, game, s.id);
-      ship.remoteInput.remoteSend = (data, msg) => { s.emit((msg) || 'worldInfo', data); };
+      ship.remoteInput.remoteSend = (data, msg = 'worldInfo') => { s.emit(msg, data); };
       game.objs.push(ship);
       s.emit('grid', game.grid);
       s.emit('ships', shipModels);
