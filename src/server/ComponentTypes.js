@@ -5,7 +5,7 @@ const COMPONENT_DIRECTORY_NAME = 'Components';
 const TYPES = {};
 let counter = 0;
 const classes = {};
-const dir = `${__dirname}\\${COMPONENT_DIRECTORY_NAME}\\`;
+const dir = `${__dirname}/${COMPONENT_DIRECTORY_NAME}/`;
 const filenames = fs.readdirSync(dir);
 
 // This is necessary to circumvent the AirBnB ESLint plugin.
