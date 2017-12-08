@@ -29,18 +29,18 @@ class ThrusterSystem {
     const medial = this.medial;
     medial.update(dt);
     const fv = utilities.getForwardVector.call(this.owner);
-    this.owner.accelerationX += fv[0] * medial.currentStrength;
-    this.owner.accelerationY += fv[1] * medial.currentStrength;
+    this.owner.forceX += fv[0] * medial.currentStrength;
+    this.owner.forceY += fv[1] * medial.currentStrength;
 
     const lateral = this.lateral;
     lateral.update(dt);
     const rv = utilities.getRightVector.call(this.owner);
-    this.owner.accelerationX += rv[0] * lateral.currentStrength;
-    this.owner.accelerationY += rv[1] * lateral.currentStrength;
+    this.owner.forceX += rv[0] * lateral.currentStrength;
+    this.owner.forceY += rv[1] * lateral.currentStrength;
 
     const rotational = this.rotational;
     rotational.update(dt);
-    this.owner.rotationalAcceleration -= rotational.currentStrength;
+    this.owner.rotationalForce -= rotational.currentStrength;
   }
 }
 

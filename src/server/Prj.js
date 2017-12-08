@@ -11,7 +11,6 @@ class Prj extends Mobile {
     destructible,
     color,
     owner,
-    visible,
     collisionFunction,
   ) {
     super();
@@ -27,7 +26,6 @@ class Prj extends Mobile {
     this.destructible = destructible;
     this.color = color;
     this.owner = owner;
-    this.visible = visible;
     this.collisionFunction = collisionFunction;
     this.type = 'prj';
   }
@@ -44,6 +42,18 @@ class Prj extends Mobile {
 
   destroy() {
     id.returnIdTag(this.id);
+  }
+
+  get networkRepresentation() {
+    return {
+      id: this.id,
+      x: this.x,
+      y: this.y,
+      velocityX: this.velocityX,
+      velocityY: this.velocityY,
+      color: this.color,
+      radius: this.destructible.radius,
+    };
   }
 }
 

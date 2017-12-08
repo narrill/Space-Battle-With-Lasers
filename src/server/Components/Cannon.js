@@ -37,7 +37,6 @@ class Cannon {
         new Destructible(ammo.destructible),
         ammo.color,
         this.owner,
-        ammo.tracerSeed % ammo.tracerInterval === 0,
         collisions[ammo.collisionFunction],
       );
       this.firing = false;

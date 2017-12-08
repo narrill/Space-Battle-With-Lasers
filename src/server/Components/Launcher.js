@@ -1,6 +1,6 @@
 const utilities = require('../utilities.js');
 const id = require('../id.js');
-const missiles = require('../missiles.js');
+const missiles = require('../objBlueprints.js').missiles;
 
 class Launcher {
   constructor(objectParams = {}, owner) {

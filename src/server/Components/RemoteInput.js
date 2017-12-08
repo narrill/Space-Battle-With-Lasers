@@ -18,6 +18,7 @@ class RemoteInput {
     this.lastSend = 0;
     this.sendInterval = 66.6666;
     this.nonInterp = {};
+    this.sent = {};
 
     utilities.veryShallowObjectMerge.call(this, objectParams);
   }
@@ -101,153 +102,7 @@ class RemoteInput {
     const sinceLastSend = owner.game.elapsedGameTime - this.lastSend;
     if (this.remoteSend && sinceLastSend >= this.sendInterval) {
       this.lastSend += this.sendInterval;
-      owner.game.queueFunction(() => {
-        const d = {};
-        if (!this.sentInterval) {
-          d.interval = this.sendInterval;
-          this.sentInterval = true;
-        }
-        if (!this.sentId) {
-          d.id = owner.id;
-          this.sentId = true;
-        }
-
-        const fetchInfo = owner.game.spatialHash.fetch([owner.x, owner.y], 15000);
-        const worldInfo = {
-          objs: [],
-          asteroids: {},
-        };
-        for (let c = 0; c < fetchInfo.obj.length; c++) {
-          const o = fetchInfo.obj[c];
-          const dest = o.destructible;
-          const ots = o.thrusterSystem;
-          const wi = {
-            id: o.id,
-            x: o.x,
-            y: o.y,
-            rotation: o.rotation,
-            radius: dest.radius,
-            shp: (dest.shield.max > 0) ? dest.shield.current / dest.shield.max : 0,
-            shc: dest.shield.max / dest.shield.efficiency,
-            hp: dest.hp / dest.maxHp,
-            color: o.color,
-            medial: ots.medial.currentStrength / ots.medial.efficiency,
-            lateral: ots.lateral.currentStrength / ots.lateral.efficiency,
-            rotational: ots.rotational.currentStrength / ots.rotational.efficiency,
-            thrusterColor: ots.color,
-          };
-
-          if (o.id === owner.id) {
-            wi.velX = owner.velocityX;
-            wi.velY = owner.velocityY;
-            wi.rotationalVelocity = owner.rotationalVelocity;
-            wi.clampMedial = stab.clamps.medial;
-            wi.clampLateral = stab.clamps.lateral;
-            wi.clampRotational = stab.clamps.rotational;
-            wi.clampsEnabled = stab.clamps.enabled;
-            wi.stabilized = stab.enabled;
-            wi.thrusterPower = owner.powerSystem.getPowerForComponent(
-              enums.SHIP_COMPONENTS.THRUSTERS,
-            );
-            wi.weaponPower = owner.powerSystem.getPowerForComponent(
-              enums.SHIP_COMPONENTS.LASERS,
-            );
-            wi.shieldPower = owner.powerSystem.getPowerForComponent(
-              enums.SHIP_COMPONENTS.SHIELDS,
-            );
-          }
-          worldInfo.objs.push(wi);
-        }
-
-        if (!this.sentAsteroidColors) {
-          worldInfo.asteroids.colors = [];
-          for (let c = 0; c < owner.game.asteroids.colors.length; c++) {
-            worldInfo.asteroids.colors.push(owner.game.asteroids.colors[c]);
-          }
-          this.sentAsteroidColors = true;
-        }
-
-        const newAsteroidsById = {};
-        for (let c = 0; c < fetchInfo.asteroid.length; c++) {
-          const a = fetchInfo.asteroid[c];
-          newAsteroidsById[a.id] = a;
-        }
-        const previousAsteroidsById = this.nonInterp.asteroids || {};
-        const newKeys = Object.keys(newAsteroidsById);
-        for (let c = 0; c < newKeys.length; c++) {
-          const aid = newKeys[c];
-          if (!previousAsteroidsById[aid]) {
-            if (!worldInfo.asteroids.objs) { worldInfo.asteroids.objs = []; }
-            const a = newAsteroidsById[aid];
-            worldInfo.asteroids.objs.push({
-              id: a.id,
-              x: a.x,
-              y: a.y,
-              colorIndex: a.colorIndex,
-              radius: a.destructible.radius,
-            });
-          }
-        }
-        const prevKeys = Object.keys(previousAsteroidsById);
-        for (let c = 0; c < prevKeys.length; c++) {
-          const aid = prevKeys[c];
-          if (!newAsteroidsById[aid]) {
-            if (!worldInfo.asteroids.objs) { worldInfo.asteroids.objs = []; }
-            worldInfo.asteroids.objs.push({
-              destroyed: aid,
-            });
-          }
-        }
-        this.nonInterp.asteroids = newAsteroidsById;
-
-        if (fetchInfo.prj.length) { worldInfo.prjs = []; }
-        for (let c = 0; c < fetchInfo.prj.length; c++) {
-          const p = fetchInfo.prj[c];
-          if (p.visible) {
-            worldInfo.prjs.push({
-              id: p.id,
-              x: p.x,
-              y: p.y,
-              velocityX: p.velocityX,
-              velocityY: p.velocityY,
-              color: p.color,
-              radius: p.destructible.radius,
-            });
-          }
-        }
-
-        if (fetchInfo.hitscan.length) { worldInfo.hitscans = []; }
-        for (let c = 0; c < fetchInfo.hitscan.length; c++) {
-          const h = fetchInfo.hitscan[c];
-          worldInfo.hitscans.push({
-            id: h.id,
-            startX: h.startX,
-            startY: h.startY,
-            endX: h.endX,
-            endY: h.endY,
-            color: h.color,
-            power: h.power,
-            efficiency: h.efficiency,
-          });
-        }
-
-        if (fetchInfo.radial.length) { worldInfo.radials = []; }
-        for (let c = 0; c < fetchInfo.radial.length; c++) {
-          const r = fetchInfo.radial[c];
-          worldInfo.radials.push({
-            id: r.id,
-            x: r.x,
-            y: r.y,
-            velocity: r.velocity,
-            radius: r.radius,
-            color: r.color,
-          });
-        }
-        d.worldInfo = worldInfo;
-        // d.powerDistribution = 
-        // console.log('remote send');
-        this.remoteSend(d);
-      });
+      owner.game.queueFunction(this.sendData.bind(this));
     }
   }
 
@@ -262,6 +117,77 @@ class RemoteInput {
 
   destroy() {
     this.remoteSend(null, 'destroyed');
+  }
+
+  sendData() {
+    // Helpers
+    const sendOnce = (data, key, value) => {
+      if(!this.sent[key]) {
+        data[key] = value;
+        this.sent[key] = true;
+      }
+    };
+
+    const populateWICategory = (wi, fi, type) => {
+      const fiCollection = fi[type];
+      if(fiCollection.length) { 
+        const wiCollection = [];
+        for (let c = 0; c < fiCollection.length; c++)
+          wiCollection.push(fiCollection[c].networkRepresentation);
+        wi[`${type}s`] = wiCollection;
+      }
+    };
+
+    const populateNonInterpWICategory = (wi, fi, type) => {
+      const fiCollection = fi[type];
+      const wiCollection = [];
+      const newItemsById = {};
+      for (let c = 0; c < fiCollection.length; c++) {
+        const item = fiCollection[c];
+        newItemsById[item.id] = item;
+      }
+      const previousItemsById = this.nonInterp[type] || {};
+      const newKeys = Object.keys(newItemsById);
+      for (let c = 0; c < newKeys.length; c++) {
+        const aid = newKeys[c];
+        if (!previousItemsById[aid]) {
+          const item = newItemsById[aid];
+          wiCollection.push(item.networkRepresentation);
+        }
+      }
+      const prevKeys = Object.keys(previousItemsById);
+      for (let c = 0; c < prevKeys.length; c++) {
+        const itemId = prevKeys[c];
+        if (!newItemsById[itemId]) {
+          wiCollection.push({
+            destroyed: itemId,
+          });
+        }
+      }
+      this.nonInterp[type] = newItemsById;
+      if(wiCollection.length)
+        wi[`${type}s`] = wiCollection;
+    };
+
+    
+    const owner = this.owner;
+    const fetchInfo = owner.game.spatialHash.fetch([owner.x, owner.y], 15000);
+    const worldInfo = {};
+
+    const d = {};
+    sendOnce(d, 'interval', this.sendInterval);
+    sendOnce(d, 'id', owner.id);
+    sendOnce(d, 'asteroidColors', owner.game.asteroids.colors);
+    d.playerInfo = owner.networkPlayerRepresentation;
+
+    populateWICategory(worldInfo, fetchInfo, 'obj');
+    populateNonInterpWICategory(worldInfo, fetchInfo, 'asteroid');
+    populateWICategory(worldInfo, fetchInfo, 'prj');
+    populateWICategory(worldInfo, fetchInfo, 'hitscan');
+    populateWICategory(worldInfo, fetchInfo, 'radial');
+
+    d.worldInfo = worldInfo;
+    this.remoteSend(d);
   }
 }
 

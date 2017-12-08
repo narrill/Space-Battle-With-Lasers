@@ -28,6 +28,16 @@ class Asteroid {
     id.returnIdTag(this.id);
   }
 
+  get networkRepresentation() {
+    return {
+      id: this.id,
+      x: this.x,
+      y: this.y,
+      colorIndex: this.colorIndex,
+      radius: this.destructible.radius,
+    };
+  }
+
   static makeAsteroids(game) {
     const grid = game.grid;
     const asteroids = game.asteroids;

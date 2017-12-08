@@ -3,14 +3,15 @@ const has = Object.prototype.hasOwnProperty;
 class Mobile {
   update(dt) {
     // accelerate
-    if (has.call(this, 'accelerationX') && has.call(this, 'accelerationY')) {
-      this.velocityX += this.accelerationX * dt;
-      this.accelerationX = 0;
-      this.velocityY += this.accelerationY * dt;
-      this.accelerationY = 0;
-      if (has.call(this, 'rotationalVelocity') && has.call(this, 'rotationalAcceleration')) {
-        this.rotationalVelocity += this.rotationalAcceleration * dt;
-        this.rotationalAcceleration = 0;
+    if (has.call(this, 'forceX') && has.call(this, 'forceY')) {
+      const mass = this.mass;
+      this.velocityX += (this.forceX / mass) * dt;
+      this.forceX = 0;
+      this.velocityY += (this.forceY / mass) * dt;
+      this.forceY = 0;
+      if (has.call(this, 'rotationalVelocity') && has.call(this, 'rotationalForce')) {
+        this.rotationalVelocity += (this.rotationalForce / mass) * dt;
+        this.rotationalForce = 0;
       }
       this.medialVelocity = undefined;
       this.lateralVelocity = undefined;

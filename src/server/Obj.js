@@ -1,6 +1,7 @@
 const utilities = require('./utilities.js');
 const id = require('./id.js');
 const gridFunctions = require('./gridFunctions.js');
+const enums = require('./enums.js');
 
 const has = Object.prototype.hasOwnProperty;
 const componentClasses = require('./ComponentTypes.js').classes;
@@ -22,16 +23,17 @@ class Obj extends Mobile {
     // velocities
     this.velocityX = 0; // in absolute form, used for movement
     this.velocityY = 0;
-    this.accelerationX = 0;
-    this.accelerationY = 0;
+    this.forceX = 0;
+    this.forceY = 0;
     this.rotationalVelocity = 0;
-    this.rotationalAcceleration = 0;
+    this.rotationalForce = 0;
     this.forwardVectorX = undefined;
     this.forwardVectorY = undefined;
     this.rightVectorX = undefined;
     this.rightVectorY = undefined;
     this.medialVelocity = undefined; // component form, used by stabilizers
     this.lateralVelocity = undefined;
+    this.mass = objectParams.physicalProperties.mass;
     // colors
     this.color = utilities.getRandomBrightColor();
     // model
@@ -40,12 +42,13 @@ class Obj extends Mobile {
     this.type = 'obj';
 
     const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
+    const physProp = objectParams.physicalProperties;
 
     // Set defaults
     const defaults = {
       destructible: {
-        hp: 100,
-        radius: 25,
+        hp: physProp.mass * physProp.mass,
+        radius: Math.sqrt(physProp.area / Math.PI),
         shield: {
           max: 100,
           recharge: 3,
@@ -146,6 +149,53 @@ class Obj extends Mobile {
       });
     }
     returnIdTag(this);
+  }
+
+  get networkRepresentation() {
+    const dest = this.destructible;
+    const ts = this.thrusterSystem;
+    return {
+      id: this.id,
+      x: this.x,
+      y: this.y,
+      rotation: this.rotation,
+      radius: dest.radius,
+      shp: (dest.shield.max > 0) ? dest.shield.current / dest.shield.max : 0,
+      shc: dest.shield.max / dest.shield.efficiency,
+      hp: dest.hp / dest.maxHp,
+      color: this.color,
+      medial: ts.medial.currentStrength / ts.medial.efficiency,
+      lateral: ts.lateral.currentStrength / ts.lateral.efficiency,
+      rotational: ts.rotational.currentStrength / ts.rotational.efficiency,
+      thrusterColor: ts.color,
+    };
+  }
+
+  get networkPlayerRepresentation() {
+    const stab = this.stabilizer;
+    const ps = this.powerSystem;
+    return {
+      x: this.x,
+      y: this.y,
+      velX: this.velocityX,
+      velY: this.velocityY,
+      rotation: this.rotation,
+      rotationalVelocity: this.rotationalVelocity,
+      clampMedial: stab.clamps.medial,
+      clampLateral: stab.clamps.lateral,
+      clampRotational: stab.clamps.rotational,
+      clampsEnabled: stab.clamps.enabled,
+      stabilized: stab.enabled,
+      thrusterPower: ps.getPowerForComponent(
+        enums.SHIP_COMPONENTS.THRUSTERS,
+      ),
+      weaponPower: ps.getPowerForComponent(
+        enums.SHIP_COMPONENTS.LASERS,
+      ),
+      shieldPower: ps.getPowerForComponent(
+        enums.SHIP_COMPONENTS.SHIELDS,
+      )
+    }
   }
 
   // add given strength to main thruster

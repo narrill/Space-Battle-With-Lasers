@@ -10,8 +10,6 @@ class Ammo {
       radius: 10,
     }, objectParams.destructible));
     this.color = 'yellow';
-    this.tracerInterval = 1;
-    this.tracerSeed = 0;
     this.collisionFunction = 'basicKineticCollision';
 
     utilities.veryShallowObjectMerge.call(this, objectParams);

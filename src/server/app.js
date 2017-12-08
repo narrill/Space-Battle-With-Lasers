@@ -78,7 +78,7 @@ const app = http.createServer(onRequest).listen(port);
 console.log(`Listening on port ${port}`);
 
 const Game = require('./Game.js');
-const ships = require('./ships.js');
+const ships = require('./objBlueprints.js').ships;
 const Obj = require('./Obj.js');
 
 const shipList = Object.keys(ships);

@@ -29,6 +29,17 @@ class Radial {
   destroy() {
     id.returnIdTag(this.id);
   }
+
+  get networkRepresentation() {
+    return {
+      id: this.id,
+      x: this.x,
+      y: this.y,
+      velocity: this.velocity,
+      radius: this.radius,
+      color: this.color,
+    };
+  }
 }
 
 module.exports = Radial;

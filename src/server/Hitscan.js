@@ -34,6 +34,19 @@ class Hitscan {
     this.game.reportQueue.push(this);
   }
 
+  get networkRepresentation() {
+    return {
+      id: this.id,
+      startX: this.startX,
+      startY: this.startY,
+      endX: this.endX,
+      endY: this.endY,
+      color: this.color,
+      power: this.power,
+      efficiency: this.efficiency,
+    };
+  }
+
   get x() {
     return this.startX;
   }

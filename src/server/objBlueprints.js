@@ -113,4 +113,78 @@ const ships = {
   },
 };
 
-module.exports = ships;
+const missiles = {
+  tomcat: {
+    cullTolerance: 0.3,
+    model: {
+      vertices: [
+        [-10, 15],
+        [0, -15],
+        [10, 15],
+      ],
+      thrusterPoints: {
+        medial: {
+          positive: [[0, 15]],
+          negative: [[-12.5, 7]],
+        },
+        lateral: {
+          positive: [[10, 1.5]],
+          negative: [[-10, 1.5]],
+        },
+        rotational: {
+          positive: [[5, -8.5]],
+          negative: [[-5, -8.5]],
+        },
+        width: 5,
+      },
+      overlay: {
+
+      },
+    },
+    destructible: {
+      hp: 15,
+      radius: 15,
+      shield: {
+        max: 0,
+      },
+    },
+    thrusterSystem: {},
+    warhead: {},
+    ai: {
+      aiFunction: 'basicMissile',
+      detonationRadius: 100,
+    },
+  },
+};
+
+const populatePhysicalProperties = (ship) => {
+  const model = ship.model;
+
+  // Calculate area - https://stackoverflow.com/a/717367
+  const vertsCopy = model.vertices.slice();
+
+  // Close the polygon
+  vertsCopy.push(vertsCopy[0]);
+  vertsCopy.push(vertsCopy[1]);
+
+  // Calculate the area
+  let area = 0;
+  for(let i = 1; i <= vertsCopy.length - 2; ++i )
+    area += vertsCopy[i][0]*( vertsCopy[i+1][1] - vertsCopy[i-1][1] );
+  area = Math.abs(area / 2);
+
+  const MASS_CONVERSION_FACTOR = .02;
+
+  // Assign physical properties
+  ship.physicalProperties = {
+    mass: area * MASS_CONVERSION_FACTOR,
+    area: area,
+  };
+
+  console.log(ship.physicalProperties);
+};
+
+Object.values(ships).forEach(populatePhysicalProperties);
+Object.values(missiles).forEach(populatePhysicalProperties);
+
+module.exports = {ships, missiles};

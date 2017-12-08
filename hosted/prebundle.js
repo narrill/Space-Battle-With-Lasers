@@ -1280,6 +1280,7 @@ const utilities = require('../server/utilities.js');
 
 let wiInterval = 0;
 let playerId = 0;
+let playerInfo;
 
 const hudInfo = {};
 
@@ -1299,9 +1300,8 @@ class WorldInfo {
 		this.objInfos = {};
 		this.objTracker = {};
 	}
-	pushCollectionFromDataToWI(dwi, type) {
+	pushCollectionFromDataToWI(dwi, type, now) {
 		const dwiCollection = dwi[type] || [];
-		const now = Date.now().valueOf();
 		for(let c = 0;c<dwiCollection.length;c++){
 			const obj = dwiCollection[c];
 			this.objTracker[obj.id] = true;
@@ -1324,23 +1324,28 @@ class WorldInfo {
 		this.objTracker = {};
 	}
 	pushWiData(data) {
+		const now = Date.now().valueOf();
 		if(data.interval) wiInterval = data.interval;
-		if(data.id) playerId = data.id;
+		if(data.id) {
+			playerId = data.id;
+			playerInfo = new ObjInfo(data.playerInfo, now);
+		}
+		else 
+			playerInfo.pushState(data.playerInfo, now);
+		if(data.asteroidColors)
+			this.asteroids.colors = data.asteroidColors;
+
 		const dwi = data.worldInfo;
 		this.prep();
-		this.pushCollectionFromDataToWI(dwi,'objs');
-		this.pushCollectionFromDataToWI(dwi,'prjs');
-		this.pushCollectionFromDataToWI(dwi,'hitscans');
-		this.pushCollectionFromDataToWI(dwi,'radials');
-		
-		// Asteroids
-		if(dwi.asteroids.colors)
-			this.asteroids.colors = dwi.asteroids.colors;
+		this.pushCollectionFromDataToWI(dwi,'objs', now);
+		this.pushCollectionFromDataToWI(dwi,'prjs', now);
+		this.pushCollectionFromDataToWI(dwi,'hitscans', now);
+		this.pushCollectionFromDataToWI(dwi,'radials', now);
 
-		if(dwi.asteroids.objs) {
+		if(dwi.asteroids) {
 			const destroyedAsteroids = {};
-			for(let c = 0; c < dwi.asteroids.objs.length; c++) {
-				const a = dwi.asteroids.objs[c];
+			for(let c = 0; c < dwi.asteroids.length; c++) {
+				const a = dwi.asteroids[c];
 				if(a.destroyed)
 					destroyedAsteroids[a.destroyed] = true;
 				else
@@ -1363,7 +1368,7 @@ class WorldInfo {
 		modelInfo[shipInfo.id] = shipInfo.model;
 	}
 	getPlayerInfo() {
-		return this.objInfos[playerId];
+		return playerInfo;
 	}
 	getModel(id) {
 		return modelInfo[id];

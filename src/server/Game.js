@@ -9,7 +9,7 @@ const Asteroid = require('./Asteroid.js');
 const utilities = require('./utilities.js');
 const SpatialHash = require('./SpatialHash.js');
 const ReportQueue = require('./ReportQueue.js');
-const ships = require('./ships.js');
+const ships = require('./objBlueprints.js').ships;
 const collisions = require('./collisions.js');
 
 class Game {

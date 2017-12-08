@@ -1267,6 +1267,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var wiInterval = 0;
     var playerId = 0;
+    var playerInfo = void 0;
 
     var hudInfo = {};
 
@@ -1293,9 +1294,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
       }, {
         key: "pushCollectionFromDataToWI",
-        value: function pushCollectionFromDataToWI(dwi, type) {
+        value: function pushCollectionFromDataToWI(dwi, type, now) {
           var dwiCollection = dwi[type] || [];
-          var now = Date.now().valueOf();
           for (var c = 0; c < dwiCollection.length; c++) {
             var obj = dwiCollection[c];
             this.objTracker[obj.id] = true;
@@ -1320,22 +1320,25 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: "pushWiData",
         value: function pushWiData(data) {
+          var now = Date.now().valueOf();
           if (data.interval) wiInterval = data.interval;
-          if (data.id) playerId = data.id;
+          if (data.id) {
+            playerId = data.id;
+            playerInfo = new ObjInfo(data.playerInfo, now);
+          } else playerInfo.pushState(data.playerInfo, now);
+          if (data.asteroidColors) this.asteroids.colors = data.asteroidColors;
+
           var dwi = data.worldInfo;
           this.prep();
-          this.pushCollectionFromDataToWI(dwi, 'objs');
-          this.pushCollectionFromDataToWI(dwi, 'prjs');
-          this.pushCollectionFromDataToWI(dwi, 'hitscans');
-          this.pushCollectionFromDataToWI(dwi, 'radials');
+          this.pushCollectionFromDataToWI(dwi, 'objs', now);
+          this.pushCollectionFromDataToWI(dwi, 'prjs', now);
+          this.pushCollectionFromDataToWI(dwi, 'hitscans', now);
+          this.pushCollectionFromDataToWI(dwi, 'radials', now);
 
-          // Asteroids
-          if (dwi.asteroids.colors) this.asteroids.colors = dwi.asteroids.colors;
-
-          if (dwi.asteroids.objs) {
+          if (dwi.asteroids) {
             var destroyedAsteroids = {};
-            for (var c = 0; c < dwi.asteroids.objs.length; c++) {
-              var a = dwi.asteroids.objs[c];
+            for (var c = 0; c < dwi.asteroids.length; c++) {
+              var a = dwi.asteroids[c];
               if (a.destroyed) destroyedAsteroids[a.destroyed] = true;else this.asteroids.objs.push(a);
             }
             for (var _c2 = 0; _c2 < this.asteroids.objs.length; _c2++) {
@@ -1359,7 +1362,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: "getPlayerInfo",
         value: function getPlayerInfo() {
-          return this.objInfos[playerId];
+          return playerInfo;
         }
       }, {
         key: "getModel",
