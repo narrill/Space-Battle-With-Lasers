@@ -38,7 +38,7 @@ class SpatialHash {
       reportQueue.min[1] - 2,
       (reportQueue.max[0] - reportQueue.min[0]) + 4,
       (reportQueue.max[1] - reportQueue.min[1]) + 4,
-      3000,
+      30000,
     );
     // const taSize = map.length;
     this.map = map;

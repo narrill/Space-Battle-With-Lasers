@@ -11,7 +11,8 @@
     "start": "node ./src/server/app.js",
     "debug": "node --inspect ./src/server/app.js",
     "pretest": "eslint ./src/server --fix",
-    "test": "echo \"Tests complete\""
+    "test": "echo \"Tests complete\"",
+    "inspect": "node --inspect ./src/server/app.js"
   },
   "engines": {
     "node": "8.4.0",

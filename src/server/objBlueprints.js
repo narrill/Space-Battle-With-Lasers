@@ -106,8 +106,6 @@ const ships = {
     stabilizer: {},
     powerSystem: {},
     warhead: {},
-    launcher: {},
-    targetingSystem: {},
     thrusterSystem: {},
     destructible: {},
   },

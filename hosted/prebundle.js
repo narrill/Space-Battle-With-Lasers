@@ -742,25 +742,25 @@ const drawing = {
 		ctx.scale(gridZoom, gridZoom);
 		if(ship.model.overlay.destructible){
 			ctx.beginPath();
-			ctx.arc(0, 0, 150, -Math.PI / 2, -Math.PI * 2 * (ship.interpolateWiValue('shp', time)) - Math.PI / 2, true);
+			ctx.arc(0, 0, 5*radius, -Math.PI / 2, -Math.PI * 2 * (ship.interpolateWiValue('shp', time)) - Math.PI / 2, true);
 			ctx.strokeStyle = 'dodgerblue';
-			ctx.lineWidth = 20;
+			ctx.lineWidth = 2*radius;
 			ctx.stroke();
 			ctx.beginPath();
-			ctx.arc(0, 0, 125, -Math.PI / 2, -Math.PI * 2 * (ship.interpolateWiValue('hp', time)) - Math.PI / 2, true);
+			ctx.arc(0, 0, 3*radius, -Math.PI / 2, -Math.PI * 2 * (ship.interpolateWiValue('hp', time)) - Math.PI / 2, true);
 			ctx.strokeStyle = 'green';
 			ctx.stroke();
 		}
 		if(ship.model.overlay.colorCircle){
 			ctx.beginPath();
-			ctx.arc(0, 0, 75, 0, Math.PI * 2);
+			ctx.arc(0, 0, radius, 0, Math.PI * 2);
 			ctx.fillStyle = color;
 			ctx.fill();	
-			ctx.beginPath();
-			ctx.arc(0, 0, radius, 0, Math.PI * 2);
-			ctx.fillStyle = 'black';
-			ctx.globalAlpha = 1;
-			ctx.fill();
+			// ctx.beginPath();
+			// ctx.arc(0, 0, radius, 0, Math.PI * 2);
+			// ctx.fillStyle = 'black';
+			// ctx.globalAlpha = 1;
+			// ctx.fill();
 		}
 		else{
 			ctx.scale(1 / gridZoom, 1 / gridZoom);
