@@ -16,7 +16,7 @@ NetworkRadial.serializableProperties = [
   { key: 'x', type: 'Float32' },
   { key: 'y', type: 'Float32' },
   { key: 'velocity', type: 'Float32' },
-  { key: 'radius', type: 'Float32' },
+  { key: 'radius', type: 'Uint16' },
   { key: 'color', type: ColorRGB },
 ];
 

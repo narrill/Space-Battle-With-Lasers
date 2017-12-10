@@ -158,8 +158,8 @@ class Obj extends Mobile {
     const ts = this.thrusterSystem;
     const transformedParams = {
       radius: dest.radius,
-      shp: (dest.shield.max > 0) ? dest.shield.current / dest.shield.max : 0,
-      shc: dest.shield.max / dest.shield.efficiency,
+      shp: (dest.shield.max > 0) ? (dest.shield.current / dest.shield.max) : 0,
+      shc: (dest.shield.max / dest.shield.efficiency),
       hp: dest.hp / dest.maxHp,
       medial: ts.medial.currentStrength / ts.medial.efficiency,
       lateral: ts.lateral.currentStrength / ts.lateral.efficiency,

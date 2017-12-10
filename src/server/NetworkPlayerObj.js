@@ -26,14 +26,14 @@ NetworkPlayerObj.serializableProperties = [
   { key: 'velocityY', type: 'Float32' },
   { key: 'rotation', type: 'Float32' },
   { key: 'rotationalVelocity', type: 'Float32' },
-  { key: 'clampMedial', type: 'Float32' },
-  { key: 'clampLateral', type: 'Float32' },
-  { key: 'clampRotational', type: 'Float32' },
+  { key: 'clampMedial', type: 'Uint16', scaleFactor: 10 },
+  { key: 'clampLateral', type: 'Uint16', scaleFactor: 10 },
+  { key: 'clampRotational', type: 'Uint16', scaleFactor: 10 },
   { key: 'clampEnabled', type: 'Uint8' },
   { key: 'stabilized', type: 'Uint8' },
-  { key: 'thrusterPower', type: 'Float32' },
-  { key: 'weaponPower', type: 'Float32' },
-  { key: 'shieldPower', type: 'Float32' },
+  { key: 'thrusterPower', type: 'Uint8', scaleFactor: 255 },
+  { key: 'weaponPower', type: 'Uint8', scaleFactor: 255 },
+  { key: 'shieldPower', type: 'Uint8', scaleFactor: 255 },
 ];
 
 module.exports = NetworkPlayerObj;

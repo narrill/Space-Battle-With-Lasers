@@ -20,8 +20,8 @@ NetworkHitscan.serializableProperties = [
   { key: 'endX', type: 'Float32' },
   { key: 'endY', type: 'Float32' },
   { key: 'color', type: ColorHSL },
-  { key: 'power', type: 'Float32' },
-  { key: 'efficiency', type: 'Float32' },
+  { key: 'power', type: 'Uint16' },
+  { key: 'efficiency', type: 'Uint16' },
 ];
 
 module.exports = NetworkHitscan;

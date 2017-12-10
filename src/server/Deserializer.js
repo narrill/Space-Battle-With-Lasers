@@ -11,13 +11,13 @@ class Deserializer {
   }
 
   // type should be an actual constructor object for non-primitives, not a string
-  read(type) {
+  read(type, scaleFactor = 1) {
     const size = primitiveByteSizes[type];
     let val;
     // Primitive
     if(size) {
       this.alignCursor(size);
-      val = this.dataView[`get${type}`](this.cursor);
+      val = this.dataView[`get${type}`](this.cursor) / scaleFactor;
       this.cursor += size;   
     }
     // Object
@@ -27,9 +27,9 @@ class Deserializer {
       for(let c = 0; c < serializableProperties.length; c++) {
         const property = serializableProperties[c];
         if(property.isArray)
-          opts[property.key] = this.readArray(property.type);
+          opts[property.key] = this.readArray(property.type, property.scaleFactor);
         else
-          opts[property.key] = this.read(property.type);
+          opts[property.key] = this.read(property.type, property.scaleFactor);
       }
       val = new type(opts);
     }
@@ -37,11 +37,11 @@ class Deserializer {
     return val;
   }
 
-  readArray(type) {
+  readArray(type, scaleFactor = 1) {
     const val = [];
     const length = this.read(ARRAY_INDEX_TYPE);
     for(let c = 0; c < length; c++)
-      val.push(this.read(type));
+      val.push(this.read(type, scaleFactor));
     return val;
   }
 }

@@ -1447,13 +1447,13 @@ class Deserializer {
   }
 
   // type should be an actual constructor object for non-primitives, not a string
-  read(type) {
+  read(type, scaleFactor = 1) {
     const size = primitiveByteSizes[type];
     let val;
     // Primitive
     if(size) {
       this.alignCursor(size);
-      val = this.dataView[`get${type}`](this.cursor);
+      val = this.dataView[`get${type}`](this.cursor) / scaleFactor;
       this.cursor += size;   
     }
     // Object
@@ -1463,9 +1463,9 @@ class Deserializer {
       for(let c = 0; c < serializableProperties.length; c++) {
         const property = serializableProperties[c];
         if(property.isArray)
-          opts[property.key] = this.readArray(property.type);
+          opts[property.key] = this.readArray(property.type, property.scaleFactor);
         else
-          opts[property.key] = this.read(property.type);
+          opts[property.key] = this.read(property.type, property.scaleFactor);
       }
       val = new type(opts);
     }
@@ -1473,11 +1473,11 @@ class Deserializer {
     return val;
   }
 
-  readArray(type) {
+  readArray(type, scaleFactor = 1) {
     const val = [];
     const length = this.read(ARRAY_INDEX_TYPE);
     for(let c = 0; c < length; c++)
-      val.push(this.read(type));
+      val.push(this.read(type, scaleFactor));
     return val;
   }
 }
@@ -1499,7 +1499,7 @@ NetworkAsteroid.serializableProperties = [
   {key: 'x', type: 'Float32'},
   {key: 'y', type: 'Float32'},
   {key: 'colorIndex', type: 'Uint8'},
-  {key: 'radius', type: 'Float32'}
+  {key: 'radius', type: 'Uint16'}
 ];
 
 module.exports = NetworkAsteroid;
@@ -1526,8 +1526,8 @@ NetworkHitscan.serializableProperties = [
   { key: 'endX', type: 'Float32' },
   { key: 'endY', type: 'Float32' },
   { key: 'color', type: ColorHSL },
-  { key: 'power', type: 'Float32' },
-  { key: 'efficiency', type: 'Float32' },
+  { key: 'power', type: 'Uint16' },
+  { key: 'efficiency', type: 'Uint16' },
 ];
 
 module.exports = NetworkHitscan;
@@ -1558,15 +1558,15 @@ NetworkObj.serializableProperties = [
   { key: 'id', type: 'Uint16' },
   { key: 'x', type: 'Float32' },
   { key: 'y', type: 'Float32' },
-  { key: 'rotation', type: 'Float32' },
-  { key: 'radius', type: 'Float32' },
-  { key: 'shp', type: 'Float32' },
-  { key: 'shc', type: 'Float32' },
-  { key: 'hp', type: 'Float32' },
+  { key: 'rotation', type: 'Int16', scaleFactor: 50 },
+  { key: 'radius', type: 'Uint16' },
+  { key: 'shp', type: 'Uint16', scaleFactor: 100 },
+  { key: 'shc', type: 'Uint16', scaleFactor: 100 },
+  { key: 'hp', type: 'Uint16', scaleFactor: 100 },
   { key: 'color', type: ColorHSL },
-  { key: 'medial', type: 'Float32' },
-  { key: 'lateral', type: 'Float32' },
-  { key: 'rotational', type: 'Float32' },
+  { key: 'medial', type: 'Int16', scaleFactor: 10 },
+  { key: 'lateral', type: 'Int16', scaleFactor: 10 },
+  { key: 'rotational', type: 'Int16', scaleFactor: 10 },
   { key: 'thrusterColor', type: ColorHSL },
 ];
 
@@ -1600,14 +1600,14 @@ NetworkPlayerObj.serializableProperties = [
   { key: 'velocityY', type: 'Float32' },
   { key: 'rotation', type: 'Float32' },
   { key: 'rotationalVelocity', type: 'Float32' },
-  { key: 'clampMedial', type: 'Float32' },
-  { key: 'clampLateral', type: 'Float32' },
-  { key: 'clampRotational', type: 'Float32' },
+  { key: 'clampMedial', type: 'Uint16', scaleFactor: 10 },
+  { key: 'clampLateral', type: 'Uint16', scaleFactor: 10 },
+  { key: 'clampRotational', type: 'Uint16', scaleFactor: 10 },
   { key: 'clampEnabled', type: 'Uint8' },
   { key: 'stabilized', type: 'Uint8' },
-  { key: 'thrusterPower', type: 'Float32' },
-  { key: 'weaponPower', type: 'Float32' },
-  { key: 'shieldPower', type: 'Float32' },
+  { key: 'thrusterPower', type: 'Uint8', scaleFactor: 255 },
+  { key: 'weaponPower', type: 'Uint8', scaleFactor: 255 },
+  { key: 'shieldPower', type: 'Uint8', scaleFactor: 255 },
 ];
 
 module.exports = NetworkPlayerObj;
@@ -1633,7 +1633,7 @@ NetworkPrj.serializableProperties = [
   { key: 'velocityX', type: 'Float32' },
   { key: 'velocityY', type: 'Float32' },
   { key: 'color', type: ColorRGB },
-  { key: 'radius', type: 'Float32' },
+  { key: 'radius', type: 'Uint8' },
 ];
 
 module.exports = NetworkPrj;
@@ -1656,7 +1656,7 @@ NetworkRadial.serializableProperties = [
   { key: 'x', type: 'Float32' },
   { key: 'y', type: 'Float32' },
   { key: 'velocity', type: 'Float32' },
-  { key: 'radius', type: 'Float32' },
+  { key: 'radius', type: 'Uint16' },
   { key: 'color', type: ColorRGB },
 ];
 
@@ -1749,7 +1749,8 @@ const primitiveByteSizes = {
   Float32: 4,
   Uint8: 1,
   Uint16: 2,
-  Uint32: 4
+  Uint32: 4,
+  Int16: 2
 };
 
 const ARRAY_INDEX_TYPE = 'Uint32';

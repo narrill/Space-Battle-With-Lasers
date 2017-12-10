@@ -1481,12 +1481,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: "read",
         value: function read(type) {
+          var scaleFactor = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+
           var size = primitiveByteSizes[type];
           var val = void 0;
           // Primitive
           if (size) {
             this.alignCursor(size);
-            val = this.dataView["get" + type](this.cursor);
+            val = this.dataView["get" + type](this.cursor) / scaleFactor;
             this.cursor += size;
           }
           // Object
@@ -1495,7 +1497,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               var opts = {};
               for (var c = 0; c < serializableProperties.length; c++) {
                 var property = serializableProperties[c];
-                if (property.isArray) opts[property.key] = this.readArray(property.type);else opts[property.key] = this.read(property.type);
+                if (property.isArray) opts[property.key] = this.readArray(property.type, property.scaleFactor);else opts[property.key] = this.read(property.type, property.scaleFactor);
               }
               val = new type(opts);
             }
@@ -1505,10 +1507,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: "readArray",
         value: function readArray(type) {
+          var scaleFactor = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+
           var val = [];
           var length = this.read(ARRAY_INDEX_TYPE);
           for (var c = 0; c < length; c++) {
-            val.push(this.read(type));
+            val.push(this.read(type, scaleFactor));
           }return val;
         }
       }]);
@@ -1528,7 +1532,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       this.radius = asteroid.radius;
     };
 
-    NetworkAsteroid.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'colorIndex', type: 'Uint8' }, { key: 'radius', type: 'Float32' }];
+    NetworkAsteroid.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'colorIndex', type: 'Uint8' }, { key: 'radius', type: 'Uint16' }];
 
     module.exports = NetworkAsteroid;
   }, {}], 7: [function (require, module, exports) {
@@ -1547,7 +1551,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       this.efficiency = hitscan.efficiency;
     };
 
-    NetworkHitscan.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'startX', type: 'Float32' }, { key: 'startY', type: 'Float32' }, { key: 'endX', type: 'Float32' }, { key: 'endY', type: 'Float32' }, { key: 'color', type: ColorHSL }, { key: 'power', type: 'Float32' }, { key: 'efficiency', type: 'Float32' }];
+    NetworkHitscan.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'startX', type: 'Float32' }, { key: 'startY', type: 'Float32' }, { key: 'endX', type: 'Float32' }, { key: 'endY', type: 'Float32' }, { key: 'color', type: ColorHSL }, { key: 'power', type: 'Uint16' }, { key: 'efficiency', type: 'Uint16' }];
 
     module.exports = NetworkHitscan;
   }, { "./utilities.js": 15 }], 8: [function (require, module, exports) {
@@ -1573,7 +1577,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       this.thrusterColor = obj.thrusterColor;
     };
 
-    NetworkObj.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'rotation', type: 'Float32' }, { key: 'radius', type: 'Float32' }, { key: 'shp', type: 'Float32' }, { key: 'shc', type: 'Float32' }, { key: 'hp', type: 'Float32' }, { key: 'color', type: ColorHSL }, { key: 'medial', type: 'Float32' }, { key: 'lateral', type: 'Float32' }, { key: 'rotational', type: 'Float32' }, { key: 'thrusterColor', type: ColorHSL }];
+    NetworkObj.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'rotation', type: 'Int16', scaleFactor: 50 }, { key: 'radius', type: 'Uint16' }, { key: 'shp', type: 'Uint16', scaleFactor: 100 }, { key: 'shc', type: 'Uint16', scaleFactor: 100 }, { key: 'hp', type: 'Uint16', scaleFactor: 100 }, { key: 'color', type: ColorHSL }, { key: 'medial', type: 'Int16', scaleFactor: 10 }, { key: 'lateral', type: 'Int16', scaleFactor: 10 }, { key: 'rotational', type: 'Int16', scaleFactor: 10 }, { key: 'thrusterColor', type: ColorHSL }];
 
     module.exports = NetworkObj;
   }, { "./utilities.js": 15 }], 9: [function (require, module, exports) {
@@ -1598,7 +1602,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       this.shieldPower = obj.shieldPower;
     };
 
-    NetworkPlayerObj.serializableProperties = [{ key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'velocityX', type: 'Float32' }, { key: 'velocityY', type: 'Float32' }, { key: 'rotation', type: 'Float32' }, { key: 'rotationalVelocity', type: 'Float32' }, { key: 'clampMedial', type: 'Float32' }, { key: 'clampLateral', type: 'Float32' }, { key: 'clampRotational', type: 'Float32' }, { key: 'clampEnabled', type: 'Uint8' }, { key: 'stabilized', type: 'Uint8' }, { key: 'thrusterPower', type: 'Float32' }, { key: 'weaponPower', type: 'Float32' }, { key: 'shieldPower', type: 'Float32' }];
+    NetworkPlayerObj.serializableProperties = [{ key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'velocityX', type: 'Float32' }, { key: 'velocityY', type: 'Float32' }, { key: 'rotation', type: 'Float32' }, { key: 'rotationalVelocity', type: 'Float32' }, { key: 'clampMedial', type: 'Uint16', scaleFactor: 10 }, { key: 'clampLateral', type: 'Uint16', scaleFactor: 10 }, { key: 'clampRotational', type: 'Uint16', scaleFactor: 10 }, { key: 'clampEnabled', type: 'Uint8' }, { key: 'stabilized', type: 'Uint8' }, { key: 'thrusterPower', type: 'Uint8', scaleFactor: 255 }, { key: 'weaponPower', type: 'Uint8', scaleFactor: 255 }, { key: 'shieldPower', type: 'Uint8', scaleFactor: 255 }];
 
     module.exports = NetworkPlayerObj;
   }, {}], 10: [function (require, module, exports) {
@@ -1616,7 +1620,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       this.radius = prj.radius;
     };
 
-    NetworkPrj.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'velocityX', type: 'Float32' }, { key: 'velocityY', type: 'Float32' }, { key: 'color', type: ColorRGB }, { key: 'radius', type: 'Float32' }];
+    NetworkPrj.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'velocityX', type: 'Float32' }, { key: 'velocityY', type: 'Float32' }, { key: 'color', type: ColorRGB }, { key: 'radius', type: 'Uint8' }];
 
     module.exports = NetworkPrj;
   }, { "./utilities.js": 15 }], 11: [function (require, module, exports) {
@@ -1633,7 +1637,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       this.color = radial.color;
     };
 
-    NetworkRadial.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'velocity', type: 'Float32' }, { key: 'radius', type: 'Float32' }, { key: 'color', type: ColorRGB }];
+    NetworkRadial.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'velocity', type: 'Float32' }, { key: 'radius', type: 'Uint16' }, { key: 'color', type: ColorRGB }];
 
     module.exports = NetworkRadial;
   }, { "./utilities.js": 15 }], 12: [function (require, module, exports) {
@@ -1723,7 +1727,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       Float32: 4,
       Uint8: 1,
       Uint16: 2,
-      Uint32: 4
+      Uint32: 4,
+      Int16: 2
     };
 
     var ARRAY_INDEX_TYPE = 'Uint32';

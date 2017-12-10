@@ -11,7 +11,7 @@ class Serializer{
   }
 
   // type should be an actual constructor object for non-primitives, not a string
-  push(type, value) {    
+  push(type, value, scaleFactor = 1) {    
     const size = primitiveByteSizes[type];
     const isArray = Array.isArray(value);
     // Array - pushes length then recurses
@@ -26,13 +26,13 @@ class Serializer{
       const serializableProperties = type.serializableProperties;
       for(let c = 0; c < serializableProperties.length; c++) {
         const property = serializableProperties[c];
-        this.push(property.type, value[property.key]);
+        this.push(property.type, value[property.key], property.scaleFactor);
       }
     }
     // Primitive
     else {
       this.alignCursor(size);
-      this.values.push({type: type, offset: this.cursor, value});
+      this.values.push({type: type, offset: this.cursor, value: value * scaleFactor});
       this.cursor += size;
     }
   }

@@ -13,7 +13,7 @@ NetworkAsteroid.serializableProperties = [
   {key: 'x', type: 'Float32'},
   {key: 'y', type: 'Float32'},
   {key: 'colorIndex', type: 'Uint8'},
-  {key: 'radius', type: 'Float32'}
+  {key: 'radius', type: 'Uint16'}
 ];
 
 module.exports = NetworkAsteroid;

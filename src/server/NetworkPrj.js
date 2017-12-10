@@ -19,7 +19,7 @@ NetworkPrj.serializableProperties = [
   { key: 'velocityX', type: 'Float32' },
   { key: 'velocityY', type: 'Float32' },
   { key: 'color', type: ColorRGB },
-  { key: 'radius', type: 'Float32' },
+  { key: 'radius', type: 'Uint8' },
 ];
 
 module.exports = NetworkPrj;
