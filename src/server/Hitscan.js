@@ -1,4 +1,5 @@
 const utilities = require('./utilities.js');
+const NetworkHitscan = require('./NetworkHitscan.js');
 
 class Hitscan {
   constructor(
@@ -35,16 +36,7 @@ class Hitscan {
   }
 
   get networkRepresentation() {
-    return {
-      id: this.id,
-      startX: this.startX,
-      startY: this.startY,
-      endX: this.endX,
-      endY: this.endY,
-      color: this.color,
-      power: this.power,
-      efficiency: this.efficiency,
-    };
+    return new NetworkHitscan(this);
   }
 
   get x() {

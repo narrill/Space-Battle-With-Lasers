@@ -2,6 +2,7 @@ const utilities = require('../utilities.js');
 const id = require('../id.js');
 const keys = require('../keys.js');
 const enums = require('../enums.js');
+const NetworkWorldInfo = require('../NetworkWorldInfo.js');
 
 const myKeys = keys.myKeys;
 const myMouse = keys.myMouse;
@@ -18,7 +19,7 @@ class RemoteInput {
     this.lastSend = 0;
     this.sendInterval = 66.6666;
     this.nonInterp = {};
-    this.sent = {};
+    this.sentInitial = false;
 
     utilities.veryShallowObjectMerge.call(this, objectParams);
   }
@@ -121,26 +122,20 @@ class RemoteInput {
 
   sendData() {
     // Helpers
-    const sendOnce = (data, key, value) => {
-      if(!this.sent[key]) {
-        data[key] = value;
-        this.sent[key] = true;
-      }
-    };
-
-    const populateWICategory = (wi, fi, type) => {
-      const fiCollection = fi[type];
-      if(fiCollection.length) { 
-        const wiCollection = [];
-        for (let c = 0; c < fiCollection.length; c++)
-          wiCollection.push(fiCollection[c].networkRepresentation);
-        wi[`${type}s`] = wiCollection;
-      }
-    };
-
-    const populateNonInterpWICategory = (wi, fi, type) => {
+    const populateWICategory = (fi, type) => {
       const fiCollection = fi[type];
       const wiCollection = [];
+      if(fiCollection.length) { 
+        for (let c = 0; c < fiCollection.length; c++)
+          wiCollection.push(fiCollection[c].networkRepresentation);
+      }
+      return wiCollection;
+    };
+
+    const populateNonInterpWICategory = (fi, type) => {
+      const fiCollection = fi[type];
+      const wiCollection = [];
+      const wiDestroyedCollection = [];
       const newItemsById = {};
       for (let c = 0; c < fiCollection.length; c++) {
         const item = fiCollection[c];
@@ -157,37 +152,37 @@ class RemoteInput {
       }
       const prevKeys = Object.keys(previousItemsById);
       for (let c = 0; c < prevKeys.length; c++) {
-        const itemId = prevKeys[c];
+        const itemId = Number(prevKeys[c]);
         if (!newItemsById[itemId]) {
-          wiCollection.push({
-            destroyed: itemId,
-          });
+          wiDestroyedCollection.push(itemId);
         }
       }
       this.nonInterp[type] = newItemsById;
-      if(wiCollection.length)
-        wi[`${type}s`] = wiCollection;
+      return { created: wiCollection, destroyed: wiDestroyedCollection };
     };
-
     
     const owner = this.owner;
+
+    if(!this.sentInitial) {
+      this.remoteSend({
+        interval: this.sendInterval,
+        asteroidColors: owner.game.asteroids.colors
+      }, 'worldInfoInit');
+      this.sentInitial = true;
+    }
+
     const fetchInfo = owner.game.spatialHash.fetch([owner.x, owner.y], 15000);
-    const worldInfo = {};
 
-    const d = {};
-    sendOnce(d, 'interval', this.sendInterval);
-    sendOnce(d, 'id', owner.id);
-    sendOnce(d, 'asteroidColors', owner.game.asteroids.colors);
-    d.playerInfo = owner.networkPlayerRepresentation;
+    const worldInfo = new NetworkWorldInfo({
+      objs: populateWICategory(fetchInfo, 'obj'),
+      asteroids: populateNonInterpWICategory(fetchInfo, 'asteroid'),
+      prjs: populateWICategory(fetchInfo, 'prj'),
+      hitscans: populateWICategory(fetchInfo, 'hitscan'),
+      radials: populateWICategory(fetchInfo, 'radial'),
+      playerInfo: owner.networkPlayerRepresentation
+    });
 
-    populateWICategory(worldInfo, fetchInfo, 'obj');
-    populateNonInterpWICategory(worldInfo, fetchInfo, 'asteroid');
-    populateWICategory(worldInfo, fetchInfo, 'prj');
-    populateWICategory(worldInfo, fetchInfo, 'hitscan');
-    populateWICategory(worldInfo, fetchInfo, 'radial');
-
-    d.worldInfo = worldInfo;
-    this.remoteSend(d);
+    this.remoteSend(worldInfo);
   }
 }
 

@@ -548,6 +548,10 @@ const init = () => {
     }
   });
 
+  socket.on('worldInfoInit', (data) => {
+    worldInfo.pushWiInitData(data);
+  });
+
   socket.on('worldInfo', (data) => {
     if(state === GAME_STATES.WAIT) {
       state = GAME_STATES.PLAYING;      
@@ -1281,6 +1285,7 @@ const utilities = require('../server/utilities.js');
 let wiInterval = 0;
 let playerId = 0;
 let playerInfo;
+let initialized = false;
 
 const hudInfo = {};
 
@@ -1309,7 +1314,7 @@ class WorldInfo {
 				this.objInfos[obj.id].pushState(obj, now);
 			}
 			else {
-				const newObjInfo = new ObjInfo(obj, now);
+				const newObjInfo = new ObjInfo(now, obj);
 				this.objInfos[obj.id] = newObjInfo;
 				this[type].push(newObjInfo);
 			}
@@ -1323,39 +1328,35 @@ class WorldInfo {
 	prep() {
 		this.objTracker = {};
 	}
+	pushWiInitData(data) {
+		wiInterval = data.interval;
+		this.asteroids.colors = data.asteroidColors;
+		initialized = true;
+	}
 	pushWiData(data) {
 		const now = Date.now().valueOf();
-		if(data.interval) wiInterval = data.interval;
-		if(data.id) {
-			playerId = data.id;
-			playerInfo = new ObjInfo(data.playerInfo, now);
-		}
-		else 
+		if(!playerInfo)
+			playerInfo = new ObjInfo(now, data.playerInfo);
+		else
 			playerInfo.pushState(data.playerInfo, now);
-		if(data.asteroidColors)
-			this.asteroids.colors = data.asteroidColors;
-
-		const dwi = data.worldInfo;
+		const dwi = data;
 		this.prep();
 		this.pushCollectionFromDataToWI(dwi,'objs', now);
 		this.pushCollectionFromDataToWI(dwi,'prjs', now);
 		this.pushCollectionFromDataToWI(dwi,'hitscans', now);
 		this.pushCollectionFromDataToWI(dwi,'radials', now);
 
-		if(dwi.asteroids) {
-			const destroyedAsteroids = {};
-			for(let c = 0; c < dwi.asteroids.length; c++) {
-				const a = dwi.asteroids[c];
-				if(a.destroyed)
-					destroyedAsteroids[a.destroyed] = true;
-				else
-					this.asteroids.objs.push(a);
-			}
-			for(let c = 0; c < this.asteroids.objs.length; c++) {
-				const a = this.asteroids.objs[c];
-				if(destroyedAsteroids[a.id])
+		const created = dwi.asteroids.created;
+		for(let c = 0; c < created.length; c++) {
+			const a = created[c];
+			this.asteroids.objs.push(a);
+		}
+		const destroyed = dwi.asteroids.destroyed;
+		for(let c = 0; c < this.asteroids.objs.length; c++) {
+			const a = this.asteroids.objs[c];
+			for( let i = 0; i < destroyed.length; i++)
+				if(destroyed[i] === a.id)
 					this.asteroids.objs.splice(c, 1);
-			}
 		}
 	}
 	addShips(ships) {
@@ -1378,11 +1379,13 @@ class WorldInfo {
 const worldInfo = new WorldInfo();
 
 class ObjInfo {
-	constructor(initialState, time) {
-		this.states = [initialState];
+	constructor(time = Date.now(), initialState) {
+		this.states = [];
 		this.stateCount = 3;
 		this.lastStateTime = time;
 		this.id = initialState.id;
+		if(initialState)
+			this.pushState(initialState, time)
 	}
 	pushState(obj, time) {
 		this.lastStateTime = time;
@@ -1397,6 +1400,7 @@ class ObjInfo {
 		return this.interpolateValue(val, time, utilities.rotationLerp);
 	}
 	interpolateValue(val, time, lerp) {
+		if(!wiInterval) return getMostRecentValue(val);
 		const perc = (time - this.lastStateTime) / wiInterval;
 		if(perc <= 1) {
 			return lerp(this.states[0][val], this.states[1][val], perc);

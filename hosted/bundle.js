@@ -569,6 +569,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
       });
 
+      socket.on('worldInfoInit', function (data) {
+        worldInfo.pushWiInitData(data);
+      });
+
       socket.on('worldInfo', function (data) {
         if (state === GAME_STATES.WAIT) {
           state = GAME_STATES.PLAYING;
@@ -1268,6 +1272,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var wiInterval = 0;
     var playerId = 0;
     var playerInfo = void 0;
+    var initialized = false;
 
     var hudInfo = {};
 
@@ -1302,7 +1307,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (this.objInfos[obj.id]) {
               this.objInfos[obj.id].pushState(obj, now);
             } else {
-              var newObjInfo = new ObjInfo(obj, now);
+              var newObjInfo = new ObjInfo(now, obj);
               this.objInfos[obj.id] = newObjInfo;
               this[type].push(newObjInfo);
             }
@@ -1318,32 +1323,34 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.objTracker = {};
         }
       }, {
+        key: "pushWiInitData",
+        value: function pushWiInitData(data) {
+          wiInterval = data.interval;
+          this.asteroids.colors = data.asteroidColors;
+          initialized = true;
+        }
+      }, {
         key: "pushWiData",
         value: function pushWiData(data) {
           var now = Date.now().valueOf();
-          if (data.interval) wiInterval = data.interval;
-          if (data.id) {
-            playerId = data.id;
-            playerInfo = new ObjInfo(data.playerInfo, now);
-          } else playerInfo.pushState(data.playerInfo, now);
-          if (data.asteroidColors) this.asteroids.colors = data.asteroidColors;
-
-          var dwi = data.worldInfo;
+          if (!playerInfo) playerInfo = new ObjInfo(now, data.playerInfo);else playerInfo.pushState(data.playerInfo, now);
+          var dwi = data;
           this.prep();
           this.pushCollectionFromDataToWI(dwi, 'objs', now);
           this.pushCollectionFromDataToWI(dwi, 'prjs', now);
           this.pushCollectionFromDataToWI(dwi, 'hitscans', now);
           this.pushCollectionFromDataToWI(dwi, 'radials', now);
 
-          if (dwi.asteroids) {
-            var destroyedAsteroids = {};
-            for (var c = 0; c < dwi.asteroids.length; c++) {
-              var a = dwi.asteroids[c];
-              if (a.destroyed) destroyedAsteroids[a.destroyed] = true;else this.asteroids.objs.push(a);
-            }
-            for (var _c2 = 0; _c2 < this.asteroids.objs.length; _c2++) {
-              var _a = this.asteroids.objs[_c2];
-              if (destroyedAsteroids[_a.id]) this.asteroids.objs.splice(_c2, 1);
+          var created = dwi.asteroids.created;
+          for (var c = 0; c < created.length; c++) {
+            var a = created[c];
+            this.asteroids.objs.push(a);
+          }
+          var destroyed = dwi.asteroids.destroyed;
+          for (var _c2 = 0; _c2 < this.asteroids.objs.length; _c2++) {
+            var _a = this.asteroids.objs[_c2];
+            for (var i = 0; i < destroyed.length; i++) {
+              if (destroyed[i] === _a.id) this.asteroids.objs.splice(_c2, 1);
             }
           }
         }
@@ -1377,13 +1384,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var worldInfo = new WorldInfo();
 
     var ObjInfo = function () {
-      function ObjInfo(initialState, time) {
+      function ObjInfo() {
+        var time = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : Date.now();
+        var initialState = arguments[1];
+
         _classCallCheck(this, ObjInfo);
 
-        this.states = [initialState];
+        this.states = [];
         this.stateCount = 3;
         this.lastStateTime = time;
         this.id = initialState.id;
+        if (initialState) this.pushState(initialState, time);
       }
 
       _createClass(ObjInfo, [{
@@ -1408,6 +1419,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: "interpolateValue",
         value: function interpolateValue(val, time, lerp) {
+          if (!wiInterval) return getMostRecentValue(val);
           var perc = (time - this.lastStateTime) / wiInterval;
           if (perc <= 1) {
             return lerp(this.states[0][val], this.states[1][val], perc);

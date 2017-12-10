@@ -1,5 +1,6 @@
 const id = require('./id.js');
 const Mobile = require('./Mobile.js');
+const NetworkPrj = require('./NetworkPrj.js');
 
 class Prj extends Mobile {
   constructor(
@@ -45,15 +46,7 @@ class Prj extends Mobile {
   }
 
   get networkRepresentation() {
-    return {
-      id: this.id,
-      x: this.x,
-      y: this.y,
-      velocityX: this.velocityX,
-      velocityY: this.velocityY,
-      color: this.color,
-      radius: this.destructible.radius,
-    };
+    return new NetworkPrj(this);
   }
 }
 

@@ -6,7 +6,7 @@ const idDictionary = {};
 const takeIdTag = () => {
   while (has.call(idDictionary, idCounter)) {
     idCounter++;
-    if (!Number.isSafeInteger(idCounter)) { idCounter = 0; }
+    if (idCounter > 65535) { idCounter = 0; }
   }
   idDictionary[idCounter] = true;
   return idCounter;

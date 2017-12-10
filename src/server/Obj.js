@@ -1,7 +1,8 @@
 const utilities = require('./utilities.js');
 const id = require('./id.js');
 const gridFunctions = require('./gridFunctions.js');
-const enums = require('./enums.js');
+const NetworkObj = require('./NetworkObj.js');
+const NetworkPlayerObj = require('./NetworkPlayerObj.js');
 
 const has = Object.prototype.hasOwnProperty;
 const componentClasses = require('./ComponentTypes.js').classes;
@@ -152,50 +153,11 @@ class Obj extends Mobile {
   }
 
   get networkRepresentation() {
-    const dest = this.destructible;
-    const ts = this.thrusterSystem;
-    return {
-      id: this.id,
-      x: this.x,
-      y: this.y,
-      rotation: this.rotation,
-      radius: dest.radius,
-      shp: (dest.shield.max > 0) ? dest.shield.current / dest.shield.max : 0,
-      shc: dest.shield.max / dest.shield.efficiency,
-      hp: dest.hp / dest.maxHp,
-      color: this.color,
-      medial: ts.medial.currentStrength / ts.medial.efficiency,
-      lateral: ts.lateral.currentStrength / ts.lateral.efficiency,
-      rotational: ts.rotational.currentStrength / ts.rotational.efficiency,
-      thrusterColor: ts.color,
-    };
+    return new NetworkObj(this);
   }
 
   get networkPlayerRepresentation() {
-    const stab = this.stabilizer;
-    const ps = this.powerSystem;
-    return {
-      x: this.x,
-      y: this.y,
-      velX: this.velocityX,
-      velY: this.velocityY,
-      rotation: this.rotation,
-      rotationalVelocity: this.rotationalVelocity,
-      clampMedial: stab.clamps.medial,
-      clampLateral: stab.clamps.lateral,
-      clampRotational: stab.clamps.rotational,
-      clampsEnabled: stab.clamps.enabled,
-      stabilized: stab.enabled,
-      thrusterPower: ps.getPowerForComponent(
-        enums.SHIP_COMPONENTS.THRUSTERS,
-      ),
-      weaponPower: ps.getPowerForComponent(
-        enums.SHIP_COMPONENTS.LASERS,
-      ),
-      shieldPower: ps.getPowerForComponent(
-        enums.SHIP_COMPONENTS.SHIELDS,
-      )
-    }
+    return new NetworkPlayerObj(this);
   }
 
   // add given strength to main thruster

@@ -489,6 +489,10 @@ const init = () => {
     }
   });
 
+  socket.on('worldInfoInit', (data) => {
+    worldInfo.pushWiInitData(data);
+  });
+
   socket.on('worldInfo', (data) => {
     if(state === GAME_STATES.WAIT) {
       state = GAME_STATES.PLAYING;      

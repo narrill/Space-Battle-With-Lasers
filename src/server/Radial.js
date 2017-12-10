@@ -1,4 +1,5 @@
 const id = require('./id.js');
+const NetworkRadial = require('./NetworkRadial.js');
 
 class Radial {
   constructor(game, x, y, vel, decay, color, owner, collisionFunction, collisionProperties) {
@@ -31,14 +32,7 @@ class Radial {
   }
 
   get networkRepresentation() {
-    return {
-      id: this.id,
-      x: this.x,
-      y: this.y,
-      velocity: this.velocity,
-      radius: this.radius,
-      color: this.color,
-    };
+    return new NetworkRadial(this);
   }
 }
 
