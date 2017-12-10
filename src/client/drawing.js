@@ -12,11 +12,6 @@ const downVector = [0, -1];
 const rightVector = [1, 0];
 const leftVector = [-1, 0];
 
-const shadeRGBColor = (color, percent) => {
-    var f=color.split(","),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=parseInt(f[0].slice(4)),G=parseInt(f[1]),B=parseInt(f[2]);
-    return "rgb("+(Math.round((t-R)*p)+R)+","+(Math.round((t-G)*p)+G)+","+(Math.round((t-B)*p)+B)+")";
-}
-
 const drawing = {
 	//clears the given camera's canvas
 	clearCamera:function(camera){
@@ -102,7 +97,7 @@ const drawing = {
 		const y = ship.interpolateWiValue('y', time);
 		const rotation = ship.interpolateWiValue('rotation', time);
 		const radius = ship.getMostRecentValue('radius');
-		const color = ship.getMostRecentValue('color');
+		const color = ship.getMostRecentValue('color').colorString;
 
 		var shipPosInCameraSpace = camera.worldPointToCameraSpace(x,y); //get ship's position in camera space
 		var shipPosInGridCameraSpace = camera.worldPointToCameraSpace(x, y, gridZ);
@@ -168,7 +163,7 @@ const drawing = {
 		const x = ship.interpolateWiValue('x', time);
 		const y = ship.interpolateWiValue('y', time);
 		const rotation = ship.interpolateRotationValue('rotation', time);
-		const color = ship.getMostRecentValue('color');
+		const color = ship.getMostRecentValue('color').colorString;
 		var shipPosInCameraSpace = camera.worldPointToCameraSpace(x,y); //get ship's position in camera space
 		ctx.translate(shipPosInCameraSpace[0],shipPosInCameraSpace[1]); //translate to camera space position
 		ctx.rotate((rotation-camera.rotation) * (Math.PI / 180)); //rotate by difference in rotations
@@ -196,7 +191,7 @@ const drawing = {
 		const rotation = ship.interpolateRotationValue('rotation', time);
 		const radius = ship.getMostRecentValue('radius');
 		const thrusterColor = ship.getMostRecentValue('thrusterColor');
-		const color = ship.getMostRecentValue('color');
+		const color = ship.getMostRecentValue('color').colorString;
 
 		var shipPosInCameraSpace = camera.worldPointToCameraSpace(x,y); //get ship's position in camera space
 
@@ -215,7 +210,7 @@ const drawing = {
 		var width = ship.model.thrusterPoints.width;
 		//forward thrust
 		for(var c = 0;c<=thrusterDetail;c++){
-			ctx.fillStyle = shadeRGBColor(thrusterColor,.5*c);
+			ctx.fillStyle = thrusterColor.shade(.5*c).colorString;
 			ctx.save();
 			ctx.beginPath();
 
@@ -369,7 +364,7 @@ const drawing = {
 				ctx.lineTo(end[0], end[1]);
 				ctx.lineTo(start[0] - coeff * width * rightVector[0] / 2, start[1] - width * rightVector[1] / 2);
 				ctx.arc(start[0], start[1], coeff * width / 2, -(angle - 90) * (Math.PI / 180), (angle - 90) * (Math.PI / 180) - 90, false);
-				ctx.fillStyle = shadeRGBColor(hitscan.getMostRecentValue('color'), 0 + c / (hitscanDetail + 1));
+				ctx.fillStyle = hitscan.getMostRecentValue('color').shade(0 + c / (hitscanDetail + 1)).colorString;
 				ctx.fill();
 				ctx.restore();
 			}
@@ -398,7 +393,7 @@ const drawing = {
 			ctx.beginPath();
 			ctx.moveTo(start[0], start[1]);
 			ctx.lineTo(end[0], end[1]);
-			ctx.strokeStyle = prj.getMostRecentValue('color');
+			ctx.strokeStyle = prj.getMostRecentValue('color').colorString;
 			var width = radius*camera.zoom;
 			ctx.lineWidth = (width>1)?width:1;
 			ctx.stroke();
@@ -425,7 +420,7 @@ const drawing = {
 			ctx.save();
 			ctx.beginPath();
 			ctx.arc(center[0], center[1], (radius + frameVelocity / 2) * camera.zoom, 0, Math.PI * 2);
-			ctx.strokeStyle = radial.getMostRecentValue('color');
+			ctx.strokeStyle = radial.getMostRecentValue('color').colorString;
 			var width = frameVelocity * camera.zoom;
 			ctx.lineWidth = (width > .3) ? width : .1;
 			ctx.stroke();
@@ -506,7 +501,7 @@ const drawing = {
 		utilities.fillText(ctx, ((hudInfo.current.stabilized) ? 'assisted' : 'manual'), camera.width / 2, camera.height - 10, "bold 12pt Orbitron", (hudInfo.current.stabilized) ? 'green' : 'red');
 		ctx.textAlign = 'left';
 		utilities.fillText(ctx, 'limiter', 10, camera.height - 10, "8pt Orbitron", 'white');
-		if(hudInfo.current.clampsEnabled)
+		if(hudInfo.current.clampEnabled)
 		{
 			const medial = hudInfo.interpolateWiValue('clampMedial', time);
 			const lateral = hudInfo.interpolateWiValue('clampLateral', time);

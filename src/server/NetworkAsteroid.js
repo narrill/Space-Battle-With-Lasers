@@ -4,7 +4,7 @@ class NetworkAsteroid {
     this.x = asteroid.x;
     this.y = asteroid.y;
     this.colorIndex = asteroid.colorIndex;
-    this.radius = asteroid.destructible.radius;
+    this.radius = asteroid.radius;
   }
 }
 

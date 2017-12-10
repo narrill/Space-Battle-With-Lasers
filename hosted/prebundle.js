@@ -56,13 +56,15 @@ class TrackShuffler {
 }
 
 module.exports = TrackShuffler;
-},{"../server/utilities.js":6}],2:[function(require,module,exports){
+},{"../server/utilities.js":15}],2:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
 const utilities = require('../server/utilities.js');
 const drawing = require('./drawing.js');
 const TrackShuffler = require('./TrackShuffler.js');
+const Deserializer = require('../server/Deserializer.js');
+const NetworkWorldInfo = require('../server/NetworkWorldInfo.js');
 
 const GAME_STATES = {
   TITLE:0,
@@ -433,8 +435,8 @@ const draw = (camera, minimapCamera, dt) => {
   {
     const playerInfo = worldInfo.getPlayerInfo();
     if(playerInfo && playerInfo.isDrawable) {
-      camera.x = playerInfo.interpolateWiValue('x', now) + playerInfo.interpolateWiValue('velX', now)/10;
-      camera.y = playerInfo.interpolateWiValue('y', now) + playerInfo.interpolateWiValue('velY', now)/10;
+      camera.x = playerInfo.interpolateWiValue('x', now) + playerInfo.interpolateWiValue('velocityX', now)/10;
+      camera.y = playerInfo.interpolateWiValue('y', now) + playerInfo.interpolateWiValue('velocityY', now)/10;
 
       let rotDiff = playerInfo.interpolateRotationValue('rotation', now) + playerInfo.interpolateWiValue('rotationalVelocity', now)/10 - camera.rotation;
       if(rotDiff > 180)
@@ -562,7 +564,8 @@ const init = () => {
       console.log(data);
       report = false;
     }
-    worldInfo.pushWiData(data);
+    const deserializer = new Deserializer(data);
+    worldInfo.pushWiData(deserializer.read(NetworkWorldInfo));
   });
 
   titleMusic = document.querySelector('#titleMusic');
@@ -615,7 +618,7 @@ const init = () => {
 
 window.onload = init;
 
-},{"../server/keys.js":5,"../server/utilities.js":6,"./TrackShuffler.js":1,"./drawing.js":3,"./worldInfo.js":4}],3:[function(require,module,exports){
+},{"../server/Deserializer.js":5,"../server/NetworkWorldInfo.js":12,"../server/keys.js":13,"../server/utilities.js":15,"./TrackShuffler.js":1,"./drawing.js":3,"./worldInfo.js":4}],3:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/drawing.js
 
@@ -629,11 +632,6 @@ const upVector = [0, 1];
 const downVector = [0, -1];
 const rightVector = [1, 0];
 const leftVector = [-1, 0];
-
-const shadeRGBColor = (color, percent) => {
-    var f=color.split(","),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=parseInt(f[0].slice(4)),G=parseInt(f[1]),B=parseInt(f[2]);
-    return "rgb("+(Math.round((t-R)*p)+R)+","+(Math.round((t-G)*p)+G)+","+(Math.round((t-B)*p)+B)+")";
-}
 
 const drawing = {
 	//clears the given camera's canvas
@@ -720,7 +718,7 @@ const drawing = {
 		const y = ship.interpolateWiValue('y', time);
 		const rotation = ship.interpolateWiValue('rotation', time);
 		const radius = ship.getMostRecentValue('radius');
-		const color = ship.getMostRecentValue('color');
+		const color = ship.getMostRecentValue('color').colorString;
 
 		var shipPosInCameraSpace = camera.worldPointToCameraSpace(x,y); //get ship's position in camera space
 		var shipPosInGridCameraSpace = camera.worldPointToCameraSpace(x, y, gridZ);
@@ -786,7 +784,7 @@ const drawing = {
 		const x = ship.interpolateWiValue('x', time);
 		const y = ship.interpolateWiValue('y', time);
 		const rotation = ship.interpolateRotationValue('rotation', time);
-		const color = ship.getMostRecentValue('color');
+		const color = ship.getMostRecentValue('color').colorString;
 		var shipPosInCameraSpace = camera.worldPointToCameraSpace(x,y); //get ship's position in camera space
 		ctx.translate(shipPosInCameraSpace[0],shipPosInCameraSpace[1]); //translate to camera space position
 		ctx.rotate((rotation-camera.rotation) * (Math.PI / 180)); //rotate by difference in rotations
@@ -814,7 +812,7 @@ const drawing = {
 		const rotation = ship.interpolateRotationValue('rotation', time);
 		const radius = ship.getMostRecentValue('radius');
 		const thrusterColor = ship.getMostRecentValue('thrusterColor');
-		const color = ship.getMostRecentValue('color');
+		const color = ship.getMostRecentValue('color').colorString;
 
 		var shipPosInCameraSpace = camera.worldPointToCameraSpace(x,y); //get ship's position in camera space
 
@@ -833,7 +831,7 @@ const drawing = {
 		var width = ship.model.thrusterPoints.width;
 		//forward thrust
 		for(var c = 0;c<=thrusterDetail;c++){
-			ctx.fillStyle = shadeRGBColor(thrusterColor,.5*c);
+			ctx.fillStyle = thrusterColor.shade(.5*c).colorString;
 			ctx.save();
 			ctx.beginPath();
 
@@ -987,7 +985,7 @@ const drawing = {
 				ctx.lineTo(end[0], end[1]);
 				ctx.lineTo(start[0] - coeff * width * rightVector[0] / 2, start[1] - width * rightVector[1] / 2);
 				ctx.arc(start[0], start[1], coeff * width / 2, -(angle - 90) * (Math.PI / 180), (angle - 90) * (Math.PI / 180) - 90, false);
-				ctx.fillStyle = shadeRGBColor(hitscan.getMostRecentValue('color'), 0 + c / (hitscanDetail + 1));
+				ctx.fillStyle = hitscan.getMostRecentValue('color').shade(0 + c / (hitscanDetail + 1)).colorString;
 				ctx.fill();
 				ctx.restore();
 			}
@@ -1016,7 +1014,7 @@ const drawing = {
 			ctx.beginPath();
 			ctx.moveTo(start[0], start[1]);
 			ctx.lineTo(end[0], end[1]);
-			ctx.strokeStyle = prj.getMostRecentValue('color');
+			ctx.strokeStyle = prj.getMostRecentValue('color').colorString;
 			var width = radius*camera.zoom;
 			ctx.lineWidth = (width>1)?width:1;
 			ctx.stroke();
@@ -1043,7 +1041,7 @@ const drawing = {
 			ctx.save();
 			ctx.beginPath();
 			ctx.arc(center[0], center[1], (radius + frameVelocity / 2) * camera.zoom, 0, Math.PI * 2);
-			ctx.strokeStyle = radial.getMostRecentValue('color');
+			ctx.strokeStyle = radial.getMostRecentValue('color').colorString;
 			var width = frameVelocity * camera.zoom;
 			ctx.lineWidth = (width > .3) ? width : .1;
 			ctx.stroke();
@@ -1124,7 +1122,7 @@ const drawing = {
 		utilities.fillText(ctx, ((hudInfo.current.stabilized) ? 'assisted' : 'manual'), camera.width / 2, camera.height - 10, "bold 12pt Orbitron", (hudInfo.current.stabilized) ? 'green' : 'red');
 		ctx.textAlign = 'left';
 		utilities.fillText(ctx, 'limiter', 10, camera.height - 10, "8pt Orbitron", 'white');
-		if(hudInfo.current.clampsEnabled)
+		if(hudInfo.current.clampEnabled)
 		{
 			const medial = hudInfo.interpolateWiValue('clampMedial', time);
 			const lateral = hudInfo.interpolateWiValue('clampLateral', time);
@@ -1276,7 +1274,7 @@ const drawing = {
 };
 
 module.exports = drawing;
-},{"../server/utilities.js":6,"./worldInfo.js":4}],4:[function(require,module,exports){
+},{"../server/utilities.js":15,"./worldInfo.js":4}],4:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
@@ -1435,7 +1433,276 @@ module.exports = {
 	worldInfo,
 	modelInfo
 };
-},{"../server/utilities.js":6}],5:[function(require,module,exports){
+},{"../server/utilities.js":15}],5:[function(require,module,exports){
+const { primitiveByteSizes, ARRAY_INDEX_TYPE } = require('./serializationConstants.js');
+
+class Deserializer {
+  constructor(buf) {
+    this.dataView = new DataView(buf);
+    this.cursor = 0;
+  }
+
+  alignCursor(alignment) {
+    this.cursor += alignment - (this.cursor % alignment);
+  }
+
+  // type should be an actual constructor object for non-primitives, not a string
+  read(type) {
+    const size = primitiveByteSizes[type];
+    let val;
+    // Primitive
+    if(size) {
+      this.alignCursor(size);
+      val = this.dataView[`get${type}`](this.cursor);
+      this.cursor += size;   
+    }
+    // Object
+    else {
+      const serializableProperties = type.serializableProperties;
+      const opts = {};
+      for(let c = 0; c < serializableProperties.length; c++) {
+        const property = serializableProperties[c];
+        if(property.isArray)
+          opts[property.key] = this.readArray(property.type);
+        else
+          opts[property.key] = this.read(property.type);
+      }
+      val = new type(opts);
+    }
+
+    return val;
+  }
+
+  readArray(type) {
+    const val = [];
+    const length = this.read(ARRAY_INDEX_TYPE);
+    for(let c = 0; c < length; c++)
+      val.push(this.read(type));
+    return val;
+  }
+}
+
+module.exports = Deserializer;
+},{"./serializationConstants.js":14}],6:[function(require,module,exports){
+class NetworkAsteroid {
+  constructor(asteroid) {
+    this.id = asteroid.id;
+    this.x = asteroid.x;
+    this.y = asteroid.y;
+    this.colorIndex = asteroid.colorIndex;
+    this.radius = asteroid.radius;
+  }
+}
+
+NetworkAsteroid.serializableProperties = [
+  {key: 'id', type: 'Uint16'},
+  {key: 'x', type: 'Float32'},
+  {key: 'y', type: 'Float32'},
+  {key: 'colorIndex', type: 'Uint8'},
+  {key: 'radius', type: 'Float32'}
+];
+
+module.exports = NetworkAsteroid;
+},{}],7:[function(require,module,exports){
+const ColorHSL = require('./utilities.js').ColorHSL;
+
+class NetworkHitscan {
+  constructor(hitscan) {
+    this.id = hitscan.id;
+    this.startX = hitscan.startX;
+    this.startY = hitscan.startY;
+    this.endX = hitscan.endX;
+    this.endY = hitscan.endY;
+    this.color = hitscan.color;
+    this.power = hitscan.power;
+    this.efficiency = hitscan.efficiency;
+  }
+}
+
+NetworkHitscan.serializableProperties = [
+  { key: 'id', type: 'Uint16' },
+  { key: 'startX', type: 'Float32' },
+  { key: 'startY', type: 'Float32' },
+  { key: 'endX', type: 'Float32' },
+  { key: 'endY', type: 'Float32' },
+  { key: 'color', type: ColorHSL },
+  { key: 'power', type: 'Float32' },
+  { key: 'efficiency', type: 'Float32' },
+];
+
+module.exports = NetworkHitscan;
+},{"./utilities.js":15}],8:[function(require,module,exports){
+const ColorHSL = require('./utilities.js').ColorHSL;
+
+class NetworkObj {
+  constructor(obj) {
+    const dest = obj.destructible;
+    const ts = obj.thrusterSystem;
+    this.id = obj.id;
+    this.x = obj.x;
+    this.y = obj.y;
+    this.rotation = obj.rotation;
+    this.radius = obj.radius;
+    this.shp = obj.shp;
+    this.shc = obj.shc;
+    this.hp = obj.hp;
+    this.color = obj.color;
+    this.medial = obj.medial;
+    this.lateral = obj.lateral;
+    this.rotational = obj.rotational;
+    this.thrusterColor = obj.thrusterColor;
+  }
+}
+
+NetworkObj.serializableProperties = [
+  { key: 'id', type: 'Uint16' },
+  { key: 'x', type: 'Float32' },
+  { key: 'y', type: 'Float32' },
+  { key: 'rotation', type: 'Float32' },
+  { key: 'radius', type: 'Float32' },
+  { key: 'shp', type: 'Float32' },
+  { key: 'shc', type: 'Float32' },
+  { key: 'hp', type: 'Float32' },
+  { key: 'color', type: ColorHSL },
+  { key: 'medial', type: 'Float32' },
+  { key: 'lateral', type: 'Float32' },
+  { key: 'rotational', type: 'Float32' },
+  { key: 'thrusterColor', type: ColorHSL },
+];
+
+module.exports = NetworkObj;
+},{"./utilities.js":15}],9:[function(require,module,exports){
+class NetworkPlayerObj {
+  constructor(obj) {
+    const stab = obj.stabilizer;
+    const ps = obj.powerSystem;
+    this.x = obj.x;
+    this.y = obj.y;
+    this.velocityX = obj.velocityX;
+    this.velocityY = obj.velocityY;
+    this.rotation = obj.rotation;
+    this.rotationalVelocity = obj.rotationalVelocity;
+    this.clampMedial = obj.clampMedial;
+    this.clampLateral = obj.clampLateral;
+    this.clampRotational = obj.clampRotational;
+    this.clampEnabled = obj.clampEnabled;
+    this.stabilized = obj.stabilized;
+    this.thrusterPower = obj.thrusterPower;
+    this.weaponPower = obj.weaponPower;
+    this.shieldPower = obj.shieldPower;
+  }
+}
+
+NetworkPlayerObj.serializableProperties = [
+  { key: 'x', type: 'Float32' },
+  { key: 'y', type: 'Float32' },
+  { key: 'velocityX', type: 'Float32' },
+  { key: 'velocityY', type: 'Float32' },
+  { key: 'rotation', type: 'Float32' },
+  { key: 'rotationalVelocity', type: 'Float32' },
+  { key: 'clampMedial', type: 'Float32' },
+  { key: 'clampLateral', type: 'Float32' },
+  { key: 'clampRotational', type: 'Float32' },
+  { key: 'clampEnabled', type: 'Uint8' },
+  { key: 'stabilized', type: 'Uint8' },
+  { key: 'thrusterPower', type: 'Float32' },
+  { key: 'weaponPower', type: 'Float32' },
+  { key: 'shieldPower', type: 'Float32' },
+];
+
+module.exports = NetworkPlayerObj;
+},{}],10:[function(require,module,exports){
+const ColorRGB = require('./utilities.js').ColorRGB;
+
+class NetworkPrj {
+  constructor(prj) {
+    this.id = prj.id;
+    this.x = prj.x;
+    this.y = prj.y;
+    this.velocityX = prj.velocityX;
+    this.velocityY = prj.velocityY;
+    this.color = prj.color;
+    this.radius = prj.radius;
+  }
+}
+
+NetworkPrj.serializableProperties = [
+  { key: 'id', type: 'Uint16' },
+  { key: 'x', type: 'Float32' },
+  { key: 'y', type: 'Float32' },
+  { key: 'velocityX', type: 'Float32' },
+  { key: 'velocityY', type: 'Float32' },
+  { key: 'color', type: ColorRGB },
+  { key: 'radius', type: 'Float32' },
+];
+
+module.exports = NetworkPrj;
+},{"./utilities.js":15}],11:[function(require,module,exports){
+const ColorRGB = require('./utilities.js').ColorRGB;
+
+class NetworkRadial {
+  constructor(radial) {
+    this.id = radial.id;
+    this.x = radial.x;
+    this.y = radial.y;
+    this.velocity = radial.velocity;
+    this.radius = radial.radius;
+    this.color = radial.color;
+  }
+}
+
+NetworkRadial.serializableProperties = [
+  { key: 'id', type: 'Uint16' },
+  { key: 'x', type: 'Float32' },
+  { key: 'y', type: 'Float32' },
+  { key: 'velocity', type: 'Float32' },
+  { key: 'radius', type: 'Float32' },
+  { key: 'color', type: ColorRGB },
+];
+
+module.exports = NetworkRadial;
+},{"./utilities.js":15}],12:[function(require,module,exports){
+const NetworkObj = require('./NetworkObj.js');
+const NetworkPlayerObj = require('./NetworkPlayerObj.js');
+const NetworkAsteroid = require('./NetworkAsteroid.js');
+const NetworkPrj = require('./NetworkPrj.js');
+const NetworkHitscan = require('./NetworkHitscan.js');
+const NetworkRadial = require('./NetworkRadial.js');
+
+class NetworkAsteroidInfo {
+  constructor({created, destroyed}) {
+    this.created = created;
+    this.destroyed = destroyed;
+  }
+}
+
+NetworkAsteroidInfo.serializableProperties = [
+  {key: 'created', type: NetworkAsteroid, isArray: true},
+  {key: 'destroyed', type: 'Uint16', isArray: true}
+];
+
+class NetworkWorldInfo {
+  constructor({objs, asteroids, prjs, hitscans, radials, playerInfo}) {
+    this.objs = objs;
+    this.asteroids = asteroids;
+    this.prjs = prjs;
+    this.hitscans = hitscans;
+    this.radials = radials;
+    this.playerInfo = playerInfo;
+  }
+}
+
+NetworkWorldInfo.serializableProperties = [
+  {key: 'objs', type: NetworkObj, isArray: true},
+  {key: 'asteroids', type: NetworkAsteroidInfo},
+  {key: 'prjs', type: NetworkPrj, isArray: true},
+  {key: 'hitscans', type: NetworkHitscan, isArray: true},
+  {key: 'radials', type: NetworkRadial, isArray: true},
+  {key: 'playerInfo', type: NetworkPlayerObj}
+];
+
+module.exports = NetworkWorldInfo;
+},{"./NetworkAsteroid.js":6,"./NetworkHitscan.js":7,"./NetworkObj.js":8,"./NetworkPlayerObj.js":9,"./NetworkPrj.js":10,"./NetworkRadial.js":11}],13:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/keys.js
 
@@ -1477,7 +1744,18 @@ myMouse.BUTTONS = Object.freeze({
 
 module.exports = { myKeys, myMouse };
 
-},{}],6:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
+const primitiveByteSizes = {
+  Float32: 4,
+  Uint8: 1,
+  Uint16: 2,
+  Uint32: 4
+};
+
+const ARRAY_INDEX_TYPE = 'Uint32';
+
+module.exports = { primitiveByteSizes, ARRAY_INDEX_TYPE };
+},{}],15:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
@@ -1500,6 +1778,56 @@ class VelocityCapsule extends Capsule {
     );
   }
 }
+
+class ColorRGB {
+  constructor({r, g, b}) {
+    this.r = r;
+    this.g = g;
+    this.b = b;
+    this._generateColorString();
+  }
+
+  _generateColorString() {
+    this.colorString = `rgb(${this.r},${this.g},${this.b})`;
+  }
+
+  shade(percent) {
+    const t = percent < 0 ? 0 : 255;
+    const p = percent < 0 ? percent * (-1) : percent;
+    const r = Math.round((t - this.r) * p) + this.r;
+    const g = Math.round((t - this.g) * p) + this.g;
+    const b = Math.round((t - this.b) * p) + this.b;
+    return new ColorRGB({r, g, b});
+  }
+}
+
+ColorRGB.serializableProperties = [
+  {key: 'r', type: 'Uint8'},
+  {key: 'g', type: 'Uint8'},
+  {key: 'b', type: 'Uint8'},
+];
+
+class ColorHSL {
+  constructor({h, s, l}) {
+    this.h = h;
+    this.s = s;
+    this.l = l;
+    this.colorString = `hsl(${this.h},${this.s}%,${this.l}%)`;
+  }
+
+  shade(percent) {
+    const t = percent < 0 ? 0 : 100;
+    const p = percent < 0 ? percent * (-1) : percent;
+    const l = Math.round((t - this.l) * p) + this.l;
+    return new ColorHSL({h: this.h, s: this.s, l: l});
+  }
+}
+
+ColorHSL.serializableProperties = [
+  {key: 'h', type: 'Uint16'},
+  {key: 's', type: 'Uint8'},
+  {key: 'l', type: 'Uint8'},
+];
 
 const utilities = {
   getForwardVector() {
@@ -1574,6 +1902,8 @@ const utilities = {
     const distance = Math.sqrt((dx * dx) + (dy * dy));
     return distance < c1.radius + c2.radius;
   },
+  ColorRGB,
+  ColorHSL,
   // Function Name: getRandomColor()
   // returns a random color of alpha 1.0
   // http://paulirish.com/2009/random-hex-color-code-snippets/
@@ -1581,14 +1911,14 @@ const utilities = {
     const red = Math.round((Math.random() * 200) + 55);
     const green = Math.round((Math.random() * 200) + 55);
     const blue = Math.round((Math.random() * 200) + 55);
-    const color = `rgb(${red},${green},${blue})`;
+    const color = new ColorRGB({r: red, g: green, b: blue});
     // OR if you want to change alpha
     // var color='rgba('+red+','+green+','+blue+',0.50)'; // 0.50
     return color;
   },
   getRandomBrightColor: () => {
     const h = Math.round(Math.random() * 360);
-    const color = `hsl(${h},100%,65%)`;
+    const color = new ColorHSL({h: h, s: 100, l: 65});
     // OR if you want to change alpha
     // var color='rgba('+red+','+green+','+blue+',0.50)'; // 0.50
     return color;

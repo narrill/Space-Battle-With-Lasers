@@ -2,7 +2,7 @@ const { primitiveByteSizes, ARRAY_INDEX_TYPE } = require('./serializationConstan
 
 class Serializer{
   constructor() {
-    reset();
+    this.reset();
   }
 
   reset() {    
@@ -12,7 +12,7 @@ class Serializer{
 
   // type should be an actual constructor object for non-primitives, not a string
   push(type, value) {    
-    const size = primitiveByteSizes(type);
+    const size = primitiveByteSizes[type];
     const isArray = Array.isArray(value);
     // Array - pushes length then recurses
     if (isArray) {

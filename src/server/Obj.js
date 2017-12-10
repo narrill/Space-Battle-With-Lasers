@@ -3,6 +3,7 @@ const id = require('./id.js');
 const gridFunctions = require('./gridFunctions.js');
 const NetworkObj = require('./NetworkObj.js');
 const NetworkPlayerObj = require('./NetworkPlayerObj.js');
+const enums = require('./enums.js');
 
 const has = Object.prototype.hasOwnProperty;
 const componentClasses = require('./ComponentTypes.js').classes;
@@ -153,11 +154,43 @@ class Obj extends Mobile {
   }
 
   get networkRepresentation() {
-    return new NetworkObj(this);
+    const dest = this.destructible;
+    const ts = this.thrusterSystem;
+    const transformedParams = {
+      radius: dest.radius,
+      shp: (dest.shield.max > 0) ? dest.shield.current / dest.shield.max : 0,
+      shc: dest.shield.max / dest.shield.efficiency,
+      hp: dest.hp / dest.maxHp,
+      medial: ts.medial.currentStrength / ts.medial.efficiency,
+      lateral: ts.lateral.currentStrength / ts.lateral.efficiency,
+      rotational: ts.rotational.currentStrength / ts.rotational.efficiency,
+      thrusterColor: ts.color
+    };
+    utilities.shallowObjectMerge.call(transformedParams, this);
+    return new NetworkObj(transformedParams);
   }
 
   get networkPlayerRepresentation() {
-    return new NetworkPlayerObj(this);
+    const stab = this.stabilizer;
+    const ps = this.powerSystem;
+    const transformedParams = {
+      clampMedial: stab.clamps.medial,
+      clampLateral: stab.clamps.lateral,
+      clampRotational: stab.clamps.rotational,
+      clampEnabled: stab.clamps.enabled,
+      stabilized: stab.enabled,
+      thrusterPower: ps.getPowerForComponent(
+        enums.SHIP_COMPONENTS.THRUSTERS,
+      ),
+      weaponPower: ps.getPowerForComponent(
+        enums.SHIP_COMPONENTS.LASERS,
+      ),
+      shieldPower: ps.getPowerForComponent(
+        enums.SHIP_COMPONENTS.SHIELDS,
+      ),
+    };
+    utilities.shallowObjectMerge.call(transformedParams, this);
+    return new NetworkPlayerObj(transformedParams);
   }
 
   // add given strength to main thruster

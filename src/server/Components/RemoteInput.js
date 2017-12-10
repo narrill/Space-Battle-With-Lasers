@@ -3,6 +3,8 @@ const id = require('../id.js');
 const keys = require('../keys.js');
 const enums = require('../enums.js');
 const NetworkWorldInfo = require('../NetworkWorldInfo.js');
+const Serializer = require('../Serializer.js');
+//require('../SerializerTest.js');
 
 const myKeys = keys.myKeys;
 const myMouse = keys.myMouse;
@@ -182,7 +184,11 @@ class RemoteInput {
       playerInfo: owner.networkPlayerRepresentation
     });
 
-    this.remoteSend(worldInfo);
+    const serializer = new Serializer();
+    serializer.push(NetworkWorldInfo, worldInfo);
+    const buf = serializer.write();
+
+    this.remoteSend(buf);
   }
 }
 

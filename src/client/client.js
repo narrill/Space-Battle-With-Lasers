@@ -4,6 +4,8 @@
 const utilities = require('../server/utilities.js');
 const drawing = require('./drawing.js');
 const TrackShuffler = require('./TrackShuffler.js');
+const Deserializer = require('../server/Deserializer.js');
+const NetworkWorldInfo = require('../server/NetworkWorldInfo.js');
 
 const GAME_STATES = {
   TITLE:0,
@@ -374,8 +376,8 @@ const draw = (camera, minimapCamera, dt) => {
   {
     const playerInfo = worldInfo.getPlayerInfo();
     if(playerInfo && playerInfo.isDrawable) {
-      camera.x = playerInfo.interpolateWiValue('x', now) + playerInfo.interpolateWiValue('velX', now)/10;
-      camera.y = playerInfo.interpolateWiValue('y', now) + playerInfo.interpolateWiValue('velY', now)/10;
+      camera.x = playerInfo.interpolateWiValue('x', now) + playerInfo.interpolateWiValue('velocityX', now)/10;
+      camera.y = playerInfo.interpolateWiValue('y', now) + playerInfo.interpolateWiValue('velocityY', now)/10;
 
       let rotDiff = playerInfo.interpolateRotationValue('rotation', now) + playerInfo.interpolateWiValue('rotationalVelocity', now)/10 - camera.rotation;
       if(rotDiff > 180)
@@ -503,7 +505,8 @@ const init = () => {
       console.log(data);
       report = false;
     }
-    worldInfo.pushWiData(data);
+    const deserializer = new Deserializer(data);
+    worldInfo.pushWiData(deserializer.read(NetworkWorldInfo));
   });
 
   titleMusic = document.querySelector('#titleMusic');

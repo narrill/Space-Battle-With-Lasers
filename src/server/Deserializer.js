@@ -16,7 +16,7 @@ class Deserializer {
     let val;
     // Primitive
     if(size) {
-      alignCursor(size);
+      this.alignCursor(size);
       val = this.dataView[`get${type}`](this.cursor);
       this.cursor += size;   
     }

@@ -1,6 +1,7 @@
 const id = require('./id.js');
 const Destructible = require('./Components/Destructible.js');
 const NetworkAsteroid = require('./NetworkAsteroid.js');
+const utilities = require('./utilities.js');
 
 class Asteroid {
   constructor(game, x, y, radius, colorIndex) {
@@ -30,7 +31,11 @@ class Asteroid {
   }
 
   get networkRepresentation() {
-    return new NetworkAsteroid(this);
+    const transformedParams = {
+      radius: this.destructible.radius
+    };
+    utilities.shallowObjectMerge.call(transformedParams, this);
+    return new NetworkAsteroid(transformedParams);
   }
 
   static makeAsteroids(game) {

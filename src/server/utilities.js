@@ -21,6 +21,56 @@ class VelocityCapsule extends Capsule {
   }
 }
 
+class ColorRGB {
+  constructor({r, g, b}) {
+    this.r = r;
+    this.g = g;
+    this.b = b;
+    this._generateColorString();
+  }
+
+  _generateColorString() {
+    this.colorString = `rgb(${this.r},${this.g},${this.b})`;
+  }
+
+  shade(percent) {
+    const t = percent < 0 ? 0 : 255;
+    const p = percent < 0 ? percent * (-1) : percent;
+    const r = Math.round((t - this.r) * p) + this.r;
+    const g = Math.round((t - this.g) * p) + this.g;
+    const b = Math.round((t - this.b) * p) + this.b;
+    return new ColorRGB({r, g, b});
+  }
+}
+
+ColorRGB.serializableProperties = [
+  {key: 'r', type: 'Uint8'},
+  {key: 'g', type: 'Uint8'},
+  {key: 'b', type: 'Uint8'},
+];
+
+class ColorHSL {
+  constructor({h, s, l}) {
+    this.h = h;
+    this.s = s;
+    this.l = l;
+    this.colorString = `hsl(${this.h},${this.s}%,${this.l}%)`;
+  }
+
+  shade(percent) {
+    const t = percent < 0 ? 0 : 100;
+    const p = percent < 0 ? percent * (-1) : percent;
+    const l = Math.round((t - this.l) * p) + this.l;
+    return new ColorHSL({h: this.h, s: this.s, l: l});
+  }
+}
+
+ColorHSL.serializableProperties = [
+  {key: 'h', type: 'Uint16'},
+  {key: 's', type: 'Uint8'},
+  {key: 'l', type: 'Uint8'},
+];
+
 const utilities = {
   getForwardVector() {
     // console.log(this.rotation);
@@ -94,6 +144,8 @@ const utilities = {
     const distance = Math.sqrt((dx * dx) + (dy * dy));
     return distance < c1.radius + c2.radius;
   },
+  ColorRGB,
+  ColorHSL,
   // Function Name: getRandomColor()
   // returns a random color of alpha 1.0
   // http://paulirish.com/2009/random-hex-color-code-snippets/
@@ -101,14 +153,14 @@ const utilities = {
     const red = Math.round((Math.random() * 200) + 55);
     const green = Math.round((Math.random() * 200) + 55);
     const blue = Math.round((Math.random() * 200) + 55);
-    const color = `rgb(${red},${green},${blue})`;
+    const color = new ColorRGB({r: red, g: green, b: blue});
     // OR if you want to change alpha
     // var color='rgba('+red+','+green+','+blue+',0.50)'; // 0.50
     return color;
   },
   getRandomBrightColor: () => {
     const h = Math.round(Math.random() * 360);
-    const color = `hsl(${h},100%,65%)`;
+    const color = new ColorHSL({h: h, s: 100, l: 65});
     // OR if you want to change alpha
     // var color='rgba('+red+','+green+','+blue+',0.50)'; // 0.50
     return color;

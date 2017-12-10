@@ -1,6 +1,7 @@
 const id = require('./id.js');
 const Mobile = require('./Mobile.js');
 const NetworkPrj = require('./NetworkPrj.js');
+const utilities = require('./utilities.js');
 
 class Prj extends Mobile {
   constructor(
@@ -46,7 +47,11 @@ class Prj extends Mobile {
   }
 
   get networkRepresentation() {
-    return new NetworkPrj(this);
+    const transformedParams = {
+      radius: this.destructible.radius
+    };
+    utilities.shallowObjectMerge.call(transformedParams, this);
+    return new NetworkPrj(transformedParams);
   }
 }
 

@@ -87,13 +87,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     module.exports = TrackShuffler;
-  }, { "../server/utilities.js": 6 }], 2: [function (require, module, exports) {
+  }, { "../server/utilities.js": 15 }], 2: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
     var utilities = require('../server/utilities.js');
     var drawing = require('./drawing.js');
     var TrackShuffler = require('./TrackShuffler.js');
+    var Deserializer = require('../server/Deserializer.js');
+    var NetworkWorldInfo = require('../server/NetworkWorldInfo.js');
 
     var GAME_STATES = {
       TITLE: 0,
@@ -469,8 +471,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       if (state == GAME_STATES.PLAYING) {
         var playerInfo = worldInfo.getPlayerInfo();
         if (playerInfo && playerInfo.isDrawable) {
-          camera.x = playerInfo.interpolateWiValue('x', now) + playerInfo.interpolateWiValue('velX', now) / 10;
-          camera.y = playerInfo.interpolateWiValue('y', now) + playerInfo.interpolateWiValue('velY', now) / 10;
+          camera.x = playerInfo.interpolateWiValue('x', now) + playerInfo.interpolateWiValue('velocityX', now) / 10;
+          camera.y = playerInfo.interpolateWiValue('y', now) + playerInfo.interpolateWiValue('velocityY', now) / 10;
 
           var rotDiff = playerInfo.interpolateRotationValue('rotation', now) + playerInfo.interpolateWiValue('rotationalVelocity', now) / 10 - camera.rotation;
           if (rotDiff > 180) rotDiff -= 360;else if (rotDiff < -180) rotDiff += 360;
@@ -583,7 +585,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           console.log(data);
           report = false;
         }
-        worldInfo.pushWiData(data);
+        var deserializer = new Deserializer(data);
+        worldInfo.pushWiData(deserializer.read(NetworkWorldInfo));
       });
 
       titleMusic = document.querySelector('#titleMusic');
@@ -635,7 +638,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     window.onload = init;
-  }, { "../server/keys.js": 5, "../server/utilities.js": 6, "./TrackShuffler.js": 1, "./drawing.js": 3, "./worldInfo.js": 4 }], 3: [function (require, module, exports) {
+  }, { "../server/Deserializer.js": 5, "../server/NetworkWorldInfo.js": 12, "../server/keys.js": 13, "../server/utilities.js": 15, "./TrackShuffler.js": 1, "./drawing.js": 3, "./worldInfo.js": 4 }], 3: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/drawing.js
 
@@ -649,16 +652,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var downVector = [0, -1];
     var rightVector = [1, 0];
     var leftVector = [-1, 0];
-
-    var shadeRGBColor = function shadeRGBColor(color, percent) {
-      var f = color.split(","),
-          t = percent < 0 ? 0 : 255,
-          p = percent < 0 ? percent * -1 : percent,
-          R = parseInt(f[0].slice(4)),
-          G = parseInt(f[1]),
-          B = parseInt(f[2]);
-      return "rgb(" + (Math.round((t - R) * p) + R) + "," + (Math.round((t - G) * p) + G) + "," + (Math.round((t - B) * p) + B) + ")";
-    };
 
     var drawing = {
       //clears the given camera's canvas
@@ -738,7 +731,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var y = ship.interpolateWiValue('y', time);
         var rotation = ship.interpolateWiValue('rotation', time);
         var radius = ship.getMostRecentValue('radius');
-        var color = ship.getMostRecentValue('color');
+        var color = ship.getMostRecentValue('color').colorString;
 
         var shipPosInCameraSpace = camera.worldPointToCameraSpace(x, y); //get ship's position in camera space
         var shipPosInGridCameraSpace = camera.worldPointToCameraSpace(x, y, gridZ);
@@ -802,7 +795,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var x = ship.interpolateWiValue('x', time);
         var y = ship.interpolateWiValue('y', time);
         var rotation = ship.interpolateRotationValue('rotation', time);
-        var color = ship.getMostRecentValue('color');
+        var color = ship.getMostRecentValue('color').colorString;
         var shipPosInCameraSpace = camera.worldPointToCameraSpace(x, y); //get ship's position in camera space
         ctx.translate(shipPosInCameraSpace[0], shipPosInCameraSpace[1]); //translate to camera space position
         ctx.rotate((rotation - camera.rotation) * (Math.PI / 180)); //rotate by difference in rotations
@@ -829,7 +822,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var rotation = ship.interpolateRotationValue('rotation', time);
         var radius = ship.getMostRecentValue('radius');
         var thrusterColor = ship.getMostRecentValue('thrusterColor');
-        var color = ship.getMostRecentValue('color');
+        var color = ship.getMostRecentValue('color').colorString;
 
         var shipPosInCameraSpace = camera.worldPointToCameraSpace(x, y); //get ship's position in camera space
 
@@ -846,7 +839,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var width = ship.model.thrusterPoints.width;
         //forward thrust
         for (var c = 0; c <= thrusterDetail; c++) {
-          ctx.fillStyle = shadeRGBColor(thrusterColor, .5 * c);
+          ctx.fillStyle = thrusterColor.shade(.5 * c).colorString;
           ctx.save();
           ctx.beginPath();
 
@@ -987,7 +980,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             ctx.lineTo(end[0], end[1]);
             ctx.lineTo(start[0] - coeff * width * rightVector[0] / 2, start[1] - width * rightVector[1] / 2);
             ctx.arc(start[0], start[1], coeff * width / 2, -(angle - 90) * (Math.PI / 180), (angle - 90) * (Math.PI / 180) - 90, false);
-            ctx.fillStyle = shadeRGBColor(hitscan.getMostRecentValue('color'), 0 + c / (hitscanDetail + 1));
+            ctx.fillStyle = hitscan.getMostRecentValue('color').shade(0 + c / (hitscanDetail + 1)).colorString;
             ctx.fill();
             ctx.restore();
           }
@@ -1014,7 +1007,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           ctx.beginPath();
           ctx.moveTo(start[0], start[1]);
           ctx.lineTo(end[0], end[1]);
-          ctx.strokeStyle = prj.getMostRecentValue('color');
+          ctx.strokeStyle = prj.getMostRecentValue('color').colorString;
           var width = radius * camera.zoom;
           ctx.lineWidth = width > 1 ? width : 1;
           ctx.stroke();
@@ -1039,7 +1032,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           ctx.save();
           ctx.beginPath();
           ctx.arc(center[0], center[1], (radius + frameVelocity / 2) * camera.zoom, 0, Math.PI * 2);
-          ctx.strokeStyle = radial.getMostRecentValue('color');
+          ctx.strokeStyle = radial.getMostRecentValue('color').colorString;
           var width = frameVelocity * camera.zoom;
           ctx.lineWidth = width > .3 ? width : .1;
           ctx.stroke();
@@ -1114,7 +1107,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         utilities.fillText(ctx, hudInfo.current.stabilized ? 'assisted' : 'manual', camera.width / 2, camera.height - 10, "bold 12pt Orbitron", hudInfo.current.stabilized ? 'green' : 'red');
         ctx.textAlign = 'left';
         utilities.fillText(ctx, 'limiter', 10, camera.height - 10, "8pt Orbitron", 'white');
-        if (hudInfo.current.clampsEnabled) {
+        if (hudInfo.current.clampEnabled) {
           var medial = hudInfo.interpolateWiValue('clampMedial', time);
           var lateral = hudInfo.interpolateWiValue('clampLateral', time);
           var rotational = hudInfo.interpolateWiValue('clampRotational', time);
@@ -1263,7 +1256,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     module.exports = drawing;
-  }, { "../server/utilities.js": 6, "./worldInfo.js": 4 }], 4: [function (require, module, exports) {
+  }, { "../server/utilities.js": 15, "./worldInfo.js": 4 }], 4: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
@@ -1464,7 +1457,227 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       worldInfo: worldInfo,
       modelInfo: modelInfo
     };
-  }, { "../server/utilities.js": 6 }], 5: [function (require, module, exports) {
+  }, { "../server/utilities.js": 15 }], 5: [function (require, module, exports) {
+    var _require = require('./serializationConstants.js'),
+        primitiveByteSizes = _require.primitiveByteSizes,
+        ARRAY_INDEX_TYPE = _require.ARRAY_INDEX_TYPE;
+
+    var Deserializer = function () {
+      function Deserializer(buf) {
+        _classCallCheck(this, Deserializer);
+
+        this.dataView = new DataView(buf);
+        this.cursor = 0;
+      }
+
+      _createClass(Deserializer, [{
+        key: "alignCursor",
+        value: function alignCursor(alignment) {
+          this.cursor += alignment - this.cursor % alignment;
+        }
+
+        // type should be an actual constructor object for non-primitives, not a string
+
+      }, {
+        key: "read",
+        value: function read(type) {
+          var size = primitiveByteSizes[type];
+          var val = void 0;
+          // Primitive
+          if (size) {
+            this.alignCursor(size);
+            val = this.dataView["get" + type](this.cursor);
+            this.cursor += size;
+          }
+          // Object
+          else {
+              var serializableProperties = type.serializableProperties;
+              var opts = {};
+              for (var c = 0; c < serializableProperties.length; c++) {
+                var property = serializableProperties[c];
+                if (property.isArray) opts[property.key] = this.readArray(property.type);else opts[property.key] = this.read(property.type);
+              }
+              val = new type(opts);
+            }
+
+          return val;
+        }
+      }, {
+        key: "readArray",
+        value: function readArray(type) {
+          var val = [];
+          var length = this.read(ARRAY_INDEX_TYPE);
+          for (var c = 0; c < length; c++) {
+            val.push(this.read(type));
+          }return val;
+        }
+      }]);
+
+      return Deserializer;
+    }();
+
+    module.exports = Deserializer;
+  }, { "./serializationConstants.js": 14 }], 6: [function (require, module, exports) {
+    var NetworkAsteroid = function NetworkAsteroid(asteroid) {
+      _classCallCheck(this, NetworkAsteroid);
+
+      this.id = asteroid.id;
+      this.x = asteroid.x;
+      this.y = asteroid.y;
+      this.colorIndex = asteroid.colorIndex;
+      this.radius = asteroid.radius;
+    };
+
+    NetworkAsteroid.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'colorIndex', type: 'Uint8' }, { key: 'radius', type: 'Float32' }];
+
+    module.exports = NetworkAsteroid;
+  }, {}], 7: [function (require, module, exports) {
+    var ColorHSL = require('./utilities.js').ColorHSL;
+
+    var NetworkHitscan = function NetworkHitscan(hitscan) {
+      _classCallCheck(this, NetworkHitscan);
+
+      this.id = hitscan.id;
+      this.startX = hitscan.startX;
+      this.startY = hitscan.startY;
+      this.endX = hitscan.endX;
+      this.endY = hitscan.endY;
+      this.color = hitscan.color;
+      this.power = hitscan.power;
+      this.efficiency = hitscan.efficiency;
+    };
+
+    NetworkHitscan.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'startX', type: 'Float32' }, { key: 'startY', type: 'Float32' }, { key: 'endX', type: 'Float32' }, { key: 'endY', type: 'Float32' }, { key: 'color', type: ColorHSL }, { key: 'power', type: 'Float32' }, { key: 'efficiency', type: 'Float32' }];
+
+    module.exports = NetworkHitscan;
+  }, { "./utilities.js": 15 }], 8: [function (require, module, exports) {
+    var ColorHSL = require('./utilities.js').ColorHSL;
+
+    var NetworkObj = function NetworkObj(obj) {
+      _classCallCheck(this, NetworkObj);
+
+      var dest = obj.destructible;
+      var ts = obj.thrusterSystem;
+      this.id = obj.id;
+      this.x = obj.x;
+      this.y = obj.y;
+      this.rotation = obj.rotation;
+      this.radius = obj.radius;
+      this.shp = obj.shp;
+      this.shc = obj.shc;
+      this.hp = obj.hp;
+      this.color = obj.color;
+      this.medial = obj.medial;
+      this.lateral = obj.lateral;
+      this.rotational = obj.rotational;
+      this.thrusterColor = obj.thrusterColor;
+    };
+
+    NetworkObj.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'rotation', type: 'Float32' }, { key: 'radius', type: 'Float32' }, { key: 'shp', type: 'Float32' }, { key: 'shc', type: 'Float32' }, { key: 'hp', type: 'Float32' }, { key: 'color', type: ColorHSL }, { key: 'medial', type: 'Float32' }, { key: 'lateral', type: 'Float32' }, { key: 'rotational', type: 'Float32' }, { key: 'thrusterColor', type: ColorHSL }];
+
+    module.exports = NetworkObj;
+  }, { "./utilities.js": 15 }], 9: [function (require, module, exports) {
+    var NetworkPlayerObj = function NetworkPlayerObj(obj) {
+      _classCallCheck(this, NetworkPlayerObj);
+
+      var stab = obj.stabilizer;
+      var ps = obj.powerSystem;
+      this.x = obj.x;
+      this.y = obj.y;
+      this.velocityX = obj.velocityX;
+      this.velocityY = obj.velocityY;
+      this.rotation = obj.rotation;
+      this.rotationalVelocity = obj.rotationalVelocity;
+      this.clampMedial = obj.clampMedial;
+      this.clampLateral = obj.clampLateral;
+      this.clampRotational = obj.clampRotational;
+      this.clampEnabled = obj.clampEnabled;
+      this.stabilized = obj.stabilized;
+      this.thrusterPower = obj.thrusterPower;
+      this.weaponPower = obj.weaponPower;
+      this.shieldPower = obj.shieldPower;
+    };
+
+    NetworkPlayerObj.serializableProperties = [{ key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'velocityX', type: 'Float32' }, { key: 'velocityY', type: 'Float32' }, { key: 'rotation', type: 'Float32' }, { key: 'rotationalVelocity', type: 'Float32' }, { key: 'clampMedial', type: 'Float32' }, { key: 'clampLateral', type: 'Float32' }, { key: 'clampRotational', type: 'Float32' }, { key: 'clampEnabled', type: 'Uint8' }, { key: 'stabilized', type: 'Uint8' }, { key: 'thrusterPower', type: 'Float32' }, { key: 'weaponPower', type: 'Float32' }, { key: 'shieldPower', type: 'Float32' }];
+
+    module.exports = NetworkPlayerObj;
+  }, {}], 10: [function (require, module, exports) {
+    var ColorRGB = require('./utilities.js').ColorRGB;
+
+    var NetworkPrj = function NetworkPrj(prj) {
+      _classCallCheck(this, NetworkPrj);
+
+      this.id = prj.id;
+      this.x = prj.x;
+      this.y = prj.y;
+      this.velocityX = prj.velocityX;
+      this.velocityY = prj.velocityY;
+      this.color = prj.color;
+      this.radius = prj.radius;
+    };
+
+    NetworkPrj.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'velocityX', type: 'Float32' }, { key: 'velocityY', type: 'Float32' }, { key: 'color', type: ColorRGB }, { key: 'radius', type: 'Float32' }];
+
+    module.exports = NetworkPrj;
+  }, { "./utilities.js": 15 }], 11: [function (require, module, exports) {
+    var ColorRGB = require('./utilities.js').ColorRGB;
+
+    var NetworkRadial = function NetworkRadial(radial) {
+      _classCallCheck(this, NetworkRadial);
+
+      this.id = radial.id;
+      this.x = radial.x;
+      this.y = radial.y;
+      this.velocity = radial.velocity;
+      this.radius = radial.radius;
+      this.color = radial.color;
+    };
+
+    NetworkRadial.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'velocity', type: 'Float32' }, { key: 'radius', type: 'Float32' }, { key: 'color', type: ColorRGB }];
+
+    module.exports = NetworkRadial;
+  }, { "./utilities.js": 15 }], 12: [function (require, module, exports) {
+    var NetworkObj = require('./NetworkObj.js');
+    var NetworkPlayerObj = require('./NetworkPlayerObj.js');
+    var NetworkAsteroid = require('./NetworkAsteroid.js');
+    var NetworkPrj = require('./NetworkPrj.js');
+    var NetworkHitscan = require('./NetworkHitscan.js');
+    var NetworkRadial = require('./NetworkRadial.js');
+
+    var NetworkAsteroidInfo = function NetworkAsteroidInfo(_ref) {
+      var created = _ref.created,
+          destroyed = _ref.destroyed;
+
+      _classCallCheck(this, NetworkAsteroidInfo);
+
+      this.created = created;
+      this.destroyed = destroyed;
+    };
+
+    NetworkAsteroidInfo.serializableProperties = [{ key: 'created', type: NetworkAsteroid, isArray: true }, { key: 'destroyed', type: 'Uint16', isArray: true }];
+
+    var NetworkWorldInfo = function NetworkWorldInfo(_ref2) {
+      var objs = _ref2.objs,
+          asteroids = _ref2.asteroids,
+          prjs = _ref2.prjs,
+          hitscans = _ref2.hitscans,
+          radials = _ref2.radials,
+          playerInfo = _ref2.playerInfo;
+
+      _classCallCheck(this, NetworkWorldInfo);
+
+      this.objs = objs;
+      this.asteroids = asteroids;
+      this.prjs = prjs;
+      this.hitscans = hitscans;
+      this.radials = radials;
+      this.playerInfo = playerInfo;
+    };
+
+    NetworkWorldInfo.serializableProperties = [{ key: 'objs', type: NetworkObj, isArray: true }, { key: 'asteroids', type: NetworkAsteroidInfo }, { key: 'prjs', type: NetworkPrj, isArray: true }, { key: 'hitscans', type: NetworkHitscan, isArray: true }, { key: 'radials', type: NetworkRadial, isArray: true }, { key: 'playerInfo', type: NetworkPlayerObj }];
+
+    module.exports = NetworkWorldInfo;
+  }, { "./NetworkAsteroid.js": 6, "./NetworkHitscan.js": 7, "./NetworkObj.js": 8, "./NetworkPlayerObj.js": 9, "./NetworkPrj.js": 10, "./NetworkRadial.js": 11 }], 13: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/keys.js
 
@@ -1505,7 +1718,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     });
 
     module.exports = { myKeys: myKeys, myMouse: myMouse };
-  }, {}], 6: [function (require, module, exports) {
+  }, {}], 14: [function (require, module, exports) {
+    var primitiveByteSizes = {
+      Float32: 4,
+      Uint8: 1,
+      Uint16: 2,
+      Uint32: 4
+    };
+
+    var ARRAY_INDEX_TYPE = 'Uint32';
+
+    module.exports = { primitiveByteSizes: primitiveByteSizes, ARRAY_INDEX_TYPE: ARRAY_INDEX_TYPE };
+  }, {}], 15: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
@@ -1528,6 +1752,71 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       return VelocityCapsule;
     }(Capsule);
+
+    var ColorRGB = function () {
+      function ColorRGB(_ref3) {
+        var r = _ref3.r,
+            g = _ref3.g,
+            b = _ref3.b;
+
+        _classCallCheck(this, ColorRGB);
+
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this._generateColorString();
+      }
+
+      _createClass(ColorRGB, [{
+        key: "_generateColorString",
+        value: function _generateColorString() {
+          this.colorString = "rgb(" + this.r + "," + this.g + "," + this.b + ")";
+        }
+      }, {
+        key: "shade",
+        value: function shade(percent) {
+          var t = percent < 0 ? 0 : 255;
+          var p = percent < 0 ? percent * -1 : percent;
+          var r = Math.round((t - this.r) * p) + this.r;
+          var g = Math.round((t - this.g) * p) + this.g;
+          var b = Math.round((t - this.b) * p) + this.b;
+          return new ColorRGB({ r: r, g: g, b: b });
+        }
+      }]);
+
+      return ColorRGB;
+    }();
+
+    ColorRGB.serializableProperties = [{ key: 'r', type: 'Uint8' }, { key: 'g', type: 'Uint8' }, { key: 'b', type: 'Uint8' }];
+
+    var ColorHSL = function () {
+      function ColorHSL(_ref4) {
+        var h = _ref4.h,
+            s = _ref4.s,
+            l = _ref4.l;
+
+        _classCallCheck(this, ColorHSL);
+
+        this.h = h;
+        this.s = s;
+        this.l = l;
+        this.colorString = "hsl(" + this.h + "," + this.s + "%," + this.l + "%)";
+      }
+
+      _createClass(ColorHSL, [{
+        key: "shade",
+        value: function shade(percent) {
+          var t = percent < 0 ? 0 : 100;
+          var p = percent < 0 ? percent * -1 : percent;
+          var l = Math.round((t - this.l) * p) + this.l;
+          return new ColorHSL({ h: this.h, s: this.s, l: l });
+        }
+      }]);
+
+      return ColorHSL;
+    }();
+
+    ColorHSL.serializableProperties = [{ key: 'h', type: 'Uint16' }, { key: 's', type: 'Uint8' }, { key: 'l', type: 'Uint8' }];
 
     var utilities = {
       getForwardVector: function getForwardVector() {
@@ -1599,6 +1888,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var distance = Math.sqrt(dx * dx + dy * dy);
         return distance < c1.radius + c2.radius;
       },
+      ColorRGB: ColorRGB,
+      ColorHSL: ColorHSL,
       // Function Name: getRandomColor()
       // returns a random color of alpha 1.0
       // http://paulirish.com/2009/random-hex-color-code-snippets/
@@ -1606,14 +1897,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var red = Math.round(Math.random() * 200 + 55);
         var green = Math.round(Math.random() * 200 + 55);
         var blue = Math.round(Math.random() * 200 + 55);
-        var color = "rgb(" + red + "," + green + "," + blue + ")";
+        var color = new ColorRGB({ r: red, g: green, b: blue });
         // OR if you want to change alpha
         // var color='rgba('+red+','+green+','+blue+',0.50)'; // 0.50
         return color;
       },
       getRandomBrightColor: function getRandomBrightColor() {
         var h = Math.round(Math.random() * 360);
-        var color = "hsl(" + h + ",100%,65%)";
+        var color = new ColorHSL({ h: h, s: 100, l: 65 });
         // OR if you want to change alpha
         // var color='rgba('+red+','+green+','+blue+',0.50)'; // 0.50
         return color;

@@ -6,7 +6,7 @@ const NetworkHitscan = require('./NetworkHitscan.js');
 const NetworkRadial = require('./NetworkRadial.js');
 
 class NetworkAsteroidInfo {
-  constructor(created, destroyed) {
+  constructor({created, destroyed}) {
     this.created = created;
     this.destroyed = destroyed;
   }
