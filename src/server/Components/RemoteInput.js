@@ -173,7 +173,7 @@ class RemoteInput {
       this.sentInitial = true;
     }
 
-    const fetchInfo = owner.game.spatialHash.fetch([owner.x, owner.y], 15000);
+    const fetchInfo = owner.game.spatialHash.boundedFetch([owner.x, owner.y], 15000);
 
     const worldInfo = new NetworkWorldInfo({
       objs: populateWICategory(fetchInfo, 'obj'),

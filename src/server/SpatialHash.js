@@ -1,5 +1,6 @@
 const Grid = require('./Map.js');
 const SWBLTypedGroup = require('./SWBLTypedGroup.js');
+const utilities = require('./utilities.js');
 
 // const getMinMaxFromObject = (object, dt) => {
 //   const min = [];
@@ -103,13 +104,35 @@ class SpatialHash {
 
     this.map.iterate(min, max, (tileIndex) => {
       const theTile = this.tiles[tileIndex];
-      if (theTile) {
-        const keys = Object.keys(objectList);
-        for (let n = 0; n < keys.length; n++) {
-          const key = keys[n];
-          for (let c = 0; c < theTile[key].length; c++) {
-            objectList[key].push(theTile[key][c]);
-          }
+      const keys = Object.keys(objectList);
+      for (let n = 0; n < keys.length; n++) {
+        const key = keys[n];
+        for (let c = 0; c < theTile[key].length; c++) {
+          objectList[key].push(theTile[key][c]);
+        }
+      }
+    });
+
+    return objectList;
+  }
+
+  boundedFetch(pos, radius, objectList = new SWBLTypedGroup()) {
+    const x = pos[0];
+    const y = pos[1];
+    const min = [x - radius, y - radius];
+    const max = [x + radius, y + radius];
+
+    this.map.iterate(min, max, (tileIndex) => {
+      const theTile = this.tiles[tileIndex];
+      const keys = Object.keys(objectList);
+      for (let n = 0; n < keys.length; n++) {
+        const key = keys[n];
+        for (let c = 0; c < theTile[key].length; c++) {
+          const o = theTile[key][c];
+          const x2 = o.x;
+          const y2 = o.y;
+          if(utilities.distanceSqrBetweenPoints(x, y, x2, y2) <= radius * radius)
+            objectList[key].push(o);
         }
       }
     });
