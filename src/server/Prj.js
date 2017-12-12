@@ -11,6 +11,7 @@ class Prj extends Mobile {
     velX,
     velY,
     destructible,
+    decayTimeSeconds,
     color,
     owner,
     collisionFunction,
@@ -26,6 +27,7 @@ class Prj extends Mobile {
     this.velocityX = velX;
     this.velocityY = velY;
     this.destructible = destructible;
+    this.decayTimeSeconds = decayTimeSeconds;
     this.color = color;
     this.owner = owner;
     this.collisionFunction = collisionFunction;
@@ -34,7 +36,7 @@ class Prj extends Mobile {
 
   update(dt) {
     super.update(dt);
-    this.destructible.hp -= this.destructible.maxHp * 2.5 * dt;
+    this.destructible.hp -= this.destructible.maxHp * (dt / this.decayTimeSeconds);
     this.game.reportQueue.push(this);
   }
 

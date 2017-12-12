@@ -429,7 +429,7 @@ const draw = (camera, minimapCamera, dt) => {
   //clear cameras
   drawing.clearCamera(camera);
   
-  drawing.drawAsteroids(stars,camera);  
+  drawing.drawAsteroids(stars.objs, stars.colors, camera);  
   
   if(state == GAME_STATES.PLAYING)
   {
@@ -473,7 +473,7 @@ const draw = (camera, minimapCamera, dt) => {
       }
     }
     drawing.drawRadials(worldInfo.radials, camera, dt, now);
-    drawing.drawAsteroids(worldInfo.asteroids, camera);
+    drawing.drawAsteroids(worldInfo.asteroids, worldInfo.asteroidColors, camera);
     drawing.drawHUD(camera, now);
     drawing.drawMinimap(minimapCamera, grid, now);
 
@@ -997,15 +997,14 @@ const drawing = {
 		var ctx = camera.ctx;
 		for(var c = 0;c< projectiles.length;c++){
 			var prj = projectiles[c];
-			if(!prj.isDrawable)
-				continue;
-			const x = prj.interpolateWiValue('x', time);
-			const y = prj.interpolateWiValue('y', time);
-			const velX = prj.getMostRecentValue('velocityX');
-			const velY = prj.getMostRecentValue('velocityY');
+			const ageSeconds = (time - prj.arrivalTime) / 1000;
+			const velX = prj.velocityX;
+			const velY = prj.velocityY;
+			const x = prj.x + ageSeconds * velX;
+			const y = prj.y + ageSeconds * velY;
 			var start = camera.worldPointToCameraSpace(x, y);
-			var end = camera.worldPointToCameraSpace(x + velX * dt, y + velY * dt);
-			const radius = prj.getMostRecentValue('radius');
+			var end = camera.worldPointToCameraSpace(x - velX * dt, y - velY * dt);
+			const radius = prj.radius;
 
 			if(start[0] > camera.width + radius || start[0] < 0 - radius || start[1] > camera.height + radius || start[1] < 0 - radius)
 				continue;
@@ -1014,7 +1013,7 @@ const drawing = {
 			ctx.beginPath();
 			ctx.moveTo(start[0], start[1]);
 			ctx.lineTo(end[0], end[1]);
-			ctx.strokeStyle = prj.getMostRecentValue('color').colorString;
+			ctx.strokeStyle = prj.color.colorString;
 			var width = radius*camera.zoom;
 			ctx.lineWidth = (width>1)?width:1;
 			ctx.stroke();
@@ -1060,9 +1059,9 @@ const drawing = {
 		{
 			ctx.save();
 			ctx.beginPath();
-			for(var c = 0; c<asteroids.objs.length;c++)
+			for(var c = 0; c<asteroids.length;c++)
 			{
-				var asteroid = asteroids.objs[c];
+				var asteroid = asteroids[c];
 				var gridPosition = camera.worldPointToCameraSpace(asteroid.x,asteroid.y, grid.z);
 				if(gridPosition[0] + asteroid.radius*gridZoom<start[0] || gridPosition[0] - asteroid.radius*gridZoom>end[0] || gridPosition[1] + asteroid.radius*gridZoom<start[1] || gridPosition[1] - asteroid.radius*gridZoom>end[1])
 					continue;			
@@ -1082,16 +1081,16 @@ const drawing = {
 	},
 
 	//draws asteroids from the given asteroids array to the given camera
-	drawAsteroids: function(asteroids, camera){
+	drawAsteroids: function(asteroids, colors, camera){
 		var start = [0,0];
 		var end = [camera.width,camera.height];
 		var ctx = camera.ctx;
-		for(var group = 0;group<asteroids.colors.length;group++){
+		for(var group = 0;group<colors.length;group++){
 			ctx.save()
-			ctx.fillStyle = asteroids.colors[group];
+			ctx.fillStyle = colors[group];
 			ctx.beginPath();
-			for(var c = 0;c<asteroids.objs.length;c++){
-				var asteroid = asteroids.objs[c];
+			for(var c = 0;c<asteroids.length;c++){
+				var asteroid = asteroids[c];
 				if(asteroid.colorIndex!=group)
 					continue;
 
@@ -1166,7 +1165,7 @@ const drawing = {
 		ctx.translate((viewportStart[0] + viewportDimensions[0] / 2 - camera.width / 2), (viewportStart[1] + viewportDimensions[1] / 2 - camera.height / 2));
 		//ctx.translate(600,300);
 		if(grid) drawing.drawGrid(camera, grid, true);
-		drawing.drawAsteroids(worldInfo.asteroids, camera);
+		drawing.drawAsteroids(worldInfo.asteroids, worldInfo.asteroidColors, camera);
 		for(var n = worldInfo.objs.length - 1; n >= 0; n--){
 			var ship = worldInfo.objs[n];
 			const model = worldInfo.getModel(ship.id);
@@ -1293,10 +1292,8 @@ class WorldInfo {
 	}
 	reset() {
 		this.objs = [];
-		this.asteroids = {
-			objs: [],
-			colors:[]
-		};
+		this.asteroids = [];
+		this.asteroidColors = [];
 		this.radials = [];
 		this.prjs = [];
 		this.hitscans = [];
@@ -1323,12 +1320,28 @@ class WorldInfo {
 				removeIndexFromWiCollection(c, this[type]);
 		}
 	}
+	pushNonInterpCollectionFromDataToWI(dwi, type, now) {
+		const created = dwi[type].created;
+		for(let c = 0; c < created.length; c++) {
+			const a = created[c];
+			a.arrivalTime = now;
+			this[type].push(a);
+		}
+		const destroyed = dwi[type].destroyed;
+		for(let c = 0; c < this[type].length; c++) {
+			const a = this[type][c];
+			for( let i = 0; i < destroyed.length; i++) {
+				if(destroyed[i] === a.id)
+					this[type].splice(c--, 1);
+			}
+		}
+	}
 	prep() {
 		this.objTracker = {};
 	}
 	pushWiInitData(data) {
 		wiInterval = data.interval;
-		this.asteroids.colors = data.asteroidColors;
+		this.asteroidColors = data.asteroidColors;
 		initialized = true;
 	}
 	pushWiData(data) {
@@ -1340,22 +1353,10 @@ class WorldInfo {
 		const dwi = data;
 		this.prep();
 		this.pushCollectionFromDataToWI(dwi,'objs', now);
-		this.pushCollectionFromDataToWI(dwi,'prjs', now);
+		this.pushNonInterpCollectionFromDataToWI(dwi,'prjs', now);
 		this.pushCollectionFromDataToWI(dwi,'hitscans', now);
 		this.pushCollectionFromDataToWI(dwi,'radials', now);
-
-		const created = dwi.asteroids.created;
-		for(let c = 0; c < created.length; c++) {
-			const a = created[c];
-			this.asteroids.objs.push(a);
-		}
-		const destroyed = dwi.asteroids.destroyed;
-		for(let c = 0; c < this.asteroids.objs.length; c++) {
-			const a = this.asteroids.objs[c];
-			for( let i = 0; i < destroyed.length; i++)
-				if(destroyed[i] === a.id)
-					this.asteroids.objs.splice(c, 1);
-		}
+		this.pushNonInterpCollectionFromDataToWI(dwi, 'asteroids', now);
 	}
 	addShips(ships) {
 		Object.keys(ships).forEach((id) => {
@@ -1681,6 +1682,18 @@ NetworkAsteroidInfo.serializableProperties = [
   {key: 'destroyed', type: 'Uint16', isArray: true}
 ];
 
+class NetworkPrjInfo {
+  constructor({created, destroyed}) {
+    this.created = created;
+    this.destroyed = destroyed;
+  }
+}
+
+NetworkPrjInfo.serializableProperties = [
+  {key: 'created', type: NetworkPrj, isArray: true},
+  {key: 'destroyed', type: 'Uint16', isArray: true}
+];
+
 class NetworkWorldInfo {
   constructor({objs, asteroids, prjs, hitscans, radials, playerInfo}) {
     this.objs = objs;
@@ -1695,7 +1708,7 @@ class NetworkWorldInfo {
 NetworkWorldInfo.serializableProperties = [
   {key: 'objs', type: NetworkObj, isArray: true},
   {key: 'asteroids', type: NetworkAsteroidInfo},
-  {key: 'prjs', type: NetworkPrj, isArray: true},
+  {key: 'prjs', type: NetworkPrjInfo},
   {key: 'hitscans', type: NetworkHitscan, isArray: true},
   {key: 'radials', type: NetworkRadial, isArray: true},
   {key: 'playerInfo', type: NetworkPlayerObj}
@@ -1895,7 +1908,7 @@ const utilities = {
     return 1 / fps;
   },
   getRandom: (min, max) => (Math.random() * (max - min)) + min,
-
+  getRandomIntIncExc: (min, max) => Math.floor((Math.random() * (max - min))) + min,
   getRandomIntInclusive: (min, max) => Math.floor((Math.random() * ((max - min) + 1))) + min,
   circlesIntersect: (c1, c2) => {
     const dx = c2.x - c1.x;
@@ -1979,6 +1992,10 @@ const utilities = {
       ((Math.cos(angleRadians) * (x - cx)) + (Math.sin(angleRadians) * (y - cy))) + cx,
       ((Math.cos(angleRadians) * (y - cy)) - (Math.sin(angleRadians) * (x - cx))) + cy,
     ];
+  },
+
+  cross(p, q) {   
+    return (p[0]*q[1] - p[1]*q[0]);
   },
 
   dotProduct: (x1, y1, x2, y2) => (x1 * x2) + (y1 * y2),

@@ -466,7 +466,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       //clear cameras
       drawing.clearCamera(camera);
 
-      drawing.drawAsteroids(stars, camera);
+      drawing.drawAsteroids(stars.objs, stars.colors, camera);
 
       if (state == GAME_STATES.PLAYING) {
         var playerInfo = worldInfo.getPlayerInfo();
@@ -503,7 +503,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           }
         }
         drawing.drawRadials(worldInfo.radials, camera, dt, now);
-        drawing.drawAsteroids(worldInfo.asteroids, camera);
+        drawing.drawAsteroids(worldInfo.asteroids, worldInfo.asteroidColors, camera);
         drawing.drawHUD(camera, now);
         drawing.drawMinimap(minimapCamera, grid, now);
 
@@ -992,14 +992,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var ctx = camera.ctx;
         for (var c = 0; c < projectiles.length; c++) {
           var prj = projectiles[c];
-          if (!prj.isDrawable) continue;
-          var x = prj.interpolateWiValue('x', time);
-          var y = prj.interpolateWiValue('y', time);
-          var velX = prj.getMostRecentValue('velocityX');
-          var velY = prj.getMostRecentValue('velocityY');
+          var ageSeconds = (time - prj.arrivalTime) / 1000;
+          var velX = prj.velocityX;
+          var velY = prj.velocityY;
+          var x = prj.x + ageSeconds * velX;
+          var y = prj.y + ageSeconds * velY;
           var start = camera.worldPointToCameraSpace(x, y);
-          var end = camera.worldPointToCameraSpace(x + velX * dt, y + velY * dt);
-          var radius = prj.getMostRecentValue('radius');
+          var end = camera.worldPointToCameraSpace(x - velX * dt, y - velY * dt);
+          var radius = prj.radius;
 
           if (start[0] > camera.width + radius || start[0] < 0 - radius || start[1] > camera.height + radius || start[1] < 0 - radius) continue;
 
@@ -1007,7 +1007,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           ctx.beginPath();
           ctx.moveTo(start[0], start[1]);
           ctx.lineTo(end[0], end[1]);
-          ctx.strokeStyle = prj.getMostRecentValue('color').colorString;
+          ctx.strokeStyle = prj.color.colorString;
           var width = radius * camera.zoom;
           ctx.lineWidth = width > 1 ? width : 1;
           ctx.stroke();
@@ -1050,8 +1050,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         if (grid) {
           ctx.save();
           ctx.beginPath();
-          for (var c = 0; c < asteroids.objs.length; c++) {
-            var asteroid = asteroids.objs[c];
+          for (var c = 0; c < asteroids.length; c++) {
+            var asteroid = asteroids[c];
             var gridPosition = camera.worldPointToCameraSpace(asteroid.x, asteroid.y, grid.z);
             if (gridPosition[0] + asteroid.radius * gridZoom < start[0] || gridPosition[0] - asteroid.radius * gridZoom > end[0] || gridPosition[1] + asteroid.radius * gridZoom < start[1] || gridPosition[1] - asteroid.radius * gridZoom > end[1]) continue;
             cameraPositions[c] = camera.worldPointToCameraSpace(asteroid.x, asteroid.y);
@@ -1070,16 +1070,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       },
 
       //draws asteroids from the given asteroids array to the given camera
-      drawAsteroids: function drawAsteroids(asteroids, camera) {
+      drawAsteroids: function drawAsteroids(asteroids, colors, camera) {
         var start = [0, 0];
         var end = [camera.width, camera.height];
         var ctx = camera.ctx;
-        for (var group = 0; group < asteroids.colors.length; group++) {
+        for (var group = 0; group < colors.length; group++) {
           ctx.save();
-          ctx.fillStyle = asteroids.colors[group];
+          ctx.fillStyle = colors[group];
           ctx.beginPath();
-          for (var c = 0; c < asteroids.objs.length; c++) {
-            var asteroid = asteroids.objs[c];
+          for (var c = 0; c < asteroids.length; c++) {
+            var asteroid = asteroids[c];
             if (asteroid.colorIndex != group) continue;
 
             var zoom = 1 / (asteroid.z ? asteroid.z : 0 + 1 / camera.zoom);
@@ -1148,7 +1148,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         ctx.translate(viewportStart[0] + viewportDimensions[0] / 2 - camera.width / 2, viewportStart[1] + viewportDimensions[1] / 2 - camera.height / 2);
         //ctx.translate(600,300);
         if (grid) drawing.drawGrid(camera, grid, true);
-        drawing.drawAsteroids(worldInfo.asteroids, camera);
+        drawing.drawAsteroids(worldInfo.asteroids, worldInfo.asteroidColors, camera);
         for (var n = worldInfo.objs.length - 1; n >= 0; n--) {
           var ship = worldInfo.objs[n];
           var model = worldInfo.getModel(ship.id);
@@ -1280,10 +1280,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         key: "reset",
         value: function reset() {
           this.objs = [];
-          this.asteroids = {
-            objs: [],
-            colors: []
-          };
+          this.asteroids = [];
+          this.asteroidColors = [];
           this.radials = [];
           this.prjs = [];
           this.hitscans = [];
@@ -1311,6 +1309,23 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           }
         }
       }, {
+        key: "pushNonInterpCollectionFromDataToWI",
+        value: function pushNonInterpCollectionFromDataToWI(dwi, type, now) {
+          var created = dwi[type].created;
+          for (var c = 0; c < created.length; c++) {
+            var a = created[c];
+            a.arrivalTime = now;
+            this[type].push(a);
+          }
+          var destroyed = dwi[type].destroyed;
+          for (var _c2 = 0; _c2 < this[type].length; _c2++) {
+            var _a = this[type][_c2];
+            for (var i = 0; i < destroyed.length; i++) {
+              if (destroyed[i] === _a.id) this[type].splice(_c2--, 1);
+            }
+          }
+        }
+      }, {
         key: "prep",
         value: function prep() {
           this.objTracker = {};
@@ -1319,7 +1334,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         key: "pushWiInitData",
         value: function pushWiInitData(data) {
           wiInterval = data.interval;
-          this.asteroids.colors = data.asteroidColors;
+          this.asteroidColors = data.asteroidColors;
           initialized = true;
         }
       }, {
@@ -1330,22 +1345,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           var dwi = data;
           this.prep();
           this.pushCollectionFromDataToWI(dwi, 'objs', now);
-          this.pushCollectionFromDataToWI(dwi, 'prjs', now);
+          this.pushNonInterpCollectionFromDataToWI(dwi, 'prjs', now);
           this.pushCollectionFromDataToWI(dwi, 'hitscans', now);
           this.pushCollectionFromDataToWI(dwi, 'radials', now);
-
-          var created = dwi.asteroids.created;
-          for (var c = 0; c < created.length; c++) {
-            var a = created[c];
-            this.asteroids.objs.push(a);
-          }
-          var destroyed = dwi.asteroids.destroyed;
-          for (var _c2 = 0; _c2 < this.asteroids.objs.length; _c2++) {
-            var _a = this.asteroids.objs[_c2];
-            for (var i = 0; i < destroyed.length; i++) {
-              if (destroyed[i] === _a.id) this.asteroids.objs.splice(_c2, 1);
-            }
-          }
+          this.pushNonInterpCollectionFromDataToWI(dwi, 'asteroids', now);
         }
       }, {
         key: "addShips",
@@ -1660,13 +1663,25 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     NetworkAsteroidInfo.serializableProperties = [{ key: 'created', type: NetworkAsteroid, isArray: true }, { key: 'destroyed', type: 'Uint16', isArray: true }];
 
-    var NetworkWorldInfo = function NetworkWorldInfo(_ref2) {
-      var objs = _ref2.objs,
-          asteroids = _ref2.asteroids,
-          prjs = _ref2.prjs,
-          hitscans = _ref2.hitscans,
-          radials = _ref2.radials,
-          playerInfo = _ref2.playerInfo;
+    var NetworkPrjInfo = function NetworkPrjInfo(_ref2) {
+      var created = _ref2.created,
+          destroyed = _ref2.destroyed;
+
+      _classCallCheck(this, NetworkPrjInfo);
+
+      this.created = created;
+      this.destroyed = destroyed;
+    };
+
+    NetworkPrjInfo.serializableProperties = [{ key: 'created', type: NetworkPrj, isArray: true }, { key: 'destroyed', type: 'Uint16', isArray: true }];
+
+    var NetworkWorldInfo = function NetworkWorldInfo(_ref3) {
+      var objs = _ref3.objs,
+          asteroids = _ref3.asteroids,
+          prjs = _ref3.prjs,
+          hitscans = _ref3.hitscans,
+          radials = _ref3.radials,
+          playerInfo = _ref3.playerInfo;
 
       _classCallCheck(this, NetworkWorldInfo);
 
@@ -1678,7 +1693,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       this.playerInfo = playerInfo;
     };
 
-    NetworkWorldInfo.serializableProperties = [{ key: 'objs', type: NetworkObj, isArray: true }, { key: 'asteroids', type: NetworkAsteroidInfo }, { key: 'prjs', type: NetworkPrj, isArray: true }, { key: 'hitscans', type: NetworkHitscan, isArray: true }, { key: 'radials', type: NetworkRadial, isArray: true }, { key: 'playerInfo', type: NetworkPlayerObj }];
+    NetworkWorldInfo.serializableProperties = [{ key: 'objs', type: NetworkObj, isArray: true }, { key: 'asteroids', type: NetworkAsteroidInfo }, { key: 'prjs', type: NetworkPrjInfo }, { key: 'hitscans', type: NetworkHitscan, isArray: true }, { key: 'radials', type: NetworkRadial, isArray: true }, { key: 'playerInfo', type: NetworkPlayerObj }];
 
     module.exports = NetworkWorldInfo;
   }, { "./NetworkAsteroid.js": 6, "./NetworkHitscan.js": 7, "./NetworkObj.js": 8, "./NetworkPlayerObj.js": 9, "./NetworkPrj.js": 10, "./NetworkRadial.js": 11 }], 13: [function (require, module, exports) {
@@ -1759,10 +1774,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }(Capsule);
 
     var ColorRGB = function () {
-      function ColorRGB(_ref3) {
-        var r = _ref3.r,
-            g = _ref3.g,
-            b = _ref3.b;
+      function ColorRGB(_ref4) {
+        var r = _ref4.r,
+            g = _ref4.g,
+            b = _ref4.b;
 
         _classCallCheck(this, ColorRGB);
 
@@ -1795,10 +1810,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     ColorRGB.serializableProperties = [{ key: 'r', type: 'Uint8' }, { key: 'g', type: 'Uint8' }, { key: 'b', type: 'Uint8' }];
 
     var ColorHSL = function () {
-      function ColorHSL(_ref4) {
-        var h = _ref4.h,
-            s = _ref4.s,
-            l = _ref4.l;
+      function ColorHSL(_ref5) {
+        var h = _ref5.h,
+            s = _ref5.s,
+            l = _ref5.l;
 
         _classCallCheck(this, ColorHSL);
 
@@ -1883,7 +1898,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       getRandom: function getRandom(min, max) {
         return Math.random() * (max - min) + min;
       },
-
+      getRandomIntIncExc: function getRandomIntIncExc(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+      },
       getRandomIntInclusive: function getRandomIntInclusive(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
       },
@@ -1974,6 +1991,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var angleRadians = Math.PI / 180 * angle;
         return [Math.cos(angleRadians) * (x - cx) + Math.sin(angleRadians) * (y - cy) + cx, Math.cos(angleRadians) * (y - cy) - Math.sin(angleRadians) * (x - cx) + cy];
       },
+
+      cross: function cross(p, q) {
+        return p[0] * q[1] - p[1] * q[0];
+      },
+
 
       dotProduct: function dotProduct(x1, y1, x2, y2) {
         return x1 * x2 + y1 * y2;

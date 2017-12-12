@@ -136,7 +136,7 @@ const utilities = {
     return 1 / fps;
   },
   getRandom: (min, max) => (Math.random() * (max - min)) + min,
-
+  getRandomIntIncExc: (min, max) => Math.floor((Math.random() * (max - min))) + min,
   getRandomIntInclusive: (min, max) => Math.floor((Math.random() * ((max - min) + 1))) + min,
   circlesIntersect: (c1, c2) => {
     const dx = c2.x - c1.x;
@@ -220,6 +220,10 @@ const utilities = {
       ((Math.cos(angleRadians) * (x - cx)) + (Math.sin(angleRadians) * (y - cy))) + cx,
       ((Math.cos(angleRadians) * (y - cy)) - (Math.sin(angleRadians) * (x - cx))) + cy,
     ];
+  },
+
+  cross(p, q) {   
+    return (p[0]*q[1] - p[1]*q[0]);
   },
 
   dotProduct: (x1, y1, x2, y2) => (x1 * x2) + (y1 * y2),

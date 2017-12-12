@@ -376,15 +376,14 @@ const drawing = {
 		var ctx = camera.ctx;
 		for(var c = 0;c< projectiles.length;c++){
 			var prj = projectiles[c];
-			if(!prj.isDrawable)
-				continue;
-			const x = prj.interpolateWiValue('x', time);
-			const y = prj.interpolateWiValue('y', time);
-			const velX = prj.getMostRecentValue('velocityX');
-			const velY = prj.getMostRecentValue('velocityY');
+			const ageSeconds = (time - prj.arrivalTime) / 1000;
+			const velX = prj.velocityX;
+			const velY = prj.velocityY;
+			const x = prj.x + ageSeconds * velX;
+			const y = prj.y + ageSeconds * velY;
 			var start = camera.worldPointToCameraSpace(x, y);
-			var end = camera.worldPointToCameraSpace(x + velX * dt, y + velY * dt);
-			const radius = prj.getMostRecentValue('radius');
+			var end = camera.worldPointToCameraSpace(x - velX * dt, y - velY * dt);
+			const radius = prj.radius;
 
 			if(start[0] > camera.width + radius || start[0] < 0 - radius || start[1] > camera.height + radius || start[1] < 0 - radius)
 				continue;
@@ -393,7 +392,7 @@ const drawing = {
 			ctx.beginPath();
 			ctx.moveTo(start[0], start[1]);
 			ctx.lineTo(end[0], end[1]);
-			ctx.strokeStyle = prj.getMostRecentValue('color').colorString;
+			ctx.strokeStyle = prj.color.colorString;
 			var width = radius*camera.zoom;
 			ctx.lineWidth = (width>1)?width:1;
 			ctx.stroke();
@@ -439,9 +438,9 @@ const drawing = {
 		{
 			ctx.save();
 			ctx.beginPath();
-			for(var c = 0; c<asteroids.objs.length;c++)
+			for(var c = 0; c<asteroids.length;c++)
 			{
-				var asteroid = asteroids.objs[c];
+				var asteroid = asteroids[c];
 				var gridPosition = camera.worldPointToCameraSpace(asteroid.x,asteroid.y, grid.z);
 				if(gridPosition[0] + asteroid.radius*gridZoom<start[0] || gridPosition[0] - asteroid.radius*gridZoom>end[0] || gridPosition[1] + asteroid.radius*gridZoom<start[1] || gridPosition[1] - asteroid.radius*gridZoom>end[1])
 					continue;			
@@ -461,16 +460,16 @@ const drawing = {
 	},
 
 	//draws asteroids from the given asteroids array to the given camera
-	drawAsteroids: function(asteroids, camera){
+	drawAsteroids: function(asteroids, colors, camera){
 		var start = [0,0];
 		var end = [camera.width,camera.height];
 		var ctx = camera.ctx;
-		for(var group = 0;group<asteroids.colors.length;group++){
+		for(var group = 0;group<colors.length;group++){
 			ctx.save()
-			ctx.fillStyle = asteroids.colors[group];
+			ctx.fillStyle = colors[group];
 			ctx.beginPath();
-			for(var c = 0;c<asteroids.objs.length;c++){
-				var asteroid = asteroids.objs[c];
+			for(var c = 0;c<asteroids.length;c++){
+				var asteroid = asteroids[c];
 				if(asteroid.colorIndex!=group)
 					continue;
 
@@ -545,7 +544,7 @@ const drawing = {
 		ctx.translate((viewportStart[0] + viewportDimensions[0] / 2 - camera.width / 2), (viewportStart[1] + viewportDimensions[1] / 2 - camera.height / 2));
 		//ctx.translate(600,300);
 		if(grid) drawing.drawGrid(camera, grid, true);
-		drawing.drawAsteroids(worldInfo.asteroids, camera);
+		drawing.drawAsteroids(worldInfo.asteroids, worldInfo.asteroidColors, camera);
 		for(var n = worldInfo.objs.length - 1; n >= 0; n--){
 			var ship = worldInfo.objs[n];
 			const model = worldInfo.getModel(ship.id);
