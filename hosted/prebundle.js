@@ -264,7 +264,7 @@ window.addEventListener("keydown",function(e){
     else if(e.keyCode!=13)
       entry+=String.fromCharCode(e.keyCode);
   }
-  else if(state === GAME_STATES.PLAYING) {
+  else if(state === GAME_STATES.PLAYING && !e.repeat) {
     socket.emit('input', {keyCode:e.keyCode,pos:1});
     if(e.key === 'r')
       report = true;
