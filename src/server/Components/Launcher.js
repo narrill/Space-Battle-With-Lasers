@@ -21,8 +21,9 @@ class Launcher {
     if (this.firing) {
       const owner = this.owner;
       const launchee = utilities.deepObjectMerge.call({}, this.tubes[0].ammo);
-      launchee.x = owner.x;
-      launchee.y = owner.y;
+      const weaponPoint = this.owner.weaponPoint;
+      launchee.x = owner.x + weaponPoint[0];
+      launchee.y = owner.y + weaponPoint[1];
       launchee.velocityX = owner.velocityX;
       launchee.velocityY = owner.velocityY;
       launchee.rotation = owner.rotation;

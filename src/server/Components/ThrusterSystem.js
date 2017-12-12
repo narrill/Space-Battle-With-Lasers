@@ -10,15 +10,15 @@ class ThrusterSystem {
     this.noiseLevel = 0;
     this.medial = new Thruster(utilities.deepObjectMerge.call({
       maxStrength: 1000,
-      efficiency: 300,
+      efficiency: 3000,
     }, objectParams.medial));
     this.lateral = new Thruster(utilities.deepObjectMerge.call({
       maxStrength: 660,
-      efficiency: 300,
+      efficiency: 3000,
     }, objectParams.lateral));
     this.rotational = new Thruster(utilities.deepObjectMerge.call({
       maxStrength: 250,
-      efficiency: 100,
+      efficiency: 1000,
     }, objectParams.rotational));
 
     utilities.veryShallowObjectMerge.call(this, objectParams);

@@ -63,7 +63,7 @@ class RemoteInput {
     // rotational motion - mouse    
     // console.log(-this.remoteInput.mouseDirection); 
     const mouseDirection = this.mouseDirection;
-    const mouseSensitivity = 150;
+    const mouseSensitivity = 250;
     owner.objRotationalThrusters(
       (((-mouseDirection) / mouseSensitivity) * ts.rotational.maxStrength) / stab.thrustRatio,
     );
@@ -173,12 +173,12 @@ class RemoteInput {
       this.sentInitial = true;
     }
 
-    const fetchInfo = owner.game.spatialHash.fetch([owner.x, owner.y], 15000);
+    const fetchInfo = owner.game.spatialHash.boundedFetch([owner.x, owner.y], 15000);
 
     const worldInfo = new NetworkWorldInfo({
       objs: populateWICategory(fetchInfo, 'obj'),
       asteroids: populateNonInterpWICategory(fetchInfo, 'asteroid'),
-      prjs: populateWICategory(fetchInfo, 'prj'),
+      prjs: populateNonInterpWICategory(fetchInfo, 'prj'),
       hitscans: populateWICategory(fetchInfo, 'hitscan'),
       radials: populateWICategory(fetchInfo, 'radial'),
       playerInfo: owner.networkPlayerRepresentation

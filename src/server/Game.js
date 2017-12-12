@@ -73,17 +73,19 @@ class Game {
       hue += 360 / this.factions;
       if (hue >= 360) { hue -= 360; }
     }
+    const shipList = Object.keys(ships);
     for (let c = 0; c < this.maxNPCs; c++) {
+      const shipName = shipList[utilities.getRandomIntIncExc(0, shipList.length)];
       const newShip = utilities.deepObjectMerge.call(
         {},
-        (Math.random() >= 0.5) ? ships.gull : ships.cheetah,
+        ships[shipName],
       );
       newShip.ai = {
         aiFunction: 'basic',
         followMin: 1500,
         followMax: 2000,
         accuracy: 0.5,
-        fireSpread: 5,
+        fireSpread: 25,
       };
       newShip.faction = -1;
       newShip.respawnTime = 5;

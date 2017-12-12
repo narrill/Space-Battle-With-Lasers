@@ -1,6 +1,8 @@
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/ships.js
 
+const utilities = require('./utilities.js');
+
 const ships = {
   cheetah: {
     model: {
@@ -9,13 +11,6 @@ const ships = {
         [0, 7],
         [20, 17],
         [0, -23],
-      ],
-
-      shieldVectors: [
-        [-0.761939, 0.647648],
-        [0, 0.5],
-        [0.761939, 0.647648],
-        [0, -1],
       ],
 
       thrusterPoints: {
@@ -33,6 +28,7 @@ const ships = {
         },
         width: 5,
       },
+      weaponOffset: [0, -30],
       overlay: {
         colorCircle: {},
         destructible: {},
@@ -47,13 +43,13 @@ const ships = {
     warhead: {},
     thrusterSystem: {
       medial: {
-        maxStrength: 2000,
+        maxStrength: 40000,
       },
       lateral: {
-        maxStrength: 2000,
+        maxStrength: 40000,
       },
       rotational: {
-        maxStrength: 400,
+        maxStrength: 8000,
       },
     },
     destructible: {
@@ -73,11 +69,56 @@ const ships = {
         [0, -20],
       ],
 
-      shieldVectors: [
-        [-0.5, 0],
-        [0, 1.25],
-        [0.5, 0],
-        [0, -0.75],
+      thrusterPoints: {
+        medial: {
+          positive: [[0, 7]],
+          negative: [[0, 2]],
+        },
+        lateral: {
+          positive: [[10, -5]],
+          negative: [[-10, -5]],
+        },
+        rotational: {
+          positive: [[2, -10]],
+          negative: [[-2, -10]],
+        },
+        width: 5,
+      },
+
+      weaponOffset: [0, -30],
+
+      overlay: {
+        colorCircle: true,
+        destructible: true,
+      },
+    },
+    cannon: {},
+    stabilizer: {},
+    powerSystem: {},
+    warhead: {},
+    thrusterSystem: {
+      medial: {
+        maxStrength: 30000,
+      },
+      lateral: {
+        maxStrength: 30000,
+      },
+      rotational: {
+        maxStrength: 6000,
+      },
+    },
+    destructible: {},
+  },
+
+  tiger: {
+    model: {
+      vertices: [
+        [10, -17],
+        [0, -7],
+        [-10, -17],        
+        [-35, 35],
+        [0, 15],
+        [35, 35],
       ],
 
       thrusterPoints: {
@@ -96,19 +137,42 @@ const ships = {
         width: 5,
       },
 
+      weaponOffset: [0, -30],
+
       overlay: {
         colorCircle: true,
         destructible: true,
-        targetingSystem: true,
       },
     },
-    cannon: {},
+    cannon: {
+      ammo: {
+        decayTimeSeconds: .25
+      },
+      cd: .03,
+      spread: 20,
+      multiShot: 6
+    },
     stabilizer: {},
     powerSystem: {},
     warhead: {},
-    thrusterSystem: {},
-    destructible: {},
-  },
+    thrusterSystem: {
+      medial: {
+        maxStrength: 28000,
+      },
+      lateral: {
+        maxStrength: 28000,
+      },
+      rotational: {
+        maxStrength: 5000,
+      },
+    },
+    destructible: {
+      shield: {
+        max: 200,
+        efficiency: 8,
+      },
+    },
+  }
 };
 
 const missiles = {
@@ -160,18 +224,51 @@ const populatePhysicalProperties = (ship) => {
 
   // Calculate area - https://stackoverflow.com/a/717367
   const vertsCopy = model.vertices.slice();
+  const shieldVectors = [];
+  shieldVectors.length = vertsCopy.length - 1;
 
   // Close the polygon
   vertsCopy.push(vertsCopy[0]);
   vertsCopy.push(vertsCopy[1]);
 
-  // Calculate the area
+  // Calculate stuff
   let area = 0;
-  for(let i = 1; i <= vertsCopy.length - 2; ++i )
-    area += vertsCopy[i][0]*( vertsCopy[i+1][1] - vertsCopy[i-1][1] );
-  area = Math.abs(area / 2);
+  for(let i = 1; i < vertsCopy.length - 1; ++i ) {
+    const prev = vertsCopy[i - 1];
+    const current = vertsCopy[i];
+    const next = vertsCopy[i + 1];
+    // Area
+    area += current[0] * (next[1] - prev[1]);
 
-  const MASS_CONVERSION_FACTOR = .02;
+    // Vert normal
+    const fromPrev = utilities.normalizeVector(
+      current[0] - prev[0],
+      current[1] - prev[1]
+    );
+    const fromNext = utilities.normalizeVector(
+      current[0] - next[0],
+      current[1] - next[1]
+    );
+    const avg = [
+      (fromPrev[0] + fromNext[0]) / 2,
+      (fromPrev[1] + fromNext[1]) / 2
+    ];
+    const prevToNext = [
+      next[0] - prev[0],
+      next[1] - prev[1]
+    ];
+    if(utilities.cross(prevToNext, avg) < 0) {
+      shieldVectors[i] = [-avg[0], -avg[1]];
+    }
+    else {
+      shieldVectors[i] = avg;
+    }
+  }
+  area = Math.abs(area / 2);
+  shieldVectors[0] = shieldVectors.pop(); // We need to do this because we closed the polygon
+  model.shieldVectors = shieldVectors;
+
+  const MASS_CONVERSION_FACTOR = .2;
 
   // Assign physical properties
   ship.physicalProperties = {

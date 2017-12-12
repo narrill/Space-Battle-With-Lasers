@@ -207,7 +207,7 @@ window.addEventListener("keydown",function(e){
     else if(e.keyCode!=13)
       entry+=String.fromCharCode(e.keyCode);
   }
-  else if(state === GAME_STATES.PLAYING) {
+  else if(state === GAME_STATES.PLAYING && !e.repeat) {
     socket.emit('input', {keyCode:e.keyCode,pos:1});
     if(e.key === 'r')
       report = true;
@@ -372,7 +372,7 @@ const draw = (camera, minimapCamera, dt) => {
   //clear cameras
   drawing.clearCamera(camera);
   
-  drawing.drawAsteroids(stars,camera);  
+  drawing.drawAsteroids(stars.objs, stars.colors, camera);  
   
   if(state == GAME_STATES.PLAYING)
   {
@@ -417,7 +417,7 @@ const draw = (camera, minimapCamera, dt) => {
       }
     }
     drawing.drawRadials(worldInfo.radials, camera, dt, now);
-    drawing.drawAsteroids(worldInfo.asteroids, camera);
+    drawing.drawAsteroids(worldInfo.asteroids, worldInfo.asteroidColors, camera);
     drawing.drawHUD(camera, now);
     drawing.drawMinimap(minimapCamera, grid, now);
 

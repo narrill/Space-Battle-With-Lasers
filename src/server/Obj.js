@@ -40,6 +40,7 @@ class Obj extends Mobile {
     this.color = utilities.getRandomBrightColor();
     // model
     this.model = objectParams.model;
+    this.physicalProperties = objectParams.physicalProperties;
     this.constructionObject = utilities.deepObjectMerge.call({}, objectParams);
     this.type = 'obj';
 
@@ -49,7 +50,7 @@ class Obj extends Mobile {
     // Set defaults
     const defaults = {
       destructible: {
-        hp: physProp.mass * physProp.mass,
+        hp: physProp.mass,
         radius: Math.sqrt(physProp.area / Math.PI),
         shield: {
           max: 100,
@@ -193,6 +194,17 @@ class Obj extends Mobile {
     return new NetworkPlayerObj(transformedParams);
   }
 
+  get weaponPoint() {
+    const weaponOffset = this.model.weaponOffset;
+    return utilities.rotate(
+      0, 
+      0, 
+      weaponOffset[0], 
+      weaponOffset[1], 
+      -this.rotation
+    );
+  }
+
   // add given strength to main thruster
   objMedialThrusters(strength) {
     this.thrusterSystem.medial.targetStrength += strength;
@@ -215,7 +227,7 @@ class Obj extends Mobile {
     if (this.thrusterSystem.rotational.targetStrength * this.rotationalVelocity >= -10
       && Math.abs(this.rotationalVelocity) > this.stabilizer.precision / 6) {
       this.objRotationalThrusters(
-        this.rotationalVelocity * this.stabilizer.strength,
+        this.rotationalVelocity * this.stabilizer.strength * this.physicalProperties.mass,
       );
     } else if (this.stabilizer.clamps.enabled
       && Math.abs(this.rotationalVelocity) >= this.stabilizer.clamps.rotational
@@ -233,7 +245,7 @@ class Obj extends Mobile {
     if (this.thrusterSystem.medial.targetStrength * medialVelocity >= 0
       && Math.abs(medialVelocity) > this.stabilizer.precision) {
       this.objMedialThrusters(
-        medialVelocity * this.stabilizer.strength,
+        medialVelocity * this.stabilizer.strength * this.physicalProperties.mass,
       );
     } else if (this.stabilizer.clamps.enabled
       && Math.abs(medialVelocity) >= this.stabilizer.clamps.medial
@@ -250,7 +262,7 @@ class Obj extends Mobile {
     if (this.thrusterSystem.lateral.targetStrength * lateralVelocity >= 0
       && Math.abs(lateralVelocity) > this.stabilizer.precision) {
       this.objLateralThrusters(
-        lateralVelocity * this.stabilizer.strength,
+        lateralVelocity * this.stabilizer.strength * this.physicalProperties.mass,
       );
     } else if (this.stabilizer.clamps.enabled
       && Math.abs(lateralVelocity) >= this.stabilizer.clamps.lateral
@@ -272,7 +284,7 @@ class Obj extends Mobile {
   objFireCannon() {
     if (!this.cannon) { return; }
     const now = this.game.elapsedGameTime;
-    if (now > this.cannon.lastFireTime + (this.cannon.cd * 1000)) {
+    if (now > this.cannon.lastFireTime + (this.cannon.cd * this.cannon.multiShot * 1000)) {
       this.cannon.lastFireTime = now;
       this.cannon.firing = true;
     }

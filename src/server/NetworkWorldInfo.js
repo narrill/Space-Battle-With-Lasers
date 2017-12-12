@@ -17,6 +17,18 @@ NetworkAsteroidInfo.serializableProperties = [
   {key: 'destroyed', type: 'Uint16', isArray: true}
 ];
 
+class NetworkPrjInfo {
+  constructor({created, destroyed}) {
+    this.created = created;
+    this.destroyed = destroyed;
+  }
+}
+
+NetworkPrjInfo.serializableProperties = [
+  {key: 'created', type: NetworkPrj, isArray: true},
+  {key: 'destroyed', type: 'Uint16', isArray: true}
+];
+
 class NetworkWorldInfo {
   constructor({objs, asteroids, prjs, hitscans, radials, playerInfo}) {
     this.objs = objs;
@@ -31,7 +43,7 @@ class NetworkWorldInfo {
 NetworkWorldInfo.serializableProperties = [
   {key: 'objs', type: NetworkObj, isArray: true},
   {key: 'asteroids', type: NetworkAsteroidInfo},
-  {key: 'prjs', type: NetworkPrj, isArray: true},
+  {key: 'prjs', type: NetworkPrjInfo},
   {key: 'hitscans', type: NetworkHitscan, isArray: true},
   {key: 'radials', type: NetworkRadial, isArray: true},
   {key: 'playerInfo', type: NetworkPlayerObj}
