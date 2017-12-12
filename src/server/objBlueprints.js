@@ -157,7 +157,66 @@ const ships = {
     warhead: {},
     thrusterSystem: {
       medial: {
-        maxStrength: 28000,
+        maxStrength: 60000,
+      },
+      lateral: {
+        maxStrength: 60000,
+      },
+      rotational: {
+        maxStrength: 12000,
+      },
+    },
+    destructible: {
+      shield: {
+        max: 200,
+        efficiency: 8,
+      },
+    },
+  },
+
+  orca: {
+    model: {
+      vertices: [
+        [-20, 17],
+        [0, 7],
+        [20, 17],
+        [20, -5],
+        [0, -23],
+        [-20, -5]
+      ],
+
+      thrusterPoints: {
+        medial: {
+          positive: [[0, 7]],
+          negative: [[0, 2]],
+        },
+        lateral: {
+          positive: [[10, -5]],
+          negative: [[-10, -5]],
+        },
+        rotational: {
+          positive: [[2, -10]],
+          negative: [[-2, -10]],
+        },
+        width: 5,
+      },
+
+      weaponOffset: [0, -30],
+
+      overlay: {
+        colorCircle: true,
+        destructible: true,
+      },
+    },
+    launcher: {
+
+    },
+    stabilizer: {},
+    powerSystem: {},
+    warhead: {},
+    thrusterSystem: {
+      medial: {
+        maxStrength: 100000,
       },
       lateral: {
         maxStrength: 28000,
@@ -180,9 +239,9 @@ const missiles = {
     cullTolerance: 0.3,
     model: {
       vertices: [
-        [-10, 15],
+        [-5, 15],
         [0, -15],
-        [10, 15],
+        [5, 15],
       ],
       thrusterPoints: {
         medial: {
@@ -210,11 +269,19 @@ const missiles = {
         max: 0,
       },
     },
-    thrusterSystem: {},
-    warhead: {},
+    thrusterSystem: {
+      medial: {
+        maxStrength: 28000,
+      },
+    },
+    warhead: {
+      radial: {
+        decay: .5
+      }
+    },
     ai: {
-      aiFunction: 'basicMissile',
-      detonationRadius: 100,
+      aiFunction: 'basicDumbFireMissile',
+      detonationRadius: 500,
     },
   },
 };

@@ -8,6 +8,7 @@ class Radial {
     this.x = x;
     this.y = y;
     this.radius = 0;
+    this.initialVelocity = vel;
     this.velocity = vel;
     this.decay = decay;
     this.color = color;
@@ -19,12 +20,12 @@ class Radial {
 
   update(dt) {
     this.radius += this.velocity * dt;
-    this.velocity -= this.velocity * this.decay * dt;
+    this.velocity -= this.initialVelocity * (dt / this.decay);
     this.game.reportQueue.push(this);
   }
 
   get shouldDestroy() {
-    return this.velocity <= 500;
+    return this.velocity <= 0;
   }
 
   destroy() {

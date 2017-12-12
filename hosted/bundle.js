@@ -589,6 +589,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         if (state === GAME_STATES.WAIT) {
           state = GAME_STATES.PLAYING;
           playStinger(enterGameStinger);
+          if (!musicShuffler) {
+            var gameplay1 = new Audio();
+            var gameplay2 = new Audio();
+            var gameplay3 = new Audio();
+            gameplay1.setAttribute('src', 'gameplay1.mp3');
+            gameplay2.setAttribute('src', 'gameplay2.mp3');
+            gameplay3.setAttribute('src', 'gameplay3.mp3');
+            musicShuffler = new TrackShuffler([gameplay1, gameplay2, gameplay3], 15);
+          }
           musicShuffler.play();
         }
         if (report) {
@@ -600,10 +609,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       });
 
       titleMusic = document.querySelector('#titleMusic');
-      var gameplayMusic1 = document.querySelector('#gameplayMusic1');
-      var gameplayMusic2 = document.querySelector('#gameplayMusic2');
-      var gameplayMusic3 = document.querySelector('#gameplayMusic3');
-      musicShuffler = new TrackShuffler([gameplayMusic1, gameplayMusic2, gameplayMusic3], 15);
       keyclick = document.querySelector('#keyclick');
       titleStinger = document.querySelector('#titlestinger');
       enterGameStinger = document.querySelector('#entergamestinger');

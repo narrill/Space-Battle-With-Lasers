@@ -10,7 +10,7 @@ class Launcher {
       { ammo: missiles.tomcat, lastFireTime: 0 },
     ];
     this.firing = false;
-    this.cd = 4;
+    this.cd = 1;
     this.fireInterval = 0.1;
     this.lastFireTime = 0;
 
@@ -29,12 +29,7 @@ class Launcher {
       launchee.rotation = owner.rotation;
       launchee.color = owner.color;
       launchee.specialProperties = { owner };
-      if (owner.targetingSystem && owner.targetingSystem.lockedTargets.length > 0 && launchee.ai) {
-        launchee.ai.specialProperties = {
-          target: owner.targetingSystem.lockedTargets[0],
-        };
-      }
-      owner.game.createObj(launchee, owner.game);
+      owner.game.createObj(launchee, owner.game, owner);
       this.firing = false;
     }
   }

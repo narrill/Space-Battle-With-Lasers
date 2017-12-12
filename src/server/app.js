@@ -41,11 +41,11 @@ const files = [
   'gameplay1.mp3',
   'gameplay2.mp3',
   'gameplay3.mp3',
-  'keyclick.wav',
-  'titlestinger.wav',
-  'entergamestinger.wav',
-  'deathstinger.wav',
-  'ambientloop.wav',
+  'keyclick.mp3',
+  'titlestinger.mp3',
+  'entergamestinger.mp3',
+  'deathstinger.mp3',
+  'ambientloop.mp3',
   'testImage.jpg'
 ];
 
