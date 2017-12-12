@@ -11,7 +11,9 @@ const aiFunctions = {
     let lowestDistance = Number.MAX_VALUE;
     for (let c = 0; c < this.game.objs.length; c++) {
       const ship = this.game.objs[c];
-      if (!(this.faction === ship.faction && this.faction !== -1) && this !== ship) {
+      if (!(this.faction === ship.faction && this.faction !== -1) 
+        && this !== ship
+        && !ship.owner) {
         const leftRoot = this.x - ship.x;
         const rightRoot = this.y - ship.y;
         const distanceSqr = (leftRoot * leftRoot) + (rightRoot * rightRoot);
