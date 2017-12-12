@@ -21,6 +21,8 @@ const getMimeTypeFromExtension = (extension) => {
       return 'audio/mpeg';
     case ('.wav'):
       return 'audio/wav';
+    case('.jpg'):
+      return 'image/jpg';
     default:
       return undefined;
   }
@@ -44,6 +46,7 @@ const files = [
   'entergamestinger.wav',
   'deathstinger.wav',
   'ambientloop.wav',
+  'testImage.jpg'
 ];
 
 const hostedFiles = {};

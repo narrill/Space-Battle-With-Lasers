@@ -102,10 +102,12 @@ let camera;
 let minimapCamera;
 let state;
 let shipList = [];
+const billboards = [];
 const titleOsc = new Oscillator(6);
 const titleCameraOsc = new Oscillator(60);
 const worldInfo = require('./worldInfo.js').worldInfo;
 const modelInfo = require('./worldInfo.js').modelInfo;
+const gridFunctions = require('../server/gridFunctions.js');
 
 const stars = { // Container for the starfield background objects. Populated at run-time
   objs:[], // From an old project of mine - https://github.com/narrill/Space-Battle/blob/master/js/main.js
@@ -404,6 +406,7 @@ const draw = (camera, minimapCamera, dt) => {
         drawing.drawShipOverlay(shipInfo, camera, grid, now);
       }
     }
+    drawing.drawBillboards(camera, billboards);
     drawing.drawProjectiles(worldInfo.prjs, camera, dt, now);
     drawing.drawHitscans(worldInfo.hitscans, camera, now);
     for(let c = 0; c < worldInfo.objs.length; c++){
@@ -477,6 +480,13 @@ const init = () => {
     startTime = Date.now().valueOf();
     grid = data;
     grid.z = .85;
+    const adImage = document.querySelector('#adImage');
+    for(let c = 0; c < 20; c++) {
+      billboards.push({
+        position: gridFunctions.randomGridPosition(grid),
+        image: adImage
+      });
+    }
   });
 
   socket.on('destroyed', () => {

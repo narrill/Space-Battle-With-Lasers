@@ -56,7 +56,7 @@ class TrackShuffler {
 }
 
 module.exports = TrackShuffler;
-},{"../server/utilities.js":15}],2:[function(require,module,exports){
+},{"../server/utilities.js":16}],2:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
@@ -161,10 +161,12 @@ let camera;
 let minimapCamera;
 let state;
 let shipList = [];
+const billboards = [];
 const titleOsc = new Oscillator(6);
 const titleCameraOsc = new Oscillator(60);
 const worldInfo = require('./worldInfo.js').worldInfo;
 const modelInfo = require('./worldInfo.js').modelInfo;
+const gridFunctions = require('../server/gridFunctions.js');
 
 const stars = { // Container for the starfield background objects. Populated at run-time
   objs:[], // From an old project of mine - https://github.com/narrill/Space-Battle/blob/master/js/main.js
@@ -463,6 +465,7 @@ const draw = (camera, minimapCamera, dt) => {
         drawing.drawShipOverlay(shipInfo, camera, grid, now);
       }
     }
+    drawing.drawBillboards(camera, billboards);
     drawing.drawProjectiles(worldInfo.prjs, camera, dt, now);
     drawing.drawHitscans(worldInfo.hitscans, camera, now);
     for(let c = 0; c < worldInfo.objs.length; c++){
@@ -536,6 +539,13 @@ const init = () => {
     startTime = Date.now().valueOf();
     grid = data;
     grid.z = .85;
+    const adImage = document.querySelector('#adImage');
+    for(let c = 0; c < 20; c++) {
+      billboards.push({
+        position: gridFunctions.randomGridPosition(grid),
+        image: adImage
+      });
+    }
   });
 
   socket.on('destroyed', () => {
@@ -618,7 +628,7 @@ const init = () => {
 
 window.onload = init;
 
-},{"../server/Deserializer.js":5,"../server/NetworkWorldInfo.js":12,"../server/keys.js":13,"../server/utilities.js":15,"./TrackShuffler.js":1,"./drawing.js":3,"./worldInfo.js":4}],3:[function(require,module,exports){
+},{"../server/Deserializer.js":5,"../server/NetworkWorldInfo.js":12,"../server/gridFunctions.js":13,"../server/keys.js":14,"../server/utilities.js":16,"./TrackShuffler.js":1,"./drawing.js":3,"./worldInfo.js":4}],3:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/drawing.js
 
@@ -1109,6 +1119,25 @@ const drawing = {
 		};
 	},
 
+	drawBillboards(camera, billboards) {
+		for(let c = 0; c < billboards.length; c++) {
+			const billboard = billboards[c];
+			const bpPos = billboard.position;
+			const image = billboard.image;
+			const cameraPosition = camera.worldPointToCameraSpace(bpPos.x, bpPos.y);
+			const ctx = camera.ctx;
+			ctx.save();
+			ctx.translate(cameraPosition[0], cameraPosition[1]);
+			ctx.scale(camera.zoom, camera.zoom);
+			ctx.drawImage(
+				image,
+				-image.width/2,
+				-image.height/2
+			);
+			ctx.restore();
+		}
+	},
+
 	//draws the heads-up display to the given camera
 	drawHUD: function(camera, time){
 		const hudInfo = worldInfo.getPlayerInfo();
@@ -1274,7 +1303,7 @@ const drawing = {
 };
 
 module.exports = drawing;
-},{"../server/utilities.js":15,"./worldInfo.js":4}],4:[function(require,module,exports){
+},{"../server/utilities.js":16,"./worldInfo.js":4}],4:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
@@ -1433,7 +1462,7 @@ module.exports = {
 	worldInfo,
 	modelInfo
 };
-},{"../server/utilities.js":15}],5:[function(require,module,exports){
+},{"../server/utilities.js":16}],5:[function(require,module,exports){
 const { primitiveByteSizes, ARRAY_INDEX_TYPE } = require('./serializationConstants.js');
 
 class Deserializer {
@@ -1483,7 +1512,7 @@ class Deserializer {
 }
 
 module.exports = Deserializer;
-},{"./serializationConstants.js":14}],6:[function(require,module,exports){
+},{"./serializationConstants.js":15}],6:[function(require,module,exports){
 class NetworkAsteroid {
   constructor(asteroid) {
     this.id = asteroid.id;
@@ -1531,7 +1560,7 @@ NetworkHitscan.serializableProperties = [
 ];
 
 module.exports = NetworkHitscan;
-},{"./utilities.js":15}],8:[function(require,module,exports){
+},{"./utilities.js":16}],8:[function(require,module,exports){
 const ColorHSL = require('./utilities.js').ColorHSL;
 
 class NetworkObj {
@@ -1571,7 +1600,7 @@ NetworkObj.serializableProperties = [
 ];
 
 module.exports = NetworkObj;
-},{"./utilities.js":15}],9:[function(require,module,exports){
+},{"./utilities.js":16}],9:[function(require,module,exports){
 class NetworkPlayerObj {
   constructor(obj) {
     const stab = obj.stabilizer;
@@ -1637,7 +1666,7 @@ NetworkPrj.serializableProperties = [
 ];
 
 module.exports = NetworkPrj;
-},{"./utilities.js":15}],11:[function(require,module,exports){
+},{"./utilities.js":16}],11:[function(require,module,exports){
 const ColorRGB = require('./utilities.js').ColorRGB;
 
 class NetworkRadial {
@@ -1661,7 +1690,7 @@ NetworkRadial.serializableProperties = [
 ];
 
 module.exports = NetworkRadial;
-},{"./utilities.js":15}],12:[function(require,module,exports){
+},{"./utilities.js":16}],12:[function(require,module,exports){
 const NetworkObj = require('./NetworkObj.js');
 const NetworkPlayerObj = require('./NetworkPlayerObj.js');
 const NetworkAsteroid = require('./NetworkAsteroid.js');
@@ -1704,6 +1733,43 @@ NetworkWorldInfo.serializableProperties = [
 module.exports = NetworkWorldInfo;
 },{"./NetworkAsteroid.js":6,"./NetworkHitscan.js":7,"./NetworkObj.js":8,"./NetworkPlayerObj.js":9,"./NetworkPrj.js":10,"./NetworkRadial.js":11}],13:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
+// https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
+
+const gridFunctions = {
+  // returns a random position within the given grid
+  randomGridPosition: (grid) => {
+    const lower = [grid.gridStart[0], grid.gridStart[1]];
+    const upper = [
+      lower[0] + (grid.gridLines * grid.gridSpacing),
+      lower[1] + (grid.gridLines * grid.gridSpacing),
+    ];
+    return {
+      // position/rotation
+      x: (Math.random() * (upper[0] - lower[0])) + lower[0],
+      y: (Math.random() * (upper[1] - lower[1])) + lower[1],
+    };
+  },
+
+  // returns a bool indicating whether the given position is 
+  // within the given grid plus tolerances (in pixels)
+  isPositionInGrid: (position, grid, tolerances = [0, 0]) => {
+    const lower = [grid.gridStart[0], grid.gridStart[1]];
+    const upper = [
+      lower[0] + (grid.gridLines * grid.gridSpacing),
+      lower[1] + (grid.gridLines * grid.gridSpacing),
+    ];
+
+    return position[0] > lower[0] - tolerances[0]
+      && position[0] < upper[0] + tolerances[0]
+      && position[1] > lower[1] - tolerances[1]
+      && position[1] < upper[1] + tolerances[1];
+  },
+};
+
+module.exports = gridFunctions;
+
+},{}],14:[function(require,module,exports){
+// Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/keys.js
 
 const myKeys = {};
@@ -1744,7 +1810,7 @@ myMouse.BUTTONS = Object.freeze({
 
 module.exports = { myKeys, myMouse };
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 const primitiveByteSizes = {
   Float32: 4,
   Uint8: 1,
@@ -1756,7 +1822,7 @@ const primitiveByteSizes = {
 const ARRAY_INDEX_TYPE = 'Uint32';
 
 module.exports = { primitiveByteSizes, ARRAY_INDEX_TYPE };
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 

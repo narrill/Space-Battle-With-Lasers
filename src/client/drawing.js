@@ -488,6 +488,25 @@ const drawing = {
 		};
 	},
 
+	drawBillboards(camera, billboards) {
+		for(let c = 0; c < billboards.length; c++) {
+			const billboard = billboards[c];
+			const bpPos = billboard.position;
+			const image = billboard.image;
+			const cameraPosition = camera.worldPointToCameraSpace(bpPos.x, bpPos.y);
+			const ctx = camera.ctx;
+			ctx.save();
+			ctx.translate(cameraPosition[0], cameraPosition[1]);
+			ctx.scale(camera.zoom, camera.zoom);
+			ctx.drawImage(
+				image,
+				-image.width/2,
+				-image.height/2
+			);
+			ctx.restore();
+		}
+	},
+
 	//draws the heads-up display to the given camera
 	drawHUD: function(camera, time){
 		const hudInfo = worldInfo.getPlayerInfo();

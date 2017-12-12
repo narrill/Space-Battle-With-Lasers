@@ -87,7 +87,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     module.exports = TrackShuffler;
-  }, { "../server/utilities.js": 15 }], 2: [function (require, module, exports) {
+  }, { "../server/utilities.js": 16 }], 2: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
@@ -231,10 +231,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var minimapCamera = void 0;
     var state = void 0;
     var shipList = [];
+    var billboards = [];
     var titleOsc = new Oscillator(6);
     var titleCameraOsc = new Oscillator(60);
     var worldInfo = require('./worldInfo.js').worldInfo;
     var modelInfo = require('./worldInfo.js').modelInfo;
+    var gridFunctions = require('../server/gridFunctions.js');
 
     var stars = { // Container for the starfield background objects. Populated at run-time
       objs: [], // From an old project of mine - https://github.com/narrill/Space-Battle/blob/master/js/main.js
@@ -493,6 +495,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             drawing.drawShipOverlay(shipInfo, camera, grid, now);
           }
         }
+        drawing.drawBillboards(camera, billboards);
         drawing.drawProjectiles(worldInfo.prjs, camera, dt, now);
         drawing.drawHitscans(worldInfo.hitscans, camera, now);
         for (var c = 0; c < worldInfo.objs.length; c++) {
@@ -557,6 +560,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         startTime = Date.now().valueOf();
         grid = data;
         grid.z = .85;
+        var adImage = document.querySelector('#adImage');
+        for (var c = 0; c < 20; c++) {
+          billboards.push({
+            position: gridFunctions.randomGridPosition(grid),
+            image: adImage
+          });
+        }
       });
 
       socket.on('destroyed', function () {
@@ -638,7 +648,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     window.onload = init;
-  }, { "../server/Deserializer.js": 5, "../server/NetworkWorldInfo.js": 12, "../server/keys.js": 13, "../server/utilities.js": 15, "./TrackShuffler.js": 1, "./drawing.js": 3, "./worldInfo.js": 4 }], 3: [function (require, module, exports) {
+  }, { "../server/Deserializer.js": 5, "../server/NetworkWorldInfo.js": 12, "../server/gridFunctions.js": 13, "../server/keys.js": 14, "../server/utilities.js": 16, "./TrackShuffler.js": 1, "./drawing.js": 3, "./worldInfo.js": 4 }], 3: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/drawing.js
 
@@ -1095,6 +1105,22 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         };
       },
 
+      drawBillboards: function drawBillboards(camera, billboards) {
+        for (var c = 0; c < billboards.length; c++) {
+          var billboard = billboards[c];
+          var bpPos = billboard.position;
+          var image = billboard.image;
+          var cameraPosition = camera.worldPointToCameraSpace(bpPos.x, bpPos.y);
+          var ctx = camera.ctx;
+          ctx.save();
+          ctx.translate(cameraPosition[0], cameraPosition[1]);
+          ctx.scale(camera.zoom, camera.zoom);
+          ctx.drawImage(image, -image.width / 2, -image.height / 2);
+          ctx.restore();
+        }
+      },
+
+
       //draws the heads-up display to the given camera
       drawHUD: function drawHUD(camera, time) {
         var hudInfo = worldInfo.getPlayerInfo();
@@ -1256,7 +1282,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     module.exports = drawing;
-  }, { "../server/utilities.js": 15, "./worldInfo.js": 4 }], 4: [function (require, module, exports) {
+  }, { "../server/utilities.js": 16, "./worldInfo.js": 4 }], 4: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
@@ -1457,7 +1483,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       worldInfo: worldInfo,
       modelInfo: modelInfo
     };
-  }, { "../server/utilities.js": 15 }], 5: [function (require, module, exports) {
+  }, { "../server/utilities.js": 16 }], 5: [function (require, module, exports) {
     var _require = require('./serializationConstants.js'),
         primitiveByteSizes = _require.primitiveByteSizes,
         ARRAY_INDEX_TYPE = _require.ARRAY_INDEX_TYPE;
@@ -1521,7 +1547,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     module.exports = Deserializer;
-  }, { "./serializationConstants.js": 14 }], 6: [function (require, module, exports) {
+  }, { "./serializationConstants.js": 15 }], 6: [function (require, module, exports) {
     var NetworkAsteroid = function NetworkAsteroid(asteroid) {
       _classCallCheck(this, NetworkAsteroid);
 
@@ -1554,7 +1580,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     NetworkHitscan.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'startX', type: 'Float32' }, { key: 'startY', type: 'Float32' }, { key: 'endX', type: 'Float32' }, { key: 'endY', type: 'Float32' }, { key: 'color', type: ColorHSL }, { key: 'power', type: 'Uint16' }, { key: 'efficiency', type: 'Uint16' }];
 
     module.exports = NetworkHitscan;
-  }, { "./utilities.js": 15 }], 8: [function (require, module, exports) {
+  }, { "./utilities.js": 16 }], 8: [function (require, module, exports) {
     var ColorHSL = require('./utilities.js').ColorHSL;
 
     var NetworkObj = function NetworkObj(obj) {
@@ -1580,7 +1606,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     NetworkObj.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'rotation', type: 'Int16', scaleFactor: 50 }, { key: 'radius', type: 'Uint16' }, { key: 'shp', type: 'Uint16', scaleFactor: 100 }, { key: 'shc', type: 'Uint16', scaleFactor: 100 }, { key: 'hp', type: 'Uint16', scaleFactor: 100 }, { key: 'color', type: ColorHSL }, { key: 'medial', type: 'Int16', scaleFactor: 10 }, { key: 'lateral', type: 'Int16', scaleFactor: 10 }, { key: 'rotational', type: 'Int16', scaleFactor: 10 }, { key: 'thrusterColor', type: ColorHSL }];
 
     module.exports = NetworkObj;
-  }, { "./utilities.js": 15 }], 9: [function (require, module, exports) {
+  }, { "./utilities.js": 16 }], 9: [function (require, module, exports) {
     var NetworkPlayerObj = function NetworkPlayerObj(obj) {
       _classCallCheck(this, NetworkPlayerObj);
 
@@ -1623,7 +1649,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     NetworkPrj.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'velocityX', type: 'Float32' }, { key: 'velocityY', type: 'Float32' }, { key: 'color', type: ColorRGB }, { key: 'radius', type: 'Uint8' }];
 
     module.exports = NetworkPrj;
-  }, { "./utilities.js": 15 }], 11: [function (require, module, exports) {
+  }, { "./utilities.js": 16 }], 11: [function (require, module, exports) {
     var ColorRGB = require('./utilities.js').ColorRGB;
 
     var NetworkRadial = function NetworkRadial(radial) {
@@ -1640,7 +1666,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     NetworkRadial.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'velocity', type: 'Float32' }, { key: 'radius', type: 'Uint16' }, { key: 'color', type: ColorRGB }];
 
     module.exports = NetworkRadial;
-  }, { "./utilities.js": 15 }], 12: [function (require, module, exports) {
+  }, { "./utilities.js": 16 }], 12: [function (require, module, exports) {
     var NetworkObj = require('./NetworkObj.js');
     var NetworkPlayerObj = require('./NetworkPlayerObj.js');
     var NetworkAsteroid = require('./NetworkAsteroid.js');
@@ -1683,6 +1709,35 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     module.exports = NetworkWorldInfo;
   }, { "./NetworkAsteroid.js": 6, "./NetworkHitscan.js": 7, "./NetworkObj.js": 8, "./NetworkPlayerObj.js": 9, "./NetworkPrj.js": 10, "./NetworkRadial.js": 11 }], 13: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
+    // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
+
+    var gridFunctions = {
+      // returns a random position within the given grid
+      randomGridPosition: function randomGridPosition(grid) {
+        var lower = [grid.gridStart[0], grid.gridStart[1]];
+        var upper = [lower[0] + grid.gridLines * grid.gridSpacing, lower[1] + grid.gridLines * grid.gridSpacing];
+        return {
+          // position/rotation
+          x: Math.random() * (upper[0] - lower[0]) + lower[0],
+          y: Math.random() * (upper[1] - lower[1]) + lower[1]
+        };
+      },
+
+      // returns a bool indicating whether the given position is 
+      // within the given grid plus tolerances (in pixels)
+      isPositionInGrid: function isPositionInGrid(position, grid) {
+        var tolerances = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [0, 0];
+
+        var lower = [grid.gridStart[0], grid.gridStart[1]];
+        var upper = [lower[0] + grid.gridLines * grid.gridSpacing, lower[1] + grid.gridLines * grid.gridSpacing];
+
+        return position[0] > lower[0] - tolerances[0] && position[0] < upper[0] + tolerances[0] && position[1] > lower[1] - tolerances[1] && position[1] < upper[1] + tolerances[1];
+      }
+    };
+
+    module.exports = gridFunctions;
+  }, {}], 14: [function (require, module, exports) {
+    // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/keys.js
 
     var myKeys = {};
@@ -1722,7 +1777,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     });
 
     module.exports = { myKeys: myKeys, myMouse: myMouse };
-  }, {}], 14: [function (require, module, exports) {
+  }, {}], 15: [function (require, module, exports) {
     var primitiveByteSizes = {
       Float32: 4,
       Uint8: 1,
@@ -1734,7 +1789,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var ARRAY_INDEX_TYPE = 'Uint32';
 
     module.exports = { primitiveByteSizes: primitiveByteSizes, ARRAY_INDEX_TYPE: ARRAY_INDEX_TYPE };
-  }, {}], 15: [function (require, module, exports) {
+  }, {}], 16: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
