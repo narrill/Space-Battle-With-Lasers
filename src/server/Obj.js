@@ -10,11 +10,12 @@ const componentClasses = require('./ComponentTypes.js').classes;
 const Mobile = require('./Mobile.js');
 
 class Obj extends Mobile {
-  constructor(objectParams = {}, game, ownerId) {
+  constructor(objectParams = {}, game, owner, playerId) {
     super();
     const gridPosition = gridFunctions.randomGridPosition(game.grid);
     this.id = id.takeIdTag();
     this.game = game;
+    this.owner = owner;
     this.faction = -1;
     // position/rotation
     this.x = gridPosition.x;
@@ -37,7 +38,7 @@ class Obj extends Mobile {
     this.lateralVelocity = undefined;
     this.mass = objectParams.physicalProperties.mass;
     // colors
-    this.color = utilities.getRandomBrightColor();
+    this.color = objectParams.color || utilities.getRandomBrightColor();
     // model
     this.model = objectParams.model;
     this.physicalProperties = objectParams.physicalProperties;
@@ -88,7 +89,7 @@ class Obj extends Mobile {
 
     // Pass model data to clients - this is a bit of a hack
     Object.values(game.socketSubscriptions).forEach((socket) => {
-      if (ownerId && socket.id === ownerId && this.model.overlay.ranges) {
+      if (playerId && socket.id === playerId && this.model.overlay.ranges) {
         const modelCopy = utilities.deepObjectMerge.call({}, this.model);
         const key2s = Object.keys(modelCopy.overlay.ranges);
         for (let n = 0; n < key2s.length; n++) {

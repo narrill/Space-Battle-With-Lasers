@@ -97,7 +97,7 @@ const aiFunctions = {
     this.objRotationalStabilizers();
   },
 
-  basicMissile(dt) {
+  basicGuidedMissile(dt) {
     const target = (this.ai.specialProperties) ? this.ai.specialProperties.target : undefined;
     if (target) {
       const vectorToTarget = (target.velocityX && target.velocityY)
@@ -146,6 +146,28 @@ const aiFunctions = {
       this.objMedialThrusters(this.thrusterSystem.medial.maxStrength);
     } else this.objMedialThrusters(this.thrusterSystem.medial.maxStrength);
   },
+
+  basicDumbFireMissile() {
+    const fetchInfo = this.game.spatialHash.boundedFetch(
+      [this.x, this.y],
+      this.ai.detonationRadius,
+      {obj:[]}
+    );
+    let shouldDetonate = false;
+    const objs = fetchInfo.obj;
+    for(let c = 0; c < objs.length; c++) {
+      const obj = objs[c];
+      if(obj.id !== this.owner.id 
+        && obj.id !== this.id 
+        && (!obj.owner || obj.owner.id !== this.owner.id)) {
+        shouldDetonate = true;
+        break;
+      }
+    }
+    if(shouldDetonate)
+      this.destructible.hp = 0;
+    this.objMedialThrusters(this.thrusterSystem.medial.maxStrength);
+  }
 };
 
 module.exports = aiFunctions;

@@ -8,7 +8,7 @@ class Warhead {
     this.id = id.takeIdTag();
     this.radial = utilities.deepObjectMerge.call({
       velocity: 6000,
-      decay: 12,
+      decay: .2,
       color: new utilities.ColorRGB({ r: 255, g: 0, b: 0 }),
       collisionProperties: {
         density: 8,

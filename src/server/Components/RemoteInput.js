@@ -82,10 +82,9 @@ class RemoteInput {
         owner.objFireLaser();
       } else if (has.call(owner, 'cannon')) {
         owner.objFireCannon();
+      } else if (has.call(owner, 'launcher')) {
+        owner.objFireLauncher();
       }
-    }
-    if (this.keyboard[myKeys.KEYBOARD.KEY_Q]) {
-      owner.objFireLauncher();
     }
     if (this.keyboard[myKeys.KEYBOARD.KEY_E]) {
       owner.objFireTargetingSystem();
