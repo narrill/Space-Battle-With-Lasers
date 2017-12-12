@@ -57,6 +57,8 @@ const aiFunctions = {
         this.objFireLaser();
       } else if (has.call(this, 'cannon')) {
         this.objFireCannon();
+      } else if (has.call(this, 'launcher')) {
+        this.objFireLauncher();
       }
     }
 
