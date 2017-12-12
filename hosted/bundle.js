@@ -1509,27 +1509,30 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       }, {
         key: "read",
-        value: function read(type) {
+        value: function read(Type) {
           var scaleFactor = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
 
-          var size = primitiveByteSizes[type];
+          var size = primitiveByteSizes[Type];
           var val = void 0;
           // Primitive
           if (size) {
             this.alignCursor(size);
-            val = this.dataView["get" + type](this.cursor) / scaleFactor;
+            val = this.dataView["get" + Type](this.cursor) / scaleFactor;
             this.cursor += size;
-          }
-          // Object
-          else {
-              var serializableProperties = type.serializableProperties;
-              var opts = {};
-              for (var c = 0; c < serializableProperties.length; c++) {
-                var property = serializableProperties[c];
-                if (property.isArray) opts[property.key] = this.readArray(property.type, property.scaleFactor);else opts[property.key] = this.read(property.type, property.scaleFactor);
+          } else {
+            // Object
+            var serializableProperties = Type.serializableProperties;
+            var opts = {};
+            for (var c = 0; c < serializableProperties.length; c++) {
+              var property = serializableProperties[c];
+              if (property.isArray) {
+                opts[property.key] = this.readArray(property.type, property.scaleFactor);
+              } else {
+                opts[property.key] = this.read(property.type, property.scaleFactor);
               }
-              val = new type(opts);
             }
+            val = new Type(opts);
+          }
 
           return val;
         }
@@ -1542,7 +1545,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           var length = this.read(ARRAY_INDEX_TYPE);
           for (var c = 0; c < length; c++) {
             val.push(this.read(type, scaleFactor));
-          }return val;
+          }
+          return val;
         }
       }]);
 
@@ -1589,8 +1593,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var NetworkObj = function NetworkObj(obj) {
       _classCallCheck(this, NetworkObj);
 
-      var dest = obj.destructible;
-      var ts = obj.thrusterSystem;
       this.id = obj.id;
       this.x = obj.x;
       this.y = obj.y;
@@ -1613,8 +1615,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var NetworkPlayerObj = function NetworkPlayerObj(obj) {
       _classCallCheck(this, NetworkPlayerObj);
 
-      var stab = obj.stabilizer;
-      var ps = obj.powerSystem;
       this.x = obj.x;
       this.y = obj.y;
       this.velocityX = obj.velocityX;

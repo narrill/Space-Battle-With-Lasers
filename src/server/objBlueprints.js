@@ -115,7 +115,7 @@ const ships = {
       vertices: [
         [10, -17],
         [0, -7],
-        [-10, -17],        
+        [-10, -17],
         [-35, 35],
         [0, 15],
         [35, 35],
@@ -146,11 +146,11 @@ const ships = {
     },
     cannon: {
       ammo: {
-        decayTimeSeconds: .25
+        decayTimeSeconds: 0.25,
       },
-      cd: .03,
+      cd: 0.03,
       spread: 20,
-      multiShot: 6
+      multiShot: 6,
     },
     stabilizer: {},
     powerSystem: {},
@@ -172,7 +172,7 @@ const ships = {
         efficiency: 8,
       },
     },
-  }
+  },
 };
 
 const missiles = {
@@ -219,7 +219,8 @@ const missiles = {
   },
 };
 
-const populatePhysicalProperties = (ship) => {
+const populatePhysicalProperties = (shipName) => {
+  const ship = ships[shipName];
   const model = ship.model;
 
   // Calculate area - https://stackoverflow.com/a/717367
@@ -233,7 +234,7 @@ const populatePhysicalProperties = (ship) => {
 
   // Calculate stuff
   let area = 0;
-  for(let i = 1; i < vertsCopy.length - 1; ++i ) {
+  for (let i = 1; i < vertsCopy.length - 1; ++i) {
     const prev = vertsCopy[i - 1];
     const current = vertsCopy[i];
     const next = vertsCopy[i + 1];
@@ -243,24 +244,23 @@ const populatePhysicalProperties = (ship) => {
     // Vert normal
     const fromPrev = utilities.normalizeVector(
       current[0] - prev[0],
-      current[1] - prev[1]
+      current[1] - prev[1],
     );
     const fromNext = utilities.normalizeVector(
       current[0] - next[0],
-      current[1] - next[1]
+      current[1] - next[1],
     );
     const avg = [
       (fromPrev[0] + fromNext[0]) / 2,
-      (fromPrev[1] + fromNext[1]) / 2
+      (fromPrev[1] + fromNext[1]) / 2,
     ];
     const prevToNext = [
       next[0] - prev[0],
-      next[1] - prev[1]
+      next[1] - prev[1],
     ];
-    if(utilities.cross(prevToNext, avg) < 0) {
+    if (utilities.cross(prevToNext, avg) < 0) {
       shieldVectors[i] = [-avg[0], -avg[1]];
-    }
-    else {
+    } else {
       shieldVectors[i] = avg;
     }
   }
@@ -268,18 +268,19 @@ const populatePhysicalProperties = (ship) => {
   shieldVectors[0] = shieldVectors.pop(); // We need to do this because we closed the polygon
   model.shieldVectors = shieldVectors;
 
-  const MASS_CONVERSION_FACTOR = .2;
+  const MASS_CONVERSION_FACTOR = 0.2;
 
   // Assign physical properties
   ship.physicalProperties = {
     mass: area * MASS_CONVERSION_FACTOR,
-    area: area,
+    area,
   };
 
+  console.log(shipName)
   console.log(ship.physicalProperties);
 };
 
-Object.values(ships).forEach(populatePhysicalProperties);
-Object.values(missiles).forEach(populatePhysicalProperties);
+Object.keys(ships).forEach(populatePhysicalProperties);
+Object.keys(missiles).forEach(populatePhysicalProperties);
 
-module.exports = {ships, missiles};
+module.exports = { ships, missiles };

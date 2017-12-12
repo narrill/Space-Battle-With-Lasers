@@ -165,7 +165,7 @@ class Obj extends Mobile {
       medial: ts.medial.currentStrength / ts.medial.efficiency,
       lateral: ts.lateral.currentStrength / ts.lateral.efficiency,
       rotational: ts.rotational.currentStrength / ts.rotational.efficiency,
-      thrusterColor: ts.color
+      thrusterColor: ts.color,
     };
     utilities.shallowObjectMerge.call(transformedParams, this);
     return new NetworkObj(transformedParams);
@@ -197,11 +197,11 @@ class Obj extends Mobile {
   get weaponPoint() {
     const weaponOffset = this.model.weaponOffset;
     return utilities.rotate(
-      0, 
-      0, 
-      weaponOffset[0], 
-      weaponOffset[1], 
-      -this.rotation
+      0,
+      0,
+      weaponOffset[0],
+      weaponOffset[1],
+      -this.rotation,
     );
   }
 

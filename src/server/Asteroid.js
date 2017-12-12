@@ -32,7 +32,7 @@ class Asteroid {
 
   get networkRepresentation() {
     const transformedParams = {
-      radius: this.destructible.radius
+      radius: this.destructible.radius,
     };
     utilities.shallowObjectMerge.call(transformedParams, this);
     return new NetworkAsteroid(transformedParams);

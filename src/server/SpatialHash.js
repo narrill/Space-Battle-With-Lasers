@@ -131,8 +131,9 @@ class SpatialHash {
           const o = theTile[key][c];
           const x2 = o.x;
           const y2 = o.y;
-          if(utilities.distanceSqrBetweenPoints(x, y, x2, y2) <= radius * radius)
+          if (utilities.distanceSqrBetweenPoints(x, y, x2, y2) <= radius * radius) {
             objectList[key].push(o);
+          }
         }
       }
     });

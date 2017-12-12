@@ -1477,27 +1477,27 @@ class Deserializer {
   }
 
   // type should be an actual constructor object for non-primitives, not a string
-  read(type, scaleFactor = 1) {
-    const size = primitiveByteSizes[type];
+  read(Type, scaleFactor = 1) {
+    const size = primitiveByteSizes[Type];
     let val;
     // Primitive
-    if(size) {
+    if (size) {
       this.alignCursor(size);
-      val = this.dataView[`get${type}`](this.cursor) / scaleFactor;
-      this.cursor += size;   
-    }
-    // Object
-    else {
-      const serializableProperties = type.serializableProperties;
+      val = this.dataView[`get${Type}`](this.cursor) / scaleFactor;
+      this.cursor += size;
+    } else {
+      // Object
+      const serializableProperties = Type.serializableProperties;
       const opts = {};
-      for(let c = 0; c < serializableProperties.length; c++) {
+      for (let c = 0; c < serializableProperties.length; c++) {
         const property = serializableProperties[c];
-        if(property.isArray)
+        if (property.isArray) {
           opts[property.key] = this.readArray(property.type, property.scaleFactor);
-        else
+        } else {
           opts[property.key] = this.read(property.type, property.scaleFactor);
+        }
       }
-      val = new type(opts);
+      val = new Type(opts);
     }
 
     return val;
@@ -1506,14 +1506,18 @@ class Deserializer {
   readArray(type, scaleFactor = 1) {
     const val = [];
     const length = this.read(ARRAY_INDEX_TYPE);
-    for(let c = 0; c < length; c++)
-      val.push(this.read(type, scaleFactor));
+    for (let c = 0; c < length; c++) { val.push(this.read(type, scaleFactor)); }
     return val;
   }
 }
 
 module.exports = Deserializer;
+<<<<<<< HEAD
 },{"./serializationConstants.js":15}],6:[function(require,module,exports){
+=======
+
+},{"./serializationConstants.js":14}],6:[function(require,module,exports){
+>>>>>>> master
 class NetworkAsteroid {
   constructor(asteroid) {
     this.id = asteroid.id;
@@ -1525,14 +1529,15 @@ class NetworkAsteroid {
 }
 
 NetworkAsteroid.serializableProperties = [
-  {key: 'id', type: 'Uint16'},
-  {key: 'x', type: 'Float32'},
-  {key: 'y', type: 'Float32'},
-  {key: 'colorIndex', type: 'Uint8'},
-  {key: 'radius', type: 'Uint16'}
+  { key: 'id', type: 'Uint16' },
+  { key: 'x', type: 'Float32' },
+  { key: 'y', type: 'Float32' },
+  { key: 'colorIndex', type: 'Uint8' },
+  { key: 'radius', type: 'Uint16' },
 ];
 
 module.exports = NetworkAsteroid;
+
 },{}],7:[function(require,module,exports){
 const ColorHSL = require('./utilities.js').ColorHSL;
 
@@ -1561,13 +1566,16 @@ NetworkHitscan.serializableProperties = [
 ];
 
 module.exports = NetworkHitscan;
+<<<<<<< HEAD
 },{"./utilities.js":16}],8:[function(require,module,exports){
+=======
+
+},{"./utilities.js":15}],8:[function(require,module,exports){
+>>>>>>> master
 const ColorHSL = require('./utilities.js').ColorHSL;
 
 class NetworkObj {
   constructor(obj) {
-    const dest = obj.destructible;
-    const ts = obj.thrusterSystem;
     this.id = obj.id;
     this.x = obj.x;
     this.y = obj.y;
@@ -1601,11 +1609,14 @@ NetworkObj.serializableProperties = [
 ];
 
 module.exports = NetworkObj;
+<<<<<<< HEAD
 },{"./utilities.js":16}],9:[function(require,module,exports){
+=======
+
+},{"./utilities.js":15}],9:[function(require,module,exports){
+>>>>>>> master
 class NetworkPlayerObj {
   constructor(obj) {
-    const stab = obj.stabilizer;
-    const ps = obj.powerSystem;
     this.x = obj.x;
     this.y = obj.y;
     this.velocityX = obj.velocityX;
@@ -1641,6 +1652,7 @@ NetworkPlayerObj.serializableProperties = [
 ];
 
 module.exports = NetworkPlayerObj;
+
 },{}],10:[function(require,module,exports){
 const ColorRGB = require('./utilities.js').ColorRGB;
 
@@ -1667,7 +1679,12 @@ NetworkPrj.serializableProperties = [
 ];
 
 module.exports = NetworkPrj;
+<<<<<<< HEAD
 },{"./utilities.js":16}],11:[function(require,module,exports){
+=======
+
+},{"./utilities.js":15}],11:[function(require,module,exports){
+>>>>>>> master
 const ColorRGB = require('./utilities.js').ColorRGB;
 
 class NetworkRadial {
@@ -1691,7 +1708,12 @@ NetworkRadial.serializableProperties = [
 ];
 
 module.exports = NetworkRadial;
+<<<<<<< HEAD
 },{"./utilities.js":16}],12:[function(require,module,exports){
+=======
+
+},{"./utilities.js":15}],12:[function(require,module,exports){
+>>>>>>> master
 const NetworkObj = require('./NetworkObj.js');
 const NetworkPlayerObj = require('./NetworkPlayerObj.js');
 const NetworkAsteroid = require('./NetworkAsteroid.js');
@@ -1700,31 +1722,31 @@ const NetworkHitscan = require('./NetworkHitscan.js');
 const NetworkRadial = require('./NetworkRadial.js');
 
 class NetworkAsteroidInfo {
-  constructor({created, destroyed}) {
+  constructor({ created, destroyed }) {
     this.created = created;
     this.destroyed = destroyed;
   }
 }
 
 NetworkAsteroidInfo.serializableProperties = [
-  {key: 'created', type: NetworkAsteroid, isArray: true},
-  {key: 'destroyed', type: 'Uint16', isArray: true}
+  { key: 'created', type: NetworkAsteroid, isArray: true },
+  { key: 'destroyed', type: 'Uint16', isArray: true },
 ];
 
 class NetworkPrjInfo {
-  constructor({created, destroyed}) {
+  constructor({ created, destroyed }) {
     this.created = created;
     this.destroyed = destroyed;
   }
 }
 
 NetworkPrjInfo.serializableProperties = [
-  {key: 'created', type: NetworkPrj, isArray: true},
-  {key: 'destroyed', type: 'Uint16', isArray: true}
+  { key: 'created', type: NetworkPrj, isArray: true },
+  { key: 'destroyed', type: 'Uint16', isArray: true },
 ];
 
 class NetworkWorldInfo {
-  constructor({objs, asteroids, prjs, hitscans, radials, playerInfo}) {
+  constructor({ objs, asteroids, prjs, hitscans, radials, playerInfo }) {
     this.objs = objs;
     this.asteroids = asteroids;
     this.prjs = prjs;
@@ -1735,15 +1757,16 @@ class NetworkWorldInfo {
 }
 
 NetworkWorldInfo.serializableProperties = [
-  {key: 'objs', type: NetworkObj, isArray: true},
-  {key: 'asteroids', type: NetworkAsteroidInfo},
-  {key: 'prjs', type: NetworkPrjInfo},
-  {key: 'hitscans', type: NetworkHitscan, isArray: true},
-  {key: 'radials', type: NetworkRadial, isArray: true},
-  {key: 'playerInfo', type: NetworkPlayerObj}
+  { key: 'objs', type: NetworkObj, isArray: true },
+  { key: 'asteroids', type: NetworkAsteroidInfo },
+  { key: 'prjs', type: NetworkPrjInfo },
+  { key: 'hitscans', type: NetworkHitscan, isArray: true },
+  { key: 'radials', type: NetworkRadial, isArray: true },
+  { key: 'playerInfo', type: NetworkPlayerObj },
 ];
 
 module.exports = NetworkWorldInfo;
+
 },{"./NetworkAsteroid.js":6,"./NetworkHitscan.js":7,"./NetworkObj.js":8,"./NetworkPlayerObj.js":9,"./NetworkPrj.js":10,"./NetworkRadial.js":11}],13:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
@@ -1829,13 +1852,18 @@ const primitiveByteSizes = {
   Uint8: 1,
   Uint16: 2,
   Uint32: 4,
-  Int16: 2
+  Int16: 2,
 };
 
 const ARRAY_INDEX_TYPE = 'Uint32';
 
 module.exports = { primitiveByteSizes, ARRAY_INDEX_TYPE };
+<<<<<<< HEAD
 },{}],16:[function(require,module,exports){
+=======
+
+},{}],15:[function(require,module,exports){
+>>>>>>> master
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
@@ -1860,7 +1888,7 @@ class VelocityCapsule extends Capsule {
 }
 
 class ColorRGB {
-  constructor({r, g, b}) {
+  constructor({ r, g, b }) {
     this.r = r;
     this.g = g;
     this.b = b;
@@ -1877,18 +1905,18 @@ class ColorRGB {
     const r = Math.round((t - this.r) * p) + this.r;
     const g = Math.round((t - this.g) * p) + this.g;
     const b = Math.round((t - this.b) * p) + this.b;
-    return new ColorRGB({r, g, b});
+    return new ColorRGB({ r, g, b });
   }
 }
 
 ColorRGB.serializableProperties = [
-  {key: 'r', type: 'Uint8'},
-  {key: 'g', type: 'Uint8'},
-  {key: 'b', type: 'Uint8'},
+  { key: 'r', type: 'Uint8' },
+  { key: 'g', type: 'Uint8' },
+  { key: 'b', type: 'Uint8' },
 ];
 
 class ColorHSL {
-  constructor({h, s, l}) {
+  constructor({ h, s, l }) {
     this.h = h;
     this.s = s;
     this.l = l;
@@ -1899,14 +1927,14 @@ class ColorHSL {
     const t = percent < 0 ? 0 : 100;
     const p = percent < 0 ? percent * (-1) : percent;
     const l = Math.round((t - this.l) * p) + this.l;
-    return new ColorHSL({h: this.h, s: this.s, l: l});
+    return new ColorHSL({ h: this.h, s: this.s, l });
   }
 }
 
 ColorHSL.serializableProperties = [
-  {key: 'h', type: 'Uint16'},
-  {key: 's', type: 'Uint8'},
-  {key: 'l', type: 'Uint8'},
+  { key: 'h', type: 'Uint16' },
+  { key: 's', type: 'Uint8' },
+  { key: 'l', type: 'Uint8' },
 ];
 
 const utilities = {
@@ -1994,14 +2022,14 @@ const utilities = {
     const red = Math.round((Math.random() * 200) + 55);
     const green = Math.round((Math.random() * 200) + 55);
     const blue = Math.round((Math.random() * 200) + 55);
-    const color = new ColorRGB({r: red, g: green, b: blue});
+    const color = new ColorRGB({ r: red, g: green, b: blue });
     // OR if you want to change alpha
     // var color='rgba('+red+','+green+','+blue+',0.50)'; // 0.50
     return color;
   },
   getRandomBrightColor: () => {
     const h = Math.round(Math.random() * 360);
-    const color = new ColorHSL({h: h, s: 100, l: 65});
+    const color = new ColorHSL({ h, s: 100, l: 65 });
     // OR if you want to change alpha
     // var color='rgba('+red+','+green+','+blue+',0.50)'; // 0.50
     return color;
@@ -2063,8 +2091,8 @@ const utilities = {
     ];
   },
 
-  cross(p, q) {   
-    return (p[0]*q[1] - p[1]*q[0]);
+  cross(p, q) {
+    return ((p[0] * q[1]) - (p[1] * q[0]));
   },
 
   dotProduct: (x1, y1, x2, y2) => (x1 * x2) + (y1 * y2),
