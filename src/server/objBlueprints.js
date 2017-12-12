@@ -219,8 +219,8 @@ const missiles = {
   },
 };
 
-const populatePhysicalProperties = (shipName) => {
-  const ship = ships[shipName];
+function populatePhysicalProperties(shipName) {
+  const ship = this[shipName];
   const model = ship.model;
 
   // Calculate area - https://stackoverflow.com/a/717367
@@ -276,11 +276,11 @@ const populatePhysicalProperties = (shipName) => {
     area,
   };
 
-  console.log(shipName)
+  console.log(shipName);
   console.log(ship.physicalProperties);
-};
+}
 
-Object.keys(ships).forEach(populatePhysicalProperties);
-Object.keys(missiles).forEach(populatePhysicalProperties);
+Object.keys(ships).forEach(populatePhysicalProperties.bind(ships));
+Object.keys(missiles).forEach(populatePhysicalProperties.bind(missiles));
 
 module.exports = { ships, missiles };
