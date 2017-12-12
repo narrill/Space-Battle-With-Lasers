@@ -7,7 +7,7 @@ class Laser {
     this.owner = owner;
     this.id = id.takeIdTag();
     this.lastFireTime = 0;
-    this.cd = .5;
+    this.cd = 0.5;
     this.range = 2000;
     this.color = utilities.getRandomBrightColor();
     this.currentPower = 0;
@@ -23,7 +23,6 @@ class Laser {
   update(dt) {
     if (this.currentPower > 0) {
       const owner = this.owner;
-      const forwardVector = utilities.getForwardVector.call(this.owner);
       // create laser objects
       const spread = (Math.random() * this.spread) - (this.spread / 2);
       const laserVector = [0, -this.range];

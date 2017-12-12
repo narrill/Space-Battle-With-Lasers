@@ -22,7 +22,7 @@ class VelocityCapsule extends Capsule {
 }
 
 class ColorRGB {
-  constructor({r, g, b}) {
+  constructor({ r, g, b }) {
     this.r = r;
     this.g = g;
     this.b = b;
@@ -39,18 +39,18 @@ class ColorRGB {
     const r = Math.round((t - this.r) * p) + this.r;
     const g = Math.round((t - this.g) * p) + this.g;
     const b = Math.round((t - this.b) * p) + this.b;
-    return new ColorRGB({r, g, b});
+    return new ColorRGB({ r, g, b });
   }
 }
 
 ColorRGB.serializableProperties = [
-  {key: 'r', type: 'Uint8'},
-  {key: 'g', type: 'Uint8'},
-  {key: 'b', type: 'Uint8'},
+  { key: 'r', type: 'Uint8' },
+  { key: 'g', type: 'Uint8' },
+  { key: 'b', type: 'Uint8' },
 ];
 
 class ColorHSL {
-  constructor({h, s, l}) {
+  constructor({ h, s, l }) {
     this.h = h;
     this.s = s;
     this.l = l;
@@ -61,14 +61,14 @@ class ColorHSL {
     const t = percent < 0 ? 0 : 100;
     const p = percent < 0 ? percent * (-1) : percent;
     const l = Math.round((t - this.l) * p) + this.l;
-    return new ColorHSL({h: this.h, s: this.s, l: l});
+    return new ColorHSL({ h: this.h, s: this.s, l });
   }
 }
 
 ColorHSL.serializableProperties = [
-  {key: 'h', type: 'Uint16'},
-  {key: 's', type: 'Uint8'},
-  {key: 'l', type: 'Uint8'},
+  { key: 'h', type: 'Uint16' },
+  { key: 's', type: 'Uint8' },
+  { key: 'l', type: 'Uint8' },
 ];
 
 const utilities = {
@@ -156,14 +156,14 @@ const utilities = {
     const red = Math.round((Math.random() * 200) + 55);
     const green = Math.round((Math.random() * 200) + 55);
     const blue = Math.round((Math.random() * 200) + 55);
-    const color = new ColorRGB({r: red, g: green, b: blue});
+    const color = new ColorRGB({ r: red, g: green, b: blue });
     // OR if you want to change alpha
     // var color='rgba('+red+','+green+','+blue+',0.50)'; // 0.50
     return color;
   },
   getRandomBrightColor: () => {
     const h = Math.round(Math.random() * 360);
-    const color = new ColorHSL({h: h, s: 100, l: 65});
+    const color = new ColorHSL({ h, s: 100, l: 65 });
     // OR if you want to change alpha
     // var color='rgba('+red+','+green+','+blue+',0.50)'; // 0.50
     return color;
@@ -225,8 +225,8 @@ const utilities = {
     ];
   },
 
-  cross(p, q) {   
-    return (p[0]*q[1] - p[1]*q[0]);
+  cross(p, q) {
+    return ((p[0] * q[1]) - (p[1] * q[0]));
   },
 
   dotProduct: (x1, y1, x2, y2) => (x1 * x2) + (y1 * y2),

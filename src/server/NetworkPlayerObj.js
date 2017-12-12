@@ -1,7 +1,5 @@
 class NetworkPlayerObj {
   constructor(obj) {
-    const stab = obj.stabilizer;
-    const ps = obj.powerSystem;
     this.x = obj.x;
     this.y = obj.y;
     this.velocityX = obj.velocityX;

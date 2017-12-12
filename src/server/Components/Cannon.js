@@ -23,17 +23,17 @@ class Cannon {
 
   update() {
     // create projectiles
-    if (this.firing) {      
+    if (this.firing) {
       const forwardVector = utilities.getForwardVector.call(this.owner);
       const weaponPoint = this.owner.weaponPoint;
-      for(let c = 0; c < this.multiShot; c++) {
+      for (let c = 0; c < this.multiShot; c++) {
         const angle = (Math.random() * this.spread) - (this.spread / 2);
         const angledForwardVector = utilities.rotate(
-          0, 
+          0,
           0,
           forwardVector[0],
           forwardVector[1],
-          angle
+          angle,
         );
         const prjVelocity = [
           angledForwardVector[0] * this.power,

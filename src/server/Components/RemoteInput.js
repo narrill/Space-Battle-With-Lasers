@@ -4,7 +4,7 @@ const keys = require('../keys.js');
 const enums = require('../enums.js');
 const NetworkWorldInfo = require('../NetworkWorldInfo.js');
 const Serializer = require('../Serializer.js');
-//require('../SerializerTest.js');
+// require('../SerializerTest.js');
 
 const myKeys = keys.myKeys;
 const myMouse = keys.myMouse;
@@ -127,9 +127,10 @@ class RemoteInput {
     const populateWICategory = (fi, type) => {
       const fiCollection = fi[type];
       const wiCollection = [];
-      if(fiCollection.length) { 
-        for (let c = 0; c < fiCollection.length; c++)
+      if (fiCollection.length) {
+        for (let c = 0; c < fiCollection.length; c++) {
           wiCollection.push(fiCollection[c].networkRepresentation);
+        }
       }
       return wiCollection;
     };
@@ -162,13 +163,13 @@ class RemoteInput {
       this.nonInterp[type] = newItemsById;
       return { created: wiCollection, destroyed: wiDestroyedCollection };
     };
-    
+
     const owner = this.owner;
 
-    if(!this.sentInitial) {
+    if (!this.sentInitial) {
       this.remoteSend({
         interval: this.sendInterval,
-        asteroidColors: owner.game.asteroids.colors
+        asteroidColors: owner.game.asteroids.colors,
       }, 'worldInfoInit');
       this.sentInitial = true;
     }
@@ -181,7 +182,7 @@ class RemoteInput {
       prjs: populateNonInterpWICategory(fetchInfo, 'prj'),
       hitscans: populateWICategory(fetchInfo, 'hitscan'),
       radials: populateWICategory(fetchInfo, 'radial'),
-      playerInfo: owner.networkPlayerRepresentation
+      playerInfo: owner.networkPlayerRepresentation,
     });
 
     const serializer = new Serializer();

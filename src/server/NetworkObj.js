@@ -2,8 +2,6 @@ const ColorHSL = require('./utilities.js').ColorHSL;
 
 class NetworkObj {
   constructor(obj) {
-    const dest = obj.destructible;
-    const ts = obj.thrusterSystem;
     this.id = obj.id;
     this.x = obj.x;
     this.y = obj.y;
