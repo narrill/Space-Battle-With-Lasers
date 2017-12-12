@@ -1512,12 +1512,8 @@ class Deserializer {
 }
 
 module.exports = Deserializer;
-<<<<<<< HEAD
-},{"./serializationConstants.js":15}],6:[function(require,module,exports){
-=======
 
-},{"./serializationConstants.js":14}],6:[function(require,module,exports){
->>>>>>> master
+},{"./serializationConstants.js":15}],6:[function(require,module,exports){
 class NetworkAsteroid {
   constructor(asteroid) {
     this.id = asteroid.id;
@@ -1566,12 +1562,8 @@ NetworkHitscan.serializableProperties = [
 ];
 
 module.exports = NetworkHitscan;
-<<<<<<< HEAD
-},{"./utilities.js":16}],8:[function(require,module,exports){
-=======
 
-},{"./utilities.js":15}],8:[function(require,module,exports){
->>>>>>> master
+},{"./utilities.js":16}],8:[function(require,module,exports){
 const ColorHSL = require('./utilities.js').ColorHSL;
 
 class NetworkObj {
@@ -1609,12 +1601,8 @@ NetworkObj.serializableProperties = [
 ];
 
 module.exports = NetworkObj;
-<<<<<<< HEAD
-},{"./utilities.js":16}],9:[function(require,module,exports){
-=======
 
-},{"./utilities.js":15}],9:[function(require,module,exports){
->>>>>>> master
+},{"./utilities.js":16}],9:[function(require,module,exports){
 class NetworkPlayerObj {
   constructor(obj) {
     this.x = obj.x;
@@ -1679,12 +1667,8 @@ NetworkPrj.serializableProperties = [
 ];
 
 module.exports = NetworkPrj;
-<<<<<<< HEAD
-},{"./utilities.js":16}],11:[function(require,module,exports){
-=======
 
-},{"./utilities.js":15}],11:[function(require,module,exports){
->>>>>>> master
+},{"./utilities.js":16}],11:[function(require,module,exports){
 const ColorRGB = require('./utilities.js').ColorRGB;
 
 class NetworkRadial {
@@ -1708,12 +1692,8 @@ NetworkRadial.serializableProperties = [
 ];
 
 module.exports = NetworkRadial;
-<<<<<<< HEAD
-},{"./utilities.js":16}],12:[function(require,module,exports){
-=======
 
-},{"./utilities.js":15}],12:[function(require,module,exports){
->>>>>>> master
+},{"./utilities.js":16}],12:[function(require,module,exports){
 const NetworkObj = require('./NetworkObj.js');
 const NetworkPlayerObj = require('./NetworkPlayerObj.js');
 const NetworkAsteroid = require('./NetworkAsteroid.js');
@@ -1858,12 +1838,8 @@ const primitiveByteSizes = {
 const ARRAY_INDEX_TYPE = 'Uint32';
 
 module.exports = { primitiveByteSizes, ARRAY_INDEX_TYPE };
-<<<<<<< HEAD
-},{}],16:[function(require,module,exports){
-=======
 
-},{}],15:[function(require,module,exports){
->>>>>>> master
+},{}],16:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
