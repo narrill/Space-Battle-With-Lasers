@@ -1,5 +1,4 @@
 const utilities = require('../utilities.js');
-const id = require('../id.js');
 const enums = require('../enums.js');
 
 const has = Object.prototype.hasOwnProperty;
@@ -7,7 +6,6 @@ const has = Object.prototype.hasOwnProperty;
 class PowerSystem {
   constructor(objectParams = {}, owner) {
     this.owner = owner;
-    this.id = id.takeIdTag();
     this.current = [0, 0, 0];
     this.target = [0, 0, 0];
     this.transferRate = 6;

@@ -1,11 +1,9 @@
 const utilities = require('../utilities.js');
-const id = require('../id.js');
 const Thruster = require('./Thruster.js');
 
 class ThrusterSystem {
   constructor(objectParams = {}, owner) {
     this.owner = owner;
-    this.id = id.takeIdTag();
     this.color = utilities.getRandomBrightColor();
     this.noiseLevel = 0;
     this.medial = new Thruster(utilities.deepObjectMerge.call({

@@ -1,9 +1,7 @@
 const utilities = require('../utilities.js');
-const id = require('../id.js');
 
 class StabilizerClamps {
   constructor(objectParams = {}) {
-    this.id = id.takeIdTag();
     this.enabled = true;
     this.medial = 1000;
     this.lateral = 660;

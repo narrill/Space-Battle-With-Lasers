@@ -1,11 +1,9 @@
 const utilities = require('../utilities.js');
-const id = require('../id.js');
 const collisions = require('../collisions.js');
 
 class Laser {
   constructor(objectParams = {}, owner) {
     this.owner = owner;
-    this.id = id.takeIdTag();
     this.lastFireTime = 0;
     this.cd = 0.5;
     this.range = 2000;
@@ -47,7 +45,6 @@ class Laser {
           power: this.currentPower,
           efficiency: this.efficiency,
         },
-        this.id,
       );
     }
     this.currentPower -= this.maxPower * (1 - this.coherence) * dt * 1000;

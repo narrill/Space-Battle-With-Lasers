@@ -12,7 +12,6 @@ class Hitscan {
     owner,
     collisionFunction,
     collisionProperties,
-    objId,
   ) {
     this.game = game;
     this.startX = startX;
@@ -22,7 +21,6 @@ class Hitscan {
     this.color = color;
     // previousLaser:previousLaser,
     this.owner = owner;
-    this.id = objId;
     this.velocityX = owner.velocityX;
     this.velocityY = owner.velocityY;
     this.collisionFunction = collisionFunction;

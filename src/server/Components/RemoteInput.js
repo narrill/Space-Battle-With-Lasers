@@ -1,5 +1,4 @@
 const utilities = require('../utilities.js');
-const id = require('../id.js');
 const keys = require('../keys.js');
 const enums = require('../enums.js');
 const NetworkWorldInfo = require('../NetworkWorldInfo.js');
@@ -14,7 +13,6 @@ const has = Object.prototype.hasOwnProperty;
 class RemoteInput {
   constructor(objectParams = {}, owner) {
     this.owner = owner;
-    this.id = id.takeIdTag();
     this.keyboard = [];
     this.mouse = [];
     this.mouseDirection = 0;

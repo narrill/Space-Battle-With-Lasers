@@ -1,11 +1,9 @@
 const utilities = require('../utilities.js');
-const id = require('../id.js');
 const missiles = require('../objBlueprints.js').missiles;
 
 class Launcher {
   constructor(objectParams = {}, owner) {
     this.owner = owner;
-    this.id = id.takeIdTag();
     this.tubes = [
       { ammo: missiles.tomcat, lastFireTime: 0 },
     ];

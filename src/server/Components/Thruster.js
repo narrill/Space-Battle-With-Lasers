@@ -1,9 +1,7 @@
 const utilities = require('../utilities.js');
-const id = require('../id.js');
 
 class Thruster {
   constructor(objectParams = {}) {
-    this.id = id.takeIdTag();
     this.currentStrength = 0;
     this.targetStrength = 0;
     this.maxStrength = 1000;

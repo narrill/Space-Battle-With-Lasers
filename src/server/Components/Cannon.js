@@ -1,5 +1,4 @@
 const utilities = require('../utilities.js');
-const id = require('../id.js');
 const Ammo = require('./Ammo.js');
 const Destructible = require('./Destructible.js');
 const collisions = require('../collisions.js');
@@ -7,7 +6,6 @@ const collisions = require('../collisions.js');
 class Cannon {
   constructor(objectParams = {}, owner) {
     this.owner = owner;
-    this.id = id.takeIdTag();
     this.firing = false;
     this.lastFireTime = 0;
     this.cd = 0.12;

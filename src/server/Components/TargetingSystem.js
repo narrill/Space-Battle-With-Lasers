@@ -1,11 +1,9 @@
 const utilities = require('../utilities.js');
-const id = require('../id.js');
 const collisions = require('../collisions.js');
 
 class TargetingSystem {
   constructor(objectParams = {}, owner) {
     this.owner = owner;
-    this.id = id.takeIdTag();
     this.targets = [];
     this.maxTargets = 1;
     this.range = 50000;
