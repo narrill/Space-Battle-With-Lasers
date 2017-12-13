@@ -1,5 +1,3 @@
-const has = Object.prototype.hasOwnProperty;
-
 let idCounter = 0;
 const idDictionary = {};
 
