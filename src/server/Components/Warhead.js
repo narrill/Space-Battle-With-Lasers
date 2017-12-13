@@ -9,7 +9,7 @@ class Warhead {
       decay: .2,
       color: new utilities.ColorRGB({ r: 255, g: 0, b: 0 }),
       collisionProperties: {
-        density: 8,
+        density: 2,
       },
       collisionFunction: 'basicBlastwaveCollision',
     }, objectParams.radial);

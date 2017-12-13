@@ -44,12 +44,15 @@ const ships = {
     thrusterSystem: {
       medial: {
         maxStrength: 40000,
+        powerRampLimit: 10000
       },
       lateral: {
         maxStrength: 40000,
+        powerRampLimit: 10000
       },
       rotational: {
         maxStrength: 8000,
+        powerRampLimit: 4000
       },
     },
     destructible: {
@@ -99,12 +102,15 @@ const ships = {
     thrusterSystem: {
       medial: {
         maxStrength: 30000,
+        powerRampLimit: 10000
       },
       lateral: {
-        maxStrength: 30000,
+        maxStrength: 30000,        
+        powerRampLimit: 10000
       },
       rotational: {
         maxStrength: 6000,
+        powerRampLimit: 3000
       },
     },
     destructible: {},
@@ -157,13 +163,16 @@ const ships = {
     warhead: {},
     thrusterSystem: {
       medial: {
-        maxStrength: 60000,
+        maxStrength: 100000,
+        powerRampLimit: 15000
       },
       lateral: {
-        maxStrength: 60000,
+        maxStrength: 100000,
+        powerRampLimit: 15000
       },
       rotational: {
-        maxStrength: 12000,
+        maxStrength: 24000,
+        powerRampLimit: 10000
       },
     },
     destructible: {
@@ -217,12 +226,15 @@ const ships = {
     thrusterSystem: {
       medial: {
         maxStrength: 100000,
+        powerRampLimit: 15000
       },
       lateral: {
-        maxStrength: 28000,
+        maxStrength: 100000,
+        powerRampLimit: 15000
       },
       rotational: {
-        maxStrength: 5000,
+        maxStrength: 24000,
+        powerRampLimit: 10000
       },
     },
     destructible: {
@@ -272,6 +284,7 @@ const missiles = {
     thrusterSystem: {
       medial: {
         maxStrength: 28000,
+        powerRampLimit: 14000
       },
     },
     warhead: {

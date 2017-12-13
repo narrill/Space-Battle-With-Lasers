@@ -28,11 +28,18 @@ class Thruster {
       this.powerRampPercentage * dt,
     ) - this.currentStrength;
 
-    if (thrusterDelta * this.currentStrength > 0) {
+    if (thrusterDelta * this.currentStrength >= 0) {
       thrusterDelta = utilities.clamp(
         (-this.powerRampLimit) * dt,
         thrusterDelta,
         this.powerRampLimit * dt,
+      );
+    } else {
+      const toZero = Math.abs(this.currentStrength);
+      thrusterDelta = utilities.clamp(
+        -toZero,
+        thrusterDelta,
+        toZero
       );
     }
 
