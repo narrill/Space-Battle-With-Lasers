@@ -83,6 +83,57 @@ class LooseTimer {
   }
 }
 
+const TitleScreen = require('TitleScreen.js');
+const GameScreen = require('GameScreen.js');
+
+class Client {
+  constructor() {
+    this.accumulator = 0;
+    this.lastTime = 0;
+
+    this.titleScreen = new TitleScreen(this);
+    this.gameScreen = new GameScreen(this);
+
+    this.currentScreen = this.titleScreen;
+  }
+
+  frame() {
+    const now = Date.now().valueOf();
+    let dt = (now-lastTime)/1000;
+
+    lastTime = Date.now().valueOf();
+    this.draw(camera, minimapCamera, dt);
+
+    const step = .004;
+    if(dt>step*8)
+    {
+        dt = step;
+        console.log('throttle');
+    }
+    accumulator+=dt;
+    while(accumulator>=step){
+      this.update(step);
+      accumulator-= step;
+    } 
+
+    requestAnimationFrame(this.frame);
+  }
+
+  update(dt) {
+    this.currentScreen.update(dt);
+  }
+
+  draw(now, dt) {
+    this.currentScreen.draw()
+  }
+
+  switchScreen(screen) {
+    if(this.currentScreen.onExit) this.currentScreen.onExit();
+    if(screen.onEnter) screen.onEnter();
+    this.currentScreen = screen;
+  }
+}
+
 let titleMusic;
 let musicShuffler;
 let ambientLoop;
@@ -500,16 +551,10 @@ const init = () => {
       state = GAME_STATES.PLAYING;      
       playStinger(enterGameStinger);
       if(!musicShuffler) {
-        const gameplay1 = new Audio();
-        const gameplay2 = new Audio();
-        const gameplay3 = new Audio();
-        gameplay1.setAttribute('src', 'gameplay1.mp3');
-        gameplay2.setAttribute('src', 'gameplay2.mp3');
-        gameplay3.setAttribute('src', 'gameplay3.mp3');
         musicShuffler = new TrackShuffler([
-          gameplay1, 
-          gameplay2, 
-          gameplay3
+          'gameplay1', 
+          'gameplay2', 
+          'gameplay3'
         ], 15);
       }
       musicShuffler.play();
