@@ -1,5 +1,7 @@
 const utilities = require('../utilities.js');
 const keys = require('../keys.js');
+const commands = require('../commands.js');
+const inputState = require('../inputState.js');
 const enums = require('../enums.js');
 const NetworkWorldInfo = require('../NetworkWorldInfo.js');
 const Serializer = require('../Serializer.js');
@@ -13,8 +15,7 @@ const has = Object.prototype.hasOwnProperty;
 class RemoteInput {
   constructor(objectParams = {}, owner) {
     this.owner = owner;
-    this.keyboard = [];
-    this.mouse = [];
+    this.commands = {};
     this.mouseDirection = 0;
     this.lastSend = 0;
     this.sendInterval = 66.6666;
@@ -27,33 +28,30 @@ class RemoteInput {
   update() {
     const owner = this.owner;
     const stab = owner.stabilizer;
-    if (this.keyboard[myKeys.KEYBOARD.KEY_TAB]
-      && !this.keyboard[myKeys.KEYBOARD.KEY_ALT]) {
+    if (inputState.isStarting(this.commands[commands.TOGGLE_STABILIZER])) {
       stab.enabled = !stab.enabled;
-      this.keyboard[myKeys.KEYBOARD.KEY_TAB] = false;
     }
 
-    if (this.keyboard[myKeys.KEYBOARD.KEY_C]) {
+    if (inputState.isStarting(this.commands[commands.TOGGLE_LIMITER])) {
       stab.clamps.enabled = !stab.clamps.enabled;
-      this.keyboard[myKeys.KEYBOARD.KEY_C] = false;
     }
 
     // set this thruster values
     const ts = owner.thrusterSystem;
     // medial motion
-    if (this.keyboard[myKeys.KEYBOARD.KEY_W]) {
+    if (inputState.isEnabled(this.commands[commands.FORWARD])) {
       owner.objMedialThrusters(ts.medial.maxStrength / stab.thrustRatio);
     }
-    if (this.keyboard[myKeys.KEYBOARD.KEY_S]) {
+    if (inputState.isEnabled(this.commands[commands.BACKWARD])) {
       owner.objMedialThrusters(-ts.medial.maxStrength / stab.thrustRatio);
     }
     if (stab.enabled) { owner.objMedialStabilizers(); }
 
     // lateral motion
-    if (this.keyboard[myKeys.KEYBOARD.KEY_A]) {
+    if (inputState.isEnabled(this.commands[commands.LEFT])) {
       owner.objLateralThrusters(ts.lateral.maxStrength / stab.thrustRatio);
     }
-    if (this.keyboard[myKeys.KEYBOARD.KEY_D]) {
+    if (inputState.isEnabled(this.commands[commands.RIGHT])) {
       owner.objLateralThrusters(-ts.lateral.maxStrength / stab.thrustRatio);
     }
     if (stab.enabled) { owner.objLateralStabilizers(); }
@@ -65,17 +63,16 @@ class RemoteInput {
     owner.objRotationalThrusters(
       (((-mouseDirection) / mouseSensitivity) * ts.rotational.maxStrength) / stab.thrustRatio,
     );
-    if (this.keyboard[myKeys.KEYBOARD.KEY_LEFT]) {
+    if (inputState.isEnabled(this.commands[commands.CCW])) {
       owner.objRotationalThrusters(ts.rotational.maxStrength / stab.thrustRatio);
     }
-    if (this.keyboard[myKeys.KEYBOARD.KEY_RIGHT]) {
+    if (inputState.isEnabled(this.commands[commands.CW])) {
       owner.objRotationalThrusters(-ts.rotational.maxStrength / stab.thrustRatio);
     }
     if (stab.enabled) { owner.objRotationalStabilizers(); }
 
     // weapons
-    if (this.mouse[myMouse.BUTTONS.LEFT]
-      || this.keyboard[myKeys.KEYBOARD.KEY_SPACE]) {
+    if (inputState.isEnabled(this.commands[commands.FIRE])) {
       if (has.call(owner, 'laser')) {
         owner.objFireLaser();
       } else if (has.call(owner, 'cannon')) {
@@ -84,20 +81,22 @@ class RemoteInput {
         owner.objFireLauncher();
       }
     }
-    if (this.keyboard[myKeys.KEYBOARD.KEY_E]) {
-      owner.objFireTargetingSystem();
-    }
+    // if (this.keyboard[myKeys.KEYBOARD.KEY_E]) {
+    //   owner.objFireTargetingSystem();
+    // }
 
     // power system
-    if (this.keyboard[myKeys.KEYBOARD.KEY_SHIFT]) {
+    if (inputState.isEnabled(this.commands[commands.BOOST_THRUSTER])) {
       owner.powerSystem.target[enums.SHIP_COMPONENTS.THRUSTERS] = 1;
     }
-    if (this.mouse[myMouse.BUTTONS.RIGHT]) {
+    if (inputState.isEnabled(this.commands[commands.BOOST_WEAPON])) {
       owner.powerSystem.target[enums.SHIP_COMPONENTS.LASERS] = 1;
     }
-    if (this.keyboard[myKeys.KEYBOARD.KEY_ALT]) {
+    if (inputState.isEnabled(this.commands[commands.BOOST_SHIELD])) {
       owner.powerSystem.target[enums.SHIP_COMPONENTS.SHIELDS] = 1;
     }
+
+    inputState.advanceStateDictionary(this.commands);
 
     const sinceLastSend = owner.game.elapsedGameTime - this.lastSend;
     if (this.remoteSend && sinceLastSend >= this.sendInterval) {
@@ -108,11 +107,8 @@ class RemoteInput {
 
   messageHandler(data) {
     if (data.disconnect && this.remoteSend) { delete this.remoteSend; }
-    if (data.keyCode) { this.keyboard[data.keyCode] = data.pos; }
-    if (data.mb || data.mb === 0) { this.mouse[data.mb] = data.pos; }
-    if (data.md || data.md === 0) {
-      this.mouseDirection = data.md;
-    }
+    if (data.command) { this.commands[data.command] = data.pos; }
+    if (data.md || data.md === 0) { this.mouseDirection = data.md; }
   }
 
   destroy() {

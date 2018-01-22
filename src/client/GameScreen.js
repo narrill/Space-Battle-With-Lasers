@@ -1,4 +1,5 @@
 const TrackShuffler = require('./TrackShuffler.js');
+const inputState = require('../server/inputState.js');
 
 class GameScreen {
   constructor(client) {
@@ -97,11 +98,11 @@ class GameScreen {
   }
 
   keyDown(e) {
-    this.client.socket.emit('input', { command: keymap[e.code], pos: 1 });
+    this.client.socket.emit('input', { command: keymap[e.code], pos: inputState.STATES.STARTING });
   }
   
   keyUp(e) {
-    this.client.socket.emit('input', { command: keymap[e.code], pos: 0 });
+    this.client.socket.emit('input', { command: keymap[e.code], pos: inputState.STATES.DISABLED });
   }
 
   mouse(x) {
