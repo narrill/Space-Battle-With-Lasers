@@ -1,24 +1,34 @@
+const TrackShuffler = require('./TrackShuffler.js');
+
 class GameScreen {
-	constructor(client) {
-		this.client = client;
-	}
+  constructor(client) {
+    this.client = client;
+  }
 
-	update(dt) {
-		const client = this.client;
-		const titleMusic = client.titleMusic;
-		const musicShuffler = client.musicShuffler;
-		const ambientLoop = client.ambientLoop;
-		const camera = client.camera;
-		const myKeys = client.myKeys;
-		const myMouse = client.myMouse;
-		const mouseTimer = client.mouseTimer;
-		const socket = client.socket;
+  init() {
+    this.musicShuffler = new TrackShuffler([
+      'gameplay1', 
+      'gameplay2', 
+      'gameplay3'
+    ], 15);
+  }
 
-		titleMusic.volume = utilities.clamp(0, titleMusic.volume - dt, 1);
+  update(dt) {
+    const client = this.client;
+    const titleMusic = client.titleMusic;
+    const musicShuffler = this.musicShuffler;
+    const ambientLoop = client.ambientLoop;
+    const camera = client.camera;
+    const myKeys = client.myKeys;
+    const myMouse = client.myMouse;
+    const mouseTimer = client.mouseTimer;
+    const socket = client.socket;
+
+    titleMusic.volume = utilities.clamp(0, titleMusic.volume - dt, 1);
     musicShuffler.update();
     ambientLoop.volume = utilities.clamp(0, ambientLoop.volume + dt, 1);
-  	//camera shenanigans
-  	//camera zoom controls
+    //camera shenanigans
+    //camera zoom controls
     if(myKeys.keydown[myKeys.KEYBOARD.KEY_UP] && camera.zoom<=camera.maxZoom)
       camera.zoom*=1+(3-1)*dt;
     if(myKeys.keydown[myKeys.KEYBOARD.KEY_DOWN] && camera.zoom>=camera.minZoom)
@@ -42,14 +52,14 @@ class GameScreen {
       socket.emit('input', {mb:myMouse.BUTTONS.RIGHT,pos:myMouse[myMouse.BUTTONS.RIGHT]});
       myMouse[myMouse.BUTTONS.RIGHT] = undefined;
     }
-	}
+  }
 
-	draw(now, dt) {
-		const playerInfo = worldInfo.getPlayerInfo();
-		const client = this.client;
-		const camera = client.camera;
-		const minimapCamera = client.minimapCamera;
-		const grid = client.grid;
+  draw(now, dt) {
+    const playerInfo = worldInfo.getPlayerInfo();
+    const client = this.client;
+    const camera = client.camera;
+    const minimapCamera = client.minimapCamera;
+    const grid = client.grid;
 
     if(playerInfo && playerInfo.isDrawable) {
       camera.x = playerInfo.interpolateWiValue('x', now) + playerInfo.interpolateWiValue('velocityX', now)/10;
@@ -96,5 +106,29 @@ class GameScreen {
 
     if(now - startTime < 15000)
       drawing.drawTutorialGraphics(camera);
-	}
+  }
+
+  keyDown(e) {
+    this.client.socket.emit('input', { keyCode: e.keyCode, pos: 1 });
+  }
+  
+  keyUp(e) {
+    this.client.socket.emit('input', { keyCode: e.keyCode, pos: 0 });
+  }
+
+  onEnter() {
+    const client = this.client;
+
+    const socket = client.socket;
+    socket.on('destroyed', () => {
+      this.client.deathStinger.play();
+      this.client.switchScreen(this.client.disconnectScreen);
+    });
+  }
+
+  onExit() {
+    this.client.socket.off('destroyed');
+  }
 }
+
+module.exports = GameScreen;

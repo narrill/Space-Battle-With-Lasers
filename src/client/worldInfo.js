@@ -7,6 +7,7 @@ let wiInterval = 0;
 let playerId = 0;
 let playerInfo;
 let initialized = false;
+let hasData = false;
 
 const hudInfo = {};
 
@@ -81,6 +82,8 @@ class WorldInfo {
 		this.pushCollectionFromDataToWI(dwi,'hitscans', now);
 		this.pushCollectionFromDataToWI(dwi,'radials', now);
 		this.pushNonInterpCollectionFromDataToWI(dwi, 'asteroids', now);
+
+		hasData = true;
 	}
 	addShips(ships) {
 		Object.keys(ships).forEach((id) => {

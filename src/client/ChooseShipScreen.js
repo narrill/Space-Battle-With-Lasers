@@ -3,10 +3,6 @@ class ChooseShipScreen {
     this.client = client;
   }
 
-  update(dt) {
-
-  }
-
   draw(now, dt) {
     drawing.drawChooseShipScreen(this.client.camera, this.entry, this.client.shipList);
   }
@@ -28,8 +24,6 @@ class ChooseShipScreen {
   onEnter(){
     this.entry = "";
   }
-
-  onExit() {
-
-  }
 }
+
+module.exports = ChooseShipScreen;
