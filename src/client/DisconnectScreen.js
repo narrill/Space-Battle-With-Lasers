@@ -8,7 +8,7 @@ class DisconnectScreen {
   }
 
   keyDown(e) {
-    if(!e.repeat && e.keyCode === 13) {
+    if(e.key === 'Enter') {
       this.client.keyclick.play();
       this.client.switchScreen(this.client.chooseShipScreen);
     }

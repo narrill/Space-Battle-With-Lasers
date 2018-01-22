@@ -18,9 +18,8 @@ class TitleScreen {
   }
 
   keyDown(e) {
-    if(!e.repeat)
-      this.client.keyclick.play();
-    if(e.keyCode === this.client.myKeys.KEYBOARD.KEY_ENTER) {
+    this.client.keyclick.play();
+    if(e.key === 'Enter') {
       this.client.switchScreen(this.client.chooseShipScreen);
     }
   }

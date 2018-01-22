@@ -5,12 +5,12 @@ const WaitScreen = require('./WaitScreen.js');
 const DisconnectScreen = require('./DisconnectScreen.js');
 const Camera = require('./Camera.js');
 const Oscillator = require('./Oscillator.js');
-const LooseTimer = require('./LooseTimer.js');
 const Stinger = require('./Stinger.js');
 const worldInfo = require('./worldInfo.js').worldInfo;
 const modelInfo = require('./worldInfo.js').modelInfo;
 const Deserializer = require('../server/Deserializer.js');
 const NetworkWorldInfo = require('../server/NetworkWorldInfo.js');
+const Input = require('./Input.js');
 
 const generateStarField = (stars) => {
   const lower = -10000000;
@@ -57,6 +57,8 @@ class Client {
         parent: this.camera
       }
     });
+
+    this.input = new Input();
 
     this.keyclick = new Stinger('keyclick');
     this.titleStinger = new Stinger('titlestinger');
@@ -137,6 +139,7 @@ class Client {
   update(dt) {
     if(this.currentScreen.update)
       this.currentScreen.update(dt);
+    this.input.update();
   }
 
   draw(now, dt) {
@@ -151,6 +154,7 @@ class Client {
       screen.initialized = true;
     }
     if(screen.onEnter) screen.onEnter();
+    this.input.setListeners(screen.keyDown, screen.keyUp, screen.mouse);
     this.currentScreen = screen;
   }
 }

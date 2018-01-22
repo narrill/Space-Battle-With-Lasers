@@ -1,40 +1,28 @@
-// Heavily adapted from a previous project of mine:
-// https://github.com/narrill/Space-Battle/blob/dev/js/keys.js
-
-const myKeys = {};
-
-myKeys.KEYBOARD = Object.freeze({
-  KEY_LEFT: 37,
-  KEY_UP: 38,
-  KEY_RIGHT: 39,
-  KEY_DOWN: 40,
-  KEY_SPACE: 32,
-  KEY_SHIFT: 16,
-  KEY_ALT: 18,
-  KEY_W: 87,
-  KEY_A: 65,
-  KEY_D: 68,
-  KEY_S: 83,
-  KEY_Q: 81,
-  KEY_E: 69,
-  KEY_TAB: 9,
-  KEY_F: 70,
-  KEY_R: 82,
-  KEY_C: 67,
-  KEY_P: 80,
-  KEY_CTRL: 17,
-  KEY_J: 74,
-  KEY_K: 75,
-  KEY_L: 76,
-  KEY_ENTER: 13,
+module.exports = Object.freeze({
+  LEFT: 37,
+  UP: 38,
+  RIGHT: 39,
+  DOWN: 40,
+  SPACE: 32,
+  SHIFT: 16,
+  ALT: 18,
+  W: 87,
+  A: 65,
+  D: 68,
+  S: 83,
+  Q: 81,
+  E: 69,
+  TAB: 9,
+  F: 70,
+  R: 82,
+  C: 67,
+  P: 80,
+  CTRL: 17,
+  J: 74,
+  K: 75,
+  L: 76,
+  ENTER: 13,
+  LMB: 0,
+  MMB: 1,
+  RMB: 2
 });
-
-const myMouse = {};
-
-myMouse.BUTTONS = Object.freeze({
-  LEFT: 0,
-  MIDDLE: 1,
-  RIGHT: 2,
-});
-
-module.exports = { myKeys, myMouse };

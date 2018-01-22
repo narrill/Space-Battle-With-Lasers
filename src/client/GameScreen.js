@@ -15,6 +15,7 @@ class GameScreen {
 
   update(dt) {
     const client = this.client;
+    const input = client.input;
     const titleMusic = client.titleMusic;
     const musicShuffler = this.musicShuffler;
     const ambientLoop = client.ambientLoop;
@@ -29,9 +30,9 @@ class GameScreen {
     ambientLoop.volume = utilities.clamp(0, ambientLoop.volume + dt, 1);
     //camera shenanigans
     //camera zoom controls
-    if(myKeys.keydown[myKeys.KEYBOARD.KEY_UP] && camera.zoom<=camera.maxZoom)
+    if(input.isDown('ArrowUp') && camera.zoom<=camera.maxZoom)
       camera.zoom*=1+(3-1)*dt;
-    if(myKeys.keydown[myKeys.KEYBOARD.KEY_DOWN] && camera.zoom>=camera.minZoom)
+    if(input.isDown('ArrowDown') && camera.zoom>=camera.minZoom)
       camera.zoom*=1+(.33-1)*dt;
     if(myMouse.wheel)
       camera.zoom*=1+(myMouse.wheel/2000);
@@ -39,19 +40,6 @@ class GameScreen {
       camera.zoom = camera.maxZoom;
     else if(camera.zoom<camera.minZoom)
       camera.zoom = camera.minZoom;
-    client.resetWheel();
-
-    mouseTimer.check();
-    if(myMouse[myMouse.BUTTONS.LEFT] != undefined)
-    {
-      socket.emit('input', {mb:myMouse.BUTTONS.LEFT,pos:myMouse[myMouse.BUTTONS.LEFT]});
-      myMouse[myMouse.BUTTONS.LEFT] = undefined;
-    }
-    if(myMouse[myMouse.BUTTONS.RIGHT] != undefined)
-    {
-      socket.emit('input', {mb:myMouse.BUTTONS.RIGHT,pos:myMouse[myMouse.BUTTONS.RIGHT]});
-      myMouse[myMouse.BUTTONS.RIGHT] = undefined;
-    }
   }
 
   draw(now, dt) {
@@ -109,11 +97,15 @@ class GameScreen {
   }
 
   keyDown(e) {
-    this.client.socket.emit('input', { keyCode: e.keyCode, pos: 1 });
+    this.client.socket.emit('input', { command: keymap[e.code], pos: 1 });
   }
   
   keyUp(e) {
-    this.client.socket.emit('input', { keyCode: e.keyCode, pos: 0 });
+    this.client.socket.emit('input', { command: keymap[e.code], pos: 0 });
+  }
+
+  mouse(x) {
+    this.client.socket.emit('input', { md: x });
   }
 
   onEnter() {
