@@ -1,5 +1,9 @@
-class ChooseShipScreen {
+const Screen = require('./Screen.js');
+const drawing = require('./drawing.js');
+
+class ChooseShipScreen extends Screen {
   constructor(client) {
+    super();
     this.client = client;
   }
 
@@ -14,10 +18,10 @@ class ChooseShipScreen {
     }
     else if(e.key === 'Enter') {
       this.client.switchScreen(this.client.waitScreen);
-      this.client.socket.emit('ship', entry);
+      this.client.socket.emit('ship', this.entry);
     }
     else
-      this.entry += String.fromCharCode(e.key);
+      this.entry += e.key;
   }
 
   onEnter(){

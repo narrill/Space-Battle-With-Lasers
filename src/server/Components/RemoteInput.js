@@ -107,7 +107,7 @@ class RemoteInput {
 
   messageHandler(data) {
     if (data.disconnect && this.remoteSend) { delete this.remoteSend; }
-    if (data.command) { this.commands[data.command] = data.pos; }
+    if (data.command || data.command === 0) { this.commands[data.command] = data.pos; }
     if (data.md || data.md === 0) { this.mouseDirection = data.md; }
   }
 

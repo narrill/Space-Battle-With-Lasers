@@ -1,5 +1,9 @@
-class WaitScreen {
+const Screen = require('./Screen.js');
+
+class WaitScreen extends Screen {
   constructor(client) {
+    super();
+    this.optionalBind('checkGameStart');
     this.client = client;
     this.firstWI = false;
   }
@@ -8,16 +12,16 @@ class WaitScreen {
     const client = this.client;
     const socket = client.socket;
     socket.on('badShipError', client.switchScreen.bind(client, client.chooseShipScreen));
-    socket.on('worldInfoInit', checkGameStart);
-    socket.on('worldInfo', checkGameStart);
+    socket.on('worldInfoInit', this.checkGameStart);
+    socket.on('worldInfo', this.checkGameStart);
   }
 
   onExit() {
     const client = this.client;
     const socket = client.socket;
     socket.off('badShipError');
-    socket.off('worldInfoInit', checkGameStart);
-    socket.off('worldInfo', checkGameStart);
+    socket.off('worldInfoInit', this.checkGameStart);
+    socket.off('worldInfo', this.checkGameStart);
   }
 
   checkGameStart() {

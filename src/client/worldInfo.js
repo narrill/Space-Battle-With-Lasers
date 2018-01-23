@@ -3,14 +3,6 @@
 
 const utilities = require('../server/utilities.js');
 
-let wiInterval = 0;
-let playerId = 0;
-let playerInfo;
-let initialized = false;
-let hasData = false;
-
-const hudInfo = {};
-
 class WorldInfo {
 	constructor() {
 		this.reset();
@@ -24,6 +16,12 @@ class WorldInfo {
 		this.hitscans = [];
 		this.objInfos = {};
 		this.objTracker = {};
+		this.initialized = false;
+		this.hasData = false;
+		this.playerId = 0;
+		this.wiInterval = 0;
+		this.playerInfo = null;
+		this.modelInfo = {};
 	}
 	pushCollectionFromDataToWI(dwi, type, now) {
 		const dwiCollection = dwi[type] || [];
@@ -42,7 +40,7 @@ class WorldInfo {
 		for(let c = 0; c < this[type].length; c++) {
 			const obj = this[type][c];
 			if(!this.objTracker[obj.id])
-				removeIndexFromWiCollection(c, this[type]);
+				this.removeIndexFromWiCollection(c, type);
 		}
 	}
 	pushNonInterpCollectionFromDataToWI(dwi, type, now) {
@@ -65,16 +63,16 @@ class WorldInfo {
 		this.objTracker = {};
 	}
 	pushWiInitData(data) {
-		wiInterval = data.interval;
+		this.wiInterval = data.interval;
 		this.asteroidColors = data.asteroidColors;
-		initialized = true;
+		this.initialized = true;
 	}
 	pushWiData(data) {
 		const now = Date.now().valueOf();
-		if(!playerInfo)
-			playerInfo = new ObjInfo(now, data.playerInfo);
+		if(!this.playerInfo)
+			this.playerInfo = new ObjInfo(now, data.playerInfo);
 		else
-			playerInfo.pushState(data.playerInfo, now);
+			this.playerInfo.pushState(data.playerInfo, now);
 		const dwi = data;
 		this.prep();
 		this.pushCollectionFromDataToWI(dwi,'objs', now);
@@ -83,22 +81,29 @@ class WorldInfo {
 		this.pushCollectionFromDataToWI(dwi,'radials', now);
 		this.pushNonInterpCollectionFromDataToWI(dwi, 'asteroids', now);
 
-		hasData = true;
+		this.hasData = true;
 	}
 	addShips(ships) {
 		Object.keys(ships).forEach((id) => {
-			modelInfo[id] = ships[id];
+			this.modelInfo[id] = ships[id];
 		});
 	}
 
 	addShip(shipInfo) {
-		modelInfo[shipInfo.id] = shipInfo.model;
+		this.modelInfo[shipInfo.id] = shipInfo.model;
 	}
 	getPlayerInfo() {
-		return playerInfo;
+		return this.playerInfo;
 	}
 	getModel(id) {
-		return modelInfo[id];
+		return this.modelInfo[id];
+	}
+
+	removeIndexFromWiCollection(index, type){
+		const collection = this[type];
+		const obj = collection[index];
+		delete this.objInfos[obj.id];
+		collection.splice(index,1);
 	}
 }
 
@@ -126,8 +131,8 @@ class ObjInfo {
 		return this.interpolateValue(val, time, utilities.rotationLerp);
 	}
 	interpolateValue(val, time, lerp) {
-		if(!wiInterval) return getMostRecentValue(val);
-		const perc = (time - this.lastStateTime) / wiInterval;
+		if(!this.wiInterval) return this.getMostRecentValue(val);
+		const perc = (time - this.lastStateTime) / this.wiInterval;
 		if(perc <= 1) {
 			return lerp(this.states[0][val], this.states[1][val], perc);
 		}
@@ -142,22 +147,11 @@ class ObjInfo {
 		return this.states.length === this.stateCount;
 	}
 	get hasModel() {
-		return Boolean(modelInfo[this.id]);
+		return Boolean(worldInfo.getModel(this.id));
 	}
 	get current() {
 		return this.states[this.stateCount - 1];
 	}
 }
 
-const modelInfo = {};
-
-function removeIndexFromWiCollection(index, collection){
-	const obj = collection[index];
-	delete worldInfo.objInfos[obj.id];
-	collection.splice(index,1);
-}
-
-module.exports = {
-	worldInfo,
-	modelInfo
-};
+module.exports = worldInfo;

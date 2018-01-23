@@ -1,8 +1,13 @@
 const TrackShuffler = require('./TrackShuffler.js');
 const inputState = require('../server/inputState.js');
+const drawing = require('./drawing.js');
+const Screen = require('./Screen.js');
+const keymap = require('./keymap.js');
+const utilities = require('../server/utilities.js');
 
-class GameScreen {
+class GameScreen extends Screen {
   constructor(client) {
+    super();
     this.client = client;
   }
 
@@ -35,7 +40,7 @@ class GameScreen {
       camera.zoom*=1+(3-1)*dt;
     if(input.isDown('ArrowDown') && camera.zoom>=camera.minZoom)
       camera.zoom*=1+(.33-1)*dt;
-    if(myMouse.wheel)
+    if(input.wheel)
       camera.zoom*=1+(myMouse.wheel/2000);
     if(camera.zoom>camera.maxZoom)
       camera.zoom = camera.maxZoom;
@@ -44,6 +49,7 @@ class GameScreen {
   }
 
   draw(now, dt) {
+    const worldInfo = this.client.worldInfo;
     const playerInfo = worldInfo.getPlayerInfo();
     const client = this.client;
     const camera = client.camera;
@@ -93,7 +99,7 @@ class GameScreen {
     drawing.drawHUD(camera, now);
     drawing.drawMinimap(minimapCamera, grid, now);
 
-    if(now - startTime < 15000)
+    if(now - this.client.startTime < 15000)
       drawing.drawTutorialGraphics(camera);
   }
 

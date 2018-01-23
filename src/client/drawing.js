@@ -2,7 +2,7 @@
 // https://github.com/narrill/Space-Battle/blob/dev/js/drawing.js
 
 const utilities = require('../server/utilities.js');
-const worldInfo = require('./worldInfo.js').worldInfo;
+const worldInfo = require('./worldInfo.js');
 
 const thrusterDetail = 3;
 const hitscanDetail = 3;

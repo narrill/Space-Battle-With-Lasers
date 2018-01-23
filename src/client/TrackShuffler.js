@@ -3,9 +3,10 @@ const utilities = require('../server/utilities.js');
 class TrackShuffler {
 	constructor(trackNames, overlapSeconds = 0) {
 		const tracks = [];
-		for(const name in trackNames){
+		for(const name of trackNames){
 			const audio = new Audio();
 			audio.setAttribute('src', `${name}.mp3`);
+			tracks.push(audio);
 		}
 		this.tracks = tracks;
 		this.currentTrack = tracks[0];

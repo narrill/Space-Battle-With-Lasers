@@ -1,7 +1,11 @@
 const Oscillator = require('./Oscillator.js');
+const utilities = require('../server/utilities.js');
+const drawing = require('./drawing.js');
+const Screen = require('./Screen.js');
 
-class TitleScreen {
+class TitleScreen extends Screen {
   constructor(client) {
+    super();
     this.client = client;
 
     this.titleOsc = new Oscillator(6);

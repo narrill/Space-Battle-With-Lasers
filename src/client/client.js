@@ -6,11 +6,11 @@ const DisconnectScreen = require('./DisconnectScreen.js');
 const Camera = require('./Camera.js');
 const Oscillator = require('./Oscillator.js');
 const Stinger = require('./Stinger.js');
-const worldInfo = require('./worldInfo.js').worldInfo;
-const modelInfo = require('./worldInfo.js').modelInfo;
+const worldInfo = require('./worldInfo.js');
 const Deserializer = require('../server/Deserializer.js');
 const NetworkWorldInfo = require('../server/NetworkWorldInfo.js');
 const Input = require('./Input.js');
+const drawing = require('./drawing.js');
 
 const generateStarField = (stars) => {
   const lower = -10000000;
@@ -36,13 +36,44 @@ class Client {
     this.accumulator = 0;
     this.lastTime = 0;
 
-    this.canvas = document.querySelector('#mainCanvas');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
     window.addEventListener('resize', () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      this.canvas.width = window.innerWidth;
+      this.canvas.height = window.innerHeight;
     });
+    document.body.appendChild(this.canvas);
+
+    this._requestLock = () => {
+      this.canvas.requestPointerLock();
+    };
+
+    this._changeCallback = () => {
+      if (document.pointerLockElement === this.canvas ||
+        document.mozPointerLockElement === this.canvas ||
+        document.webkitPointerLockElement === this.canvas) {
+        // Pointer was just locked
+        // Enable the mousemove listener
+        window.removeEventListener("mouseup", this._requestLock, false);
+        this.input.engage();
+        this.canvas.addEventListener("drag", () => {}, false);
+        this.canvas.onclick = undefined;
+        this.locked = true;
+      } else {
+        // Pointer was just unlocked
+        // Disable the mousemove listener
+        this.input.disengage();
+        document.addEventListener("mouseup", this._requestLock,false);
+        this.canvas.removeEventListener("drag", () => {}, false);
+        this.canvas.onclick = () => {
+          this.canvas.requestPointerLock();
+        };
+        this.locked = false;
+      }
+    };
+
+    this._pointerInit();
 
     this.camera = new Camera(this.canvas);
     this.minimapCamera = new Camera(this.canvas, {
@@ -60,6 +91,8 @@ class Client {
 
     this.input = new Input();
 
+    this.worldInfo = worldInfo;
+
     this.keyclick = new Stinger('keyclick');
     this.titleStinger = new Stinger('titlestinger');
     this.enterGameStinger = new Stinger('entergamestinger');
@@ -73,7 +106,8 @@ class Client {
     this.waitScreen = new WaitScreen(this);
     this.disconnectScreen = new DisconnectScreen(this);
 
-    this.currentScreen = this.titleScreen;
+    this.currentScreen = {};
+    this.switchScreen(this.titleScreen);
 
     this.stars = {
       objs:[], 
@@ -93,47 +127,47 @@ class Client {
     });
 
     this.socket.on('shipList', (data) => {
-      shipList = data;
+      this.shipList = data;
     });
 
     this.socket.on('worldInfoInit', (data) => {
-      worldInfo.pushWiInitData(data);
+      this.worldInfo.pushWiInitData(data);
     });
 
     this.socket.on('worldInfo', (data) => {
       const deserializer = new Deserializer(data);
-      worldInfo.pushWiData(deserializer.read(NetworkWorldInfo));
+      this.worldInfo.pushWiData(deserializer.read(NetworkWorldInfo));
     });
 
     this.socket.on('ship', (shipInfo) => {
-      worldInfo.addShip(shipInfo);
+      this.worldInfo.addShip(shipInfo);
     });
 
     this.socket.on('ships', (ships) => {
-      worldInfo.addShips(ships);
+      this.worldInfo.addShips(ships);
     });
   }
 
   frame() {
     const now = Date.now().valueOf();
-    let dt = (now-lastTime)/1000;
+    let dt = (now - this.lastTime) / 1000;
 
     this.lastTime = Date.now().valueOf();
-    this.draw(camera, minimapCamera, dt);
+    this.draw(now, dt);
 
     const step = .004;
-    if(dt>step*8)
+    if(dt > step * 8)
     {
         dt = step;
         console.log('throttle');
     }
-    this.accumulator+=dt;
-    while(this.accumulator>=step){
+    this.accumulator += dt;
+    while(this.accumulator >= step){
       this.update(step);
-      this.accumulator-= step;
+      this.accumulator -= step;
     } 
 
-    requestAnimationFrame(this.frame);
+    requestAnimationFrame(this.frame.bind(this));
   }
 
   update(dt) {
@@ -143,8 +177,12 @@ class Client {
   }
 
   draw(now, dt) {
+    drawing.clearCamera(this.camera);
+    drawing.drawAsteroids(this.stars.objs, this.stars.colors, this.camera);
     if(this.currentScreen.draw)
       this.currentScreen.draw(now, dt);
+    if(!this.locked)
+      drawing.drawLockedGraphic(this.camera);
   }
 
   switchScreen(screen) {
@@ -157,6 +195,18 @@ class Client {
     this.input.setListeners(screen.keyDown, screen.keyUp, screen.mouse);
     this.currentScreen = screen;
   }
+
+  _pointerInit() {
+    this.canvas.addEventListener("mouseup",this._requestLock);
+    // Hook pointer lock state change events
+    document.addEventListener('pointerlockchange', this._changeCallback, false);
+    document.addEventListener('mozpointerlockchange', this._changeCallback, false);
+    document.addEventListener('webkitpointerlockchange', this._changeCallback, false);
+    this.canvas.requestPointerLock = this.canvas.requestPointerLock ||
+      this.canvas.mozRequestPointerLock ||
+      this.canvas.webkitRequestPointerLock;
+    this.canvas.onselectstart = () => { return false; };
+  }  
 }
 
 module.exports = Client;

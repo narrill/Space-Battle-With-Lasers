@@ -11,19 +11,20 @@ class Camera {
     this.maxZoom = (objectParams.maxZoom)?objectParams.maxZoom:Number.MAX_VALUE;
     this.viewport = new Viewport(objectParams.viewport);
     
+    this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
   }
 
   get width(){
-    return canvas.width;
+    return this.canvas.width;
   }
 
   get height(){
-    return canvas.height;
+    return this.canvas.height;
   }
 
   worldPointToCameraSpace (xw, yw, zw = 0) {
-    const zoom = 1/(1/this.zoom + zw);
+    const zoom = 1 / (1 / this.zoom + zw);
     var cameraToPointVector = [(xw - this.x) * zoom, (yw - this.y) * zoom];
     var rotatedVector = utilities.rotate(0, 0, cameraToPointVector[0], cameraToPointVector[1], this.rotation);
     return [this.width / 2 + rotatedVector[0], this.height / 2 + rotatedVector[1]];
