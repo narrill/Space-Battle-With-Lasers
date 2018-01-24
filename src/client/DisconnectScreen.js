@@ -1,5 +1,9 @@
-class DisconnectScreen {
+const Screen = require('./Screen.js');
+const drawing = require('./drawing.js');
+
+class DisconnectScreen extends Screen {
   constructor(client) {
+    super();
     this.client = client;
   }
 

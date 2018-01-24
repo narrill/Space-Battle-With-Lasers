@@ -41,7 +41,7 @@ class GameScreen extends Screen {
     if(input.isDown('ArrowDown') && camera.zoom>=camera.minZoom)
       camera.zoom*=1+(.33-1)*dt;
     if(input.wheel)
-      camera.zoom*=1+(myMouse.wheel/2000);
+      camera.zoom*=1+(input.wheel/2000);
     if(camera.zoom>camera.maxZoom)
       camera.zoom = camera.maxZoom;
     else if(camera.zoom<camera.minZoom)

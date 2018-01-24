@@ -32,7 +32,7 @@ class WorldInfo {
 				this.objInfos[obj.id].pushState(obj, now);
 			}
 			else {
-				const newObjInfo = new ObjInfo(now, obj);
+				const newObjInfo = new ObjInfo(this, now, obj);
 				this.objInfos[obj.id] = newObjInfo;
 				this[type].push(newObjInfo);
 			}
@@ -70,7 +70,7 @@ class WorldInfo {
 	pushWiData(data) {
 		const now = Date.now().valueOf();
 		if(!this.playerInfo)
-			this.playerInfo = new ObjInfo(now, data.playerInfo);
+			this.playerInfo = new ObjInfo(this, now, data.playerInfo);
 		else
 			this.playerInfo.pushState(data.playerInfo, now);
 		const dwi = data;
@@ -110,7 +110,8 @@ class WorldInfo {
 const worldInfo = new WorldInfo();
 
 class ObjInfo {
-	constructor(time = Date.now(), initialState) {
+	constructor(worldInfo, time = Date.now(), initialState) {
+		this.worldInfo = worldInfo;
 		this.states = [];
 		this.stateCount = 3;
 		this.lastStateTime = time;
@@ -131,8 +132,8 @@ class ObjInfo {
 		return this.interpolateValue(val, time, utilities.rotationLerp);
 	}
 	interpolateValue(val, time, lerp) {
-		if(!this.wiInterval) return this.getMostRecentValue(val);
-		const perc = (time - this.lastStateTime) / this.wiInterval;
+		if(!this.worldInfo.wiInterval) return this.getMostRecentValue(val);
+		const perc = (time - this.lastStateTime) / this.worldInfo.wiInterval;
 		if(perc <= 1) {
 			return lerp(this.states[0][val], this.states[1][val], perc);
 		}
@@ -147,7 +148,7 @@ class ObjInfo {
 		return this.states.length === this.stateCount;
 	}
 	get hasModel() {
-		return Boolean(worldInfo.getModel(this.id));
+		return Boolean(this.worldInfo.getModel(this.id));
 	}
 	get current() {
 		return this.states[this.stateCount - 1];

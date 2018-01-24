@@ -280,8 +280,12 @@ class Client {
 
 module.exports = Client;
 },{"../server/Deserializer.js":20,"../server/NetworkWorldInfo.js":27,"./Camera.js":1,"./ChooseShipScreen.js":2,"./DisconnectScreen.js":4,"./GameScreen.js":5,"./Input.js":6,"./Oscillator.js":8,"./Stinger.js":10,"./TitleScreen.js":11,"./WaitScreen.js":14,"./drawing.js":15,"./worldInfo.js":19}],4:[function(require,module,exports){
-class DisconnectScreen {
+const Screen = require('./Screen.js');
+const drawing = require('./drawing.js');
+
+class DisconnectScreen extends Screen {
   constructor(client) {
+    super();
     this.client = client;
   }
 
@@ -298,7 +302,7 @@ class DisconnectScreen {
 }
 
 module.exports = DisconnectScreen;
-},{}],5:[function(require,module,exports){
+},{"./Screen.js":9,"./drawing.js":15}],5:[function(require,module,exports){
 const TrackShuffler = require('./TrackShuffler.js');
 const inputState = require('../server/inputState.js');
 const drawing = require('./drawing.js');
@@ -342,7 +346,7 @@ class GameScreen extends Screen {
     if(input.isDown('ArrowDown') && camera.zoom>=camera.minZoom)
       camera.zoom*=1+(.33-1)*dt;
     if(input.wheel)
-      camera.zoom*=1+(myMouse.wheel/2000);
+      camera.zoom*=1+(input.wheel/2000);
     if(camera.zoom>camera.maxZoom)
       camera.zoom = camera.maxZoom;
     else if(camera.zoom<camera.minZoom)
@@ -465,7 +469,7 @@ class Input {
     };
 
     this._wheel = (e) => {
-      this.wheel += e.deltaY;
+      this.wheel -= e.deltaY;
     };
 
     this._mousemove = (e) => {
@@ -721,6 +725,7 @@ class WaitScreen extends Screen {
   onEnter() {
     const client = this.client;
     const socket = client.socket;
+    client.worldInfo.reset();
     socket.on('badShipError', client.switchScreen.bind(client, client.chooseShipScreen));
     socket.on('worldInfoInit', this.checkGameStart);
     socket.on('worldInfo', this.checkGameStart);
@@ -1463,7 +1468,7 @@ class WorldInfo {
 				this.objInfos[obj.id].pushState(obj, now);
 			}
 			else {
-				const newObjInfo = new ObjInfo(now, obj);
+				const newObjInfo = new ObjInfo(this, now, obj);
 				this.objInfos[obj.id] = newObjInfo;
 				this[type].push(newObjInfo);
 			}
@@ -1501,7 +1506,7 @@ class WorldInfo {
 	pushWiData(data) {
 		const now = Date.now().valueOf();
 		if(!this.playerInfo)
-			this.playerInfo = new ObjInfo(now, data.playerInfo);
+			this.playerInfo = new ObjInfo(this, now, data.playerInfo);
 		else
 			this.playerInfo.pushState(data.playerInfo, now);
 		const dwi = data;
@@ -1541,7 +1546,8 @@ class WorldInfo {
 const worldInfo = new WorldInfo();
 
 class ObjInfo {
-	constructor(time = Date.now(), initialState) {
+	constructor(worldInfo, time = Date.now(), initialState) {
+		this.worldInfo = worldInfo;
 		this.states = [];
 		this.stateCount = 3;
 		this.lastStateTime = time;
@@ -1562,8 +1568,8 @@ class ObjInfo {
 		return this.interpolateValue(val, time, utilities.rotationLerp);
 	}
 	interpolateValue(val, time, lerp) {
-		if(!this.wiInterval) return this.getMostRecentValue(val);
-		const perc = (time - this.lastStateTime) / this.wiInterval;
+		if(!this.worldInfo.wiInterval) return this.getMostRecentValue(val);
+		const perc = (time - this.lastStateTime) / this.worldInfo.wiInterval;
 		if(perc <= 1) {
 			return lerp(this.states[0][val], this.states[1][val], perc);
 		}
@@ -1578,7 +1584,7 @@ class ObjInfo {
 		return this.states.length === this.stateCount;
 	}
 	get hasModel() {
-		return Boolean(worldInfo.getModel(this.id));
+		return Boolean(this.worldInfo.getModel(this.id));
 	}
 	get current() {
 		return this.states[this.stateCount - 1];

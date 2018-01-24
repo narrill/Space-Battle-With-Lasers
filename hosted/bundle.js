@@ -328,11 +328,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     module.exports = Client;
   }, { "../server/Deserializer.js": 20, "../server/NetworkWorldInfo.js": 27, "./Camera.js": 1, "./ChooseShipScreen.js": 2, "./DisconnectScreen.js": 4, "./GameScreen.js": 5, "./Input.js": 6, "./Oscillator.js": 8, "./Stinger.js": 10, "./TitleScreen.js": 11, "./WaitScreen.js": 14, "./drawing.js": 15, "./worldInfo.js": 19 }], 4: [function (require, module, exports) {
-    var DisconnectScreen = function () {
+    var Screen = require('./Screen.js');
+    var drawing = require('./drawing.js');
+
+    var DisconnectScreen = function (_Screen2) {
+      _inherits(DisconnectScreen, _Screen2);
+
       function DisconnectScreen(client) {
         _classCallCheck(this, DisconnectScreen);
 
-        this.client = client;
+        var _this3 = _possibleConstructorReturn(this, (DisconnectScreen.__proto__ || Object.getPrototypeOf(DisconnectScreen)).call(this));
+
+        _this3.client = client;
+        return _this3;
       }
 
       _createClass(DisconnectScreen, [{
@@ -351,10 +359,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }]);
 
       return DisconnectScreen;
-    }();
+    }(Screen);
 
     module.exports = DisconnectScreen;
-  }, {}], 5: [function (require, module, exports) {
+  }, { "./Screen.js": 9, "./drawing.js": 15 }], 5: [function (require, module, exports) {
     var TrackShuffler = require('./TrackShuffler.js');
     var inputState = require('../server/inputState.js');
     var drawing = require('./drawing.js');
@@ -362,16 +370,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var keymap = require('./keymap.js');
     var utilities = require('../server/utilities.js');
 
-    var GameScreen = function (_Screen2) {
-      _inherits(GameScreen, _Screen2);
+    var GameScreen = function (_Screen3) {
+      _inherits(GameScreen, _Screen3);
 
       function GameScreen(client) {
         _classCallCheck(this, GameScreen);
 
-        var _this3 = _possibleConstructorReturn(this, (GameScreen.__proto__ || Object.getPrototypeOf(GameScreen)).call(this));
+        var _this4 = _possibleConstructorReturn(this, (GameScreen.__proto__ || Object.getPrototypeOf(GameScreen)).call(this));
 
-        _this3.client = client;
-        return _this3;
+        _this4.client = client;
+        return _this4;
       }
 
       _createClass(GameScreen, [{
@@ -400,7 +408,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           //camera zoom controls
           if (input.isDown('ArrowUp') && camera.zoom <= camera.maxZoom) camera.zoom *= 1 + (3 - 1) * dt;
           if (input.isDown('ArrowDown') && camera.zoom >= camera.minZoom) camera.zoom *= 1 + (.33 - 1) * dt;
-          if (input.wheel) camera.zoom *= 1 + myMouse.wheel / 2000;
+          if (input.wheel) camera.zoom *= 1 + input.wheel / 2000;
           if (camera.zoom > camera.maxZoom) camera.zoom = camera.maxZoom;else if (camera.zoom < camera.minZoom) camera.zoom = camera.minZoom;
         }
       }, {
@@ -470,14 +478,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: "onEnter",
         value: function onEnter() {
-          var _this4 = this;
+          var _this5 = this;
 
           var client = this.client;
 
           var socket = client.socket;
           socket.on('destroyed', function () {
-            _this4.client.deathStinger.play();
-            _this4.client.switchScreen(_this4.client.disconnectScreen);
+            _this5.client.deathStinger.play();
+            _this5.client.switchScreen(_this5.client.disconnectScreen);
           });
         }
       }, {
@@ -497,7 +505,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var Input = function () {
       function Input() {
-        var _this5 = this;
+        var _this6 = this;
 
         _classCallCheck(this, Input);
 
@@ -507,36 +515,36 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.lastMouseX = 0;
 
         this.mouseTimer = new LooseTimer(50, function () {
-          if (_this5.mouseX !== _this5.lastMouseX) {
-            _this5.lastMouseX = _this5.mouseX;
-            if (_this5.mouseListener) _this5.mouseListener(_this5.mouseX);
-            _this5.mouseX = 0;
+          if (_this6.mouseX !== _this6.lastMouseX) {
+            _this6.lastMouseX = _this6.mouseX;
+            if (_this6.mouseListener) _this6.mouseListener(_this6.mouseX);
+            _this6.mouseX = 0;
           }
         });
 
         this._mousedown = function (e) {
-          _this5.keystate[e.button] = 2;
-          if (_this5.pressListener) _this5.pressListener({ key: 'LMB', code: e.button });
+          _this6.keystate[e.button] = 2;
+          if (_this6.pressListener) _this6.pressListener({ key: 'LMB', code: e.button });
         };
 
         this._mouseup = function (e) {
-          _this5.keystate[e.button] = 0;
-          if (_this5.releaseListener) _this5.releaseListener({ key: 'LMB', code: e.button });
+          _this6.keystate[e.button] = 0;
+          if (_this6.releaseListener) _this6.releaseListener({ key: 'LMB', code: e.button });
         };
 
         this._wheel = function (e) {
-          _this5.wheel += e.deltaY;
+          _this6.wheel -= e.deltaY;
         };
 
         this._mousemove = function (e) {
-          _this5.mouseX += e.movementX;
+          _this6.mouseX += e.movementX;
         };
 
         this._keydown = function (e) {
           if (!e.repeat) {
-            _this5.keystate[e.code] = inputState.STATES.STARTING;
+            _this6.keystate[e.code] = inputState.STATES.STARTING;
 
-            if (_this5.pressListener) _this5.pressListener(e);
+            if (_this6.pressListener) _this6.pressListener(e);
           }
 
           e.preventDefault();
@@ -544,8 +552,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         };
 
         this._keyup = function (e) {
-          _this5.keystate[e.code] = inputState.STATES.DISABLED;
-          if (_this5.releaseListener) _this5.releaseListener(e);
+          _this6.keystate[e.code] = inputState.STATES.DISABLED;
+          if (_this6.releaseListener) _this6.releaseListener(e);
           e.preventDefault();
           e.stopPropagation();
         };
@@ -699,19 +707,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var drawing = require('./drawing.js');
     var Screen = require('./Screen.js');
 
-    var TitleScreen = function (_Screen3) {
-      _inherits(TitleScreen, _Screen3);
+    var TitleScreen = function (_Screen4) {
+      _inherits(TitleScreen, _Screen4);
 
       function TitleScreen(client) {
         _classCallCheck(this, TitleScreen);
 
-        var _this6 = _possibleConstructorReturn(this, (TitleScreen.__proto__ || Object.getPrototypeOf(TitleScreen)).call(this));
+        var _this7 = _possibleConstructorReturn(this, (TitleScreen.__proto__ || Object.getPrototypeOf(TitleScreen)).call(this));
 
-        _this6.client = client;
+        _this7.client = client;
 
-        _this6.titleOsc = new Oscillator(6);
-        _this6.titleCameraOsc = new Oscillator(60);
-        return _this6;
+        _this7.titleOsc = new Oscillator(6);
+        _this7.titleCameraOsc = new Oscillator(60);
+        return _this7;
       }
 
       _createClass(TitleScreen, [{
@@ -855,18 +863,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }, {}], 14: [function (require, module, exports) {
     var Screen = require('./Screen.js');
 
-    var WaitScreen = function (_Screen4) {
-      _inherits(WaitScreen, _Screen4);
+    var WaitScreen = function (_Screen5) {
+      _inherits(WaitScreen, _Screen5);
 
       function WaitScreen(client) {
         _classCallCheck(this, WaitScreen);
 
-        var _this7 = _possibleConstructorReturn(this, (WaitScreen.__proto__ || Object.getPrototypeOf(WaitScreen)).call(this));
+        var _this8 = _possibleConstructorReturn(this, (WaitScreen.__proto__ || Object.getPrototypeOf(WaitScreen)).call(this));
 
-        _this7.optionalBind('checkGameStart');
-        _this7.client = client;
-        _this7.firstWI = false;
-        return _this7;
+        _this8.optionalBind('checkGameStart');
+        _this8.client = client;
+        _this8.firstWI = false;
+        return _this8;
       }
 
       _createClass(WaitScreen, [{
@@ -874,6 +882,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         value: function onEnter() {
           var client = this.client;
           var socket = client.socket;
+          client.worldInfo.reset();
           socket.on('badShipError', client.switchScreen.bind(client, client.chooseShipScreen));
           socket.on('worldInfoInit', this.checkGameStart);
           socket.on('worldInfo', this.checkGameStart);
@@ -1588,7 +1597,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (this.objInfos[obj.id]) {
               this.objInfos[obj.id].pushState(obj, now);
             } else {
-              var newObjInfo = new ObjInfo(now, obj);
+              var newObjInfo = new ObjInfo(this, now, obj);
               this.objInfos[obj.id] = newObjInfo;
               this[type].push(newObjInfo);
             }
@@ -1631,7 +1640,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         key: "pushWiData",
         value: function pushWiData(data) {
           var now = Date.now().valueOf();
-          if (!this.playerInfo) this.playerInfo = new ObjInfo(now, data.playerInfo);else this.playerInfo.pushState(data.playerInfo, now);
+          if (!this.playerInfo) this.playerInfo = new ObjInfo(this, now, data.playerInfo);else this.playerInfo.pushState(data.playerInfo, now);
           var dwi = data;
           this.prep();
           this.pushCollectionFromDataToWI(dwi, 'objs', now);
@@ -1645,10 +1654,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: "addShips",
         value: function addShips(ships) {
-          var _this8 = this;
+          var _this9 = this;
 
           Object.keys(ships).forEach(function (id) {
-            _this8.modelInfo[id] = ships[id];
+            _this9.modelInfo[id] = ships[id];
           });
         }
       }, {
@@ -1682,12 +1691,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var worldInfo = new WorldInfo();
 
     var ObjInfo = function () {
-      function ObjInfo() {
-        var time = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : Date.now();
-        var initialState = arguments[1];
+      function ObjInfo(worldInfo) {
+        var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : Date.now();
+        var initialState = arguments[2];
 
         _classCallCheck(this, ObjInfo);
 
+        this.worldInfo = worldInfo;
         this.states = [];
         this.stateCount = 3;
         this.lastStateTime = time;
@@ -1717,8 +1727,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: "interpolateValue",
         value: function interpolateValue(val, time, lerp) {
-          if (!this.wiInterval) return this.getMostRecentValue(val);
-          var perc = (time - this.lastStateTime) / this.wiInterval;
+          if (!this.worldInfo.wiInterval) return this.getMostRecentValue(val);
+          var perc = (time - this.lastStateTime) / this.worldInfo.wiInterval;
           if (perc <= 1) {
             return lerp(this.states[0][val], this.states[1][val], perc);
           } else {
@@ -1738,7 +1748,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: "hasModel",
         get: function get() {
-          return Boolean(worldInfo.getModel(this.id));
+          return Boolean(this.worldInfo.getModel(this.id));
         }
       }, {
         key: "current",
@@ -2684,7 +2694,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       },
 
       deepObjectMerge: function deepObjectMerge(src) {
-        var _this10 = this;
+        var _this11 = this;
 
         if (!src) {
           return this;
@@ -2694,25 +2704,25 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           // if the current attribute is an object in the source
           if (src[key] instanceof Object && !(src[key] instanceof Array)) {
             // if the current attribute isn't in the this, or isn't an object in the this
-            if (!_this10[key] || !(_this10[key] instanceof Object && !(_this10[key] instanceof Array))) {
+            if (!_this11[key] || !(_this11[key] instanceof Object && !(_this11[key] instanceof Array))) {
               // make it an empty object
-              _this10[key] = {};
+              _this11[key] = {};
             }
             // then deep merge the two
             if (key === 'specialProperties') {
-              if (!_this10[key]) {
-                _this10[key] = {};
+              if (!_this11[key]) {
+                _this11[key] = {};
               }
-              utilities.shallowObjectMerge.call(_this10[key], src[key]);
+              utilities.shallowObjectMerge.call(_this11[key], src[key]);
             } else {
-              utilities.deepObjectMerge.call(_this10[key], src[key]);
+              utilities.deepObjectMerge.call(_this11[key], src[key]);
             }
           } else {
             // if current attribute is an array in the source, give this a copy of it
             // this[key] = (Array.isArray(src[key])) ? src[key].slice() : src[key];
 
             // we'll worry about referencing bugs later
-            _this10[key] = src[key];
+            _this11[key] = src[key];
           }
         });
 
@@ -2729,7 +2739,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       // }
 
       veryShallowObjectMerge: function veryShallowObjectMerge(src) {
-        var _this11 = this;
+        var _this12 = this;
 
         if (!src) {
           return this;
@@ -2737,28 +2747,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         // loop through source's attributes
         Object.keys(src).forEach(function (key) {
           if (key === 'specialProperties') {
-            if (!_this11[key]) {
-              _this11[key] = {};
+            if (!_this12[key]) {
+              _this12[key] = {};
             }
-            utilities.shallowObjectMerge.call(_this11[key], src[key]);
+            utilities.shallowObjectMerge.call(_this12[key], src[key]);
             return;
           }
           // if the current attribute is an object in the source
           if (!(src[key] instanceof Object) || src[key] instanceof Array) {
-            _this11[key] = src[key];
+            _this12[key] = src[key];
           }
         });
 
         return this;
       },
       shallowObjectMerge: function shallowObjectMerge(src) {
-        var _this12 = this;
+        var _this13 = this;
 
         if (!src) {
           return this;
         }
         Object.keys(src).forEach(function (key) {
-          _this12[key] = src[key];
+          _this13[key] = src[key];
         });
 
         return this;

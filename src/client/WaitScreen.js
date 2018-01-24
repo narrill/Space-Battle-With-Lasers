@@ -11,6 +11,7 @@ class WaitScreen extends Screen {
   onEnter() {
     const client = this.client;
     const socket = client.socket;
+    client.worldInfo.reset();
     socket.on('badShipError', client.switchScreen.bind(client, client.chooseShipScreen));
     socket.on('worldInfoInit', this.checkGameStart);
     socket.on('worldInfo', this.checkGameStart);

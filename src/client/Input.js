@@ -30,7 +30,7 @@ class Input {
     };
 
     this._wheel = (e) => {
-      this.wheel += e.deltaY;
+      this.wheel -= e.deltaY;
     };
 
     this._mousemove = (e) => {
