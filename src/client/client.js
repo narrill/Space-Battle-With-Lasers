@@ -11,6 +11,7 @@ const Deserializer = require('../server/Deserializer.js');
 const NetworkWorldInfo = require('../server/NetworkWorldInfo.js');
 const Input = require('./Input.js');
 const drawing = require('./drawing.js');
+const utilities = require('../server/utilities.js');
 
 const generateStarField = (stars) => {
   const lower = -10000000;
@@ -183,6 +184,8 @@ class Client {
       this.currentScreen.draw(now, dt);
     if(!this.locked)
       drawing.drawLockedGraphic(this.camera);
+
+    utilities.fillText(this.camera.ctx,'fps: ' + Math.floor(1 / dt), 15, 15, "8pt Orbitron", 'white');
   }
 
   switchScreen(screen) {

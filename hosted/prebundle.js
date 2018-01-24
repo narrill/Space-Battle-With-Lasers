@@ -80,6 +80,7 @@ const Deserializer = require('../server/Deserializer.js');
 const NetworkWorldInfo = require('../server/NetworkWorldInfo.js');
 const Input = require('./Input.js');
 const drawing = require('./drawing.js');
+const utilities = require('../server/utilities.js');
 
 const generateStarField = (stars) => {
   const lower = -10000000;
@@ -252,6 +253,8 @@ class Client {
       this.currentScreen.draw(now, dt);
     if(!this.locked)
       drawing.drawLockedGraphic(this.camera);
+
+    utilities.fillText(this.camera.ctx,'fps: ' + Math.floor(1 / dt), 15, 15, "8pt Orbitron", 'white');
   }
 
   switchScreen(screen) {
@@ -279,7 +282,7 @@ class Client {
 }
 
 module.exports = Client;
-},{"../server/Deserializer.js":20,"../server/NetworkWorldInfo.js":27,"./Camera.js":1,"./ChooseShipScreen.js":2,"./DisconnectScreen.js":4,"./GameScreen.js":5,"./Input.js":6,"./Oscillator.js":8,"./Stinger.js":10,"./TitleScreen.js":11,"./WaitScreen.js":14,"./drawing.js":15,"./worldInfo.js":19}],4:[function(require,module,exports){
+},{"../server/Deserializer.js":20,"../server/NetworkWorldInfo.js":27,"../server/utilities.js":32,"./Camera.js":1,"./ChooseShipScreen.js":2,"./DisconnectScreen.js":4,"./GameScreen.js":5,"./Input.js":6,"./Oscillator.js":8,"./Stinger.js":10,"./TitleScreen.js":11,"./WaitScreen.js":14,"./drawing.js":15,"./worldInfo.js":19}],4:[function(require,module,exports){
 const Screen = require('./Screen.js');
 const drawing = require('./drawing.js');
 

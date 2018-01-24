@@ -124,6 +124,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var NetworkWorldInfo = require('../server/NetworkWorldInfo.js');
     var Input = require('./Input.js');
     var drawing = require('./drawing.js');
+    var utilities = require('../server/utilities.js');
 
     var generateStarField = function generateStarField(stars) {
       var lower = -10000000;
@@ -295,6 +296,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           drawing.drawAsteroids(this.stars.objs, this.stars.colors, this.camera);
           if (this.currentScreen.draw) this.currentScreen.draw(now, dt);
           if (!this.locked) drawing.drawLockedGraphic(this.camera);
+
+          utilities.fillText(this.camera.ctx, 'fps: ' + Math.floor(1 / dt), 15, 15, "8pt Orbitron", 'white');
         }
       }, {
         key: "switchScreen",
@@ -327,7 +330,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     module.exports = Client;
-  }, { "../server/Deserializer.js": 20, "../server/NetworkWorldInfo.js": 27, "./Camera.js": 1, "./ChooseShipScreen.js": 2, "./DisconnectScreen.js": 4, "./GameScreen.js": 5, "./Input.js": 6, "./Oscillator.js": 8, "./Stinger.js": 10, "./TitleScreen.js": 11, "./WaitScreen.js": 14, "./drawing.js": 15, "./worldInfo.js": 19 }], 4: [function (require, module, exports) {
+  }, { "../server/Deserializer.js": 20, "../server/NetworkWorldInfo.js": 27, "../server/utilities.js": 32, "./Camera.js": 1, "./ChooseShipScreen.js": 2, "./DisconnectScreen.js": 4, "./GameScreen.js": 5, "./Input.js": 6, "./Oscillator.js": 8, "./Stinger.js": 10, "./TitleScreen.js": 11, "./WaitScreen.js": 14, "./drawing.js": 15, "./worldInfo.js": 19 }], 4: [function (require, module, exports) {
     var Screen = require('./Screen.js');
     var drawing = require('./drawing.js');
 
