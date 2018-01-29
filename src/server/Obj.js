@@ -37,6 +37,7 @@ class Obj extends Mobile {
     this.medialVelocity = undefined; // component form, used by stabilizers
     this.lateralVelocity = undefined;
     this.mass = objectParams.physicalProperties.mass;
+    this.momentOfInertia = objectParams.physicalProperties.momentOfInertia;
     // colors
     this.color = objectParams.color || utilities.getRandomBrightColor();
     // model
@@ -52,7 +53,7 @@ class Obj extends Mobile {
     const defaults = {
       destructible: {
         hp: physProp.mass,
-        radius: Math.sqrt(physProp.area / Math.PI),
+        radius: physProp.radius,
         shield: {
           max: 100,
           recharge: 3,

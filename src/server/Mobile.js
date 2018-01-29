@@ -1,4 +1,5 @@
 const has = Object.prototype.hasOwnProperty;
+const utilities = require('./utilities.js');
 
 class Mobile {
   update(dt) {
@@ -10,7 +11,10 @@ class Mobile {
       this.velocityY += (this.forceY / mass) * dt;
       this.forceY = 0;
       if (has.call(this, 'rotationalVelocity') && has.call(this, 'rotationalForce')) {
-        this.rotationalVelocity += (this.rotationalForce / mass) * dt;
+        const torque = this.rotationalForce * this.destructible.radius;
+        const angularAcceleration = torque / this.momentOfInertia;
+        this.rotation = utilities.correctOrientation(this.rotation + (this.rotationalVelocity * dt) + ((angularAcceleration *dt * dt) / 2));
+        this.rotationalVelocity += angularAcceleration * dt;        
         this.rotationalForce = 0;
       }
       this.medialVelocity = undefined;
@@ -20,14 +24,6 @@ class Mobile {
     // move
     this.x += this.velocityX * dt;
     this.y += this.velocityY * dt;
-    if (has.call(this, 'rotation')) {
-      this.rotation += this.rotationalVelocity * dt;
-      if (this.rotation > 180) {
-        this.rotation -= 360;
-      } else if (this.rotation < -180) {
-        this.rotation += 360;
-      }
-    }
 
     this.forwardVectorX = undefined;
     this.forwardVectorY = undefined;

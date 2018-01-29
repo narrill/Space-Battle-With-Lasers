@@ -51,8 +51,8 @@ const ships = {
         powerRampLimit: 10000
       },
       rotational: {
-        maxStrength: 8000,
-        powerRampLimit: 4000
+        maxStrength: 40000,
+        powerRampLimit: 10000
       },
     },
     destructible: {
@@ -109,8 +109,8 @@ const ships = {
         powerRampLimit: 10000
       },
       rotational: {
-        maxStrength: 6000,
-        powerRampLimit: 3000
+        maxStrength: 30000,
+        powerRampLimit: 10000
       },
     },
     destructible: {},
@@ -171,8 +171,8 @@ const ships = {
         powerRampLimit: 15000
       },
       rotational: {
-        maxStrength: 24000,
-        powerRampLimit: 10000
+        maxStrength: 100000,
+        powerRampLimit: 15000
       },
     },
     destructible: {
@@ -233,8 +233,8 @@ const ships = {
         powerRampLimit: 15000
       },
       rotational: {
-        maxStrength: 24000,
-        powerRampLimit: 10000
+        maxStrength: 100000,
+        powerRampLimit: 15000
       },
     },
     destructible: {
@@ -348,12 +348,18 @@ function populatePhysicalProperties(shipName) {
   shieldVectors[0] = shieldVectors.pop(); // We need to do this because we closed the polygon
   model.shieldVectors = shieldVectors;
 
-  const MASS_CONVERSION_FACTOR = 0.2;
+  const DENSITY = 0.2;
+  const mass = area * DENSITY;
+  const radius = Math.sqrt(area / Math.PI);
+
+  const momentOfInertia = (mass * radius * radius) / 2;
 
   // Assign physical properties
   ship.physicalProperties = {
-    mass: area * MASS_CONVERSION_FACTOR,
+    mass,
     area,
+    radius,
+    momentOfInertia
   };
 
   console.log(shipName);
