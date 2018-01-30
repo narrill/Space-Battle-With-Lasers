@@ -7,9 +7,9 @@ const enums = require('./enums.js');
 
 const has = Object.prototype.hasOwnProperty;
 const componentClasses = require('./ComponentTypes.js').classes;
-const Mobile = require('./Mobile.js');
+const Accelerable = require('./Accelerable.js');
 
-class Obj extends Mobile {
+class Obj extends Accelerable {
   constructor(objectParams = {}, game, owner, playerId) {
     super();
     const gridPosition = gridFunctions.randomGridPosition(game.grid);
