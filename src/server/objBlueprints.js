@@ -1,6 +1,3 @@
-// Heavily adapted from a previous project of mine:
-// https://github.com/narrill/Space-Battle/blob/dev/js/ships.js
-
 const utilities = require('./utilities.js');
 
 const ships = {
@@ -366,7 +363,12 @@ function populatePhysicalProperties(shipName) {
   console.log(ship.physicalProperties);
 }
 
-Object.keys(ships).forEach(populatePhysicalProperties.bind(ships));
+function processShip(shipName) {
+  populatePhysicalProperties.call(this, shipName);
+  this[shipName].shipName = shipName;
+}
+
+Object.keys(ships).forEach(processShip.bind(ships));
 Object.keys(missiles).forEach(populatePhysicalProperties.bind(missiles));
 
 module.exports = { ships, missiles };

@@ -26,25 +26,7 @@ const getMimeTypeFromExtension = (extension) => {
   }
 };
 
-const files = [
-  'client.html',
-  'bundle.js',
-  'AROMA-Light.ttf',
-  'AROMA-Bold.ttf',
-  'Prime-Regular.otf',
-  'Orbitron-Light.ttf',
-  'Orbitron-Black.ttf',
-  'title.mp3',
-  'bundle.js',
-  'gameplay1.mp3',
-  'gameplay2.mp3',
-  'gameplay3.mp3',
-  'keyclick.mp3',
-  'titlestinger.mp3',
-  'entergamestinger.mp3',
-  'deathstinger.mp3',
-  'ambientloop.mp3',
-];
+const files = fs.readdirSync(`${__dirname}/../../hosted/`);
 
 const hostedFiles = {};
 for (let c = 0; c < files.length; c++) {
@@ -80,29 +62,33 @@ console.log(`Listening on port ${port}`);
 const Game = require('./Game.js');
 const ships = require('./objBlueprints.js').ships;
 const Obj = require('./Obj.js');
+const utilities = require('./utilities.js');
 
 const shipList = Object.keys(ships);
 
 const game = new Game();
 
+const names = {};
+
 const io = socketio(app);
-// to-do, network protocol
 
 io.on('connection', (s) => {
   let ship;
+  let name;
   s.emit('shipList', shipList);
 
   s.on('ship', (shipName) => {
-    const chosenShip = ships[String(shipName).toLowerCase().valueOf()];
-    if (chosenShip) {
+    const chosenShipBP = ships[String(shipName).toLowerCase().valueOf()];
+    if (chosenShipBP) {
+      const bpCopy = utilities.deepObjectMerge.call({}, chosenShipBP);
       game.socketSubscriptions[s.id] = s;
-      chosenShip.remoteInput = {};
+      bpCopy.remoteInput = {specialProperties:{socket: s}};
+      bpCopy.name = name;
       const shipModels = {};
       Object.values(game.objs).forEach((sh) => {
         shipModels[sh.id] = sh.model;
       });
-      ship = new Obj(chosenShip, game, s.id);
-      ship.remoteInput.remoteSend = (data, msg = 'worldInfo') => { s.emit(msg, data); };
+      ship = new Obj(bpCopy, game, s.id);
       game.objs.push(ship);
       s.emit('grid', game.grid);
       s.emit('ships', shipModels);
@@ -111,12 +97,23 @@ io.on('connection', (s) => {
     }
   });
 
+  s.on('name', (pName) => {
+    if(!names[pName]) {
+      name = pName;
+      names[pName] = true;
+      s.emit('goodName');
+    }
+    else
+      s.emit('badName');
+  });
+
   s.on('input', (data) => {
     if (ship && ship.remoteInput) ship.remoteInput.messageHandler(data);
   });
 
   s.on('disconnect', () => {
     delete game.socketSubscriptions[s.id];
+    delete names[name];
   });
 });
 

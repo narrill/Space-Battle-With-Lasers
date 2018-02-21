@@ -5,7 +5,6 @@ const inputState = require('../inputState.js');
 const enums = require('../enums.js');
 const NetworkWorldInfo = require('../NetworkWorldInfo.js');
 const Serializer = require('../Serializer.js');
-// require('../SerializerTest.js');
 
 const myKeys = keys.myKeys;
 const myMouse = keys.myMouse;
@@ -21,6 +20,8 @@ class RemoteInput {
     this.sendInterval = 66.6666;
     this.nonInterp = {};
     this.sentInitial = false;
+    const socket = objectParams.specialProperties.socket;
+    this.remoteSend = (data, msg = 'worldInfo') => { socket.emit(msg, data); };
 
     utilities.veryShallowObjectMerge.call(this, objectParams);
   }

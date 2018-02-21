@@ -43,7 +43,6 @@ class Obj extends Accelerable {
     // model
     this.model = objectParams.model;
     this.physicalProperties = objectParams.physicalProperties;
-    this.constructionObject = utilities.deepObjectMerge.call({}, objectParams);
     this.type = 'obj';
 
     const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
@@ -134,6 +133,7 @@ class Obj extends Accelerable {
         const shouldRecurse =
           key !== 'game'
           && key !== 'owner'
+          && key !== 'specialProperties'
           && src[key] instanceof Object
           && !(src[key] instanceof Array);
         if (shouldRecurse) {

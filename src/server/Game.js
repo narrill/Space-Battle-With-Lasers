@@ -19,9 +19,8 @@ class Game {
     this.timeStep = 0.0167;
     this.lastTime = 0; // used by calculateDeltaTime()
     this.objs = [];
-    this.maxNPCs = 20;
+    this.maxNPCs = 300;
     this.factions = 4;
-    this.respawnQueue = [];
     this.factionColors = [];
     this.hitscans = [];
     this.projectiles = [];
@@ -73,24 +72,7 @@ class Game {
       hue += 360 / this.factions;
       if (hue >= 360) { hue -= 360; }
     }
-    const shipList = Object.keys(ships);
-    for (let c = 0; c < this.maxNPCs; c++) {
-      const shipName = shipList[utilities.getRandomIntIncExc(0, shipList.length)];
-      const newShip = utilities.deepObjectMerge.call(
-        {},
-        ships[shipName],
-      );
-      newShip.ai = {
-        aiFunction: 'basic',
-        followMin: 1500,
-        followMax: 2000,
-        accuracy: 0.5,
-        fireSpread: 25,
-      };
-      newShip.faction = -1;
-      newShip.respawnTime = 5;
-      this.objs.push(new Obj(newShip, this));
-    }
+  
     this.lastTime = Date.now();
     this.elapsedGameTime = 0;
   }
@@ -128,12 +110,23 @@ class Game {
     checkForDestruction(this.projectiles);
     checkForDestruction(this.radials);
 
-    for (let c = 0; c < this.respawnQueue.length; c++) {
-      const rs = this.respawnQueue[c];
-      if (this.elapsedGameTime >= rs.time) {
-        this.createObj(rs.params, this);
-        this.respawnQueue.splice(c--, 1);
-      }
+    // Spawn NPCs
+    const shipList = Object.keys(ships);
+    for (let c = this.objs.length; c < this.maxNPCs; c++) {
+      const shipName = shipList[utilities.getRandomIntIncExc(0, shipList.length)];
+      const newShip = utilities.deepObjectMerge.call(
+        {},
+        ships[shipName],
+      );
+      newShip.ai = {
+        aiFunction: 'basic',
+        followMin: 1500,
+        followMax: 2000,
+        accuracy: 0.5,
+        fireSpread: 25,
+      };
+      newShip.faction = -1;
+      this.objs.push(new Obj(newShip, this));
     }
 
     const updateCollection = (collection) => {
@@ -407,6 +400,27 @@ class Game {
 
   createAsteroid(...args) {
     this.asteroids.objs.push(new Asteroid(...args));
+  }
+
+  get names() {
+    const names = [];
+    for(let c = 0; c < this.objs.length; c++)
+      if(this.objs[c].name)
+        names.push(this.objs[c].name);
+    return names;
+  }
+
+  get activeShips() {
+    const activeShips = {};
+    for(let c = 0; c < this.objs.length; c++) {
+      const shipName = this.objs[c].shipName;
+      if(shipName) {
+        if(!activeShips[shipName])
+          activeShips[shipName] = 0;
+        activeShips[shipName]++;
+      }
+    }
+    return activeShips;
   }
 }
 
