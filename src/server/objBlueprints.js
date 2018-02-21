@@ -41,15 +41,15 @@ const ships = {
     thrusterSystem: {
       medial: {
         maxStrength: 40000,
-        powerRampLimit: 10000
+        powerRampLimit: 10000,
       },
       lateral: {
         maxStrength: 40000,
-        powerRampLimit: 10000
+        powerRampLimit: 10000,
       },
       rotational: {
         maxStrength: 40000,
-        powerRampLimit: 10000
+        powerRampLimit: 10000,
       },
     },
     destructible: {
@@ -99,15 +99,15 @@ const ships = {
     thrusterSystem: {
       medial: {
         maxStrength: 30000,
-        powerRampLimit: 10000
+        powerRampLimit: 10000,
       },
       lateral: {
-        maxStrength: 30000,        
-        powerRampLimit: 10000
+        maxStrength: 30000,
+        powerRampLimit: 10000,
       },
       rotational: {
         maxStrength: 30000,
-        powerRampLimit: 10000
+        powerRampLimit: 10000,
       },
     },
     destructible: {},
@@ -161,15 +161,15 @@ const ships = {
     thrusterSystem: {
       medial: {
         maxStrength: 100000,
-        powerRampLimit: 15000
+        powerRampLimit: 15000,
       },
       lateral: {
         maxStrength: 100000,
-        powerRampLimit: 15000
+        powerRampLimit: 15000,
       },
       rotational: {
         maxStrength: 100000,
-        powerRampLimit: 15000
+        powerRampLimit: 15000,
       },
     },
     destructible: {
@@ -188,7 +188,7 @@ const ships = {
         [20, 17],
         [20, -5],
         [0, -23],
-        [-20, -5]
+        [-20, -5],
       ],
 
       thrusterPoints: {
@@ -223,15 +223,15 @@ const ships = {
     thrusterSystem: {
       medial: {
         maxStrength: 100000,
-        powerRampLimit: 15000
+        powerRampLimit: 15000,
       },
       lateral: {
         maxStrength: 100000,
-        powerRampLimit: 15000
+        powerRampLimit: 15000,
       },
       rotational: {
         maxStrength: 100000,
-        powerRampLimit: 15000
+        powerRampLimit: 15000,
       },
     },
     destructible: {
@@ -281,13 +281,13 @@ const missiles = {
     thrusterSystem: {
       medial: {
         maxStrength: 28000,
-        powerRampLimit: 14000
+        powerRampLimit: 14000,
       },
     },
     warhead: {
       radial: {
-        decay: .5
-      }
+        decay: 0.5,
+      },
     },
     ai: {
       aiFunction: 'basicDumbFireMissile',
@@ -356,7 +356,7 @@ function populatePhysicalProperties(shipName) {
     mass,
     area,
     radius,
-    momentOfInertia
+    momentOfInertia,
   };
 
   console.log(shipName);

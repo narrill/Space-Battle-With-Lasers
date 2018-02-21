@@ -1,5 +1,3 @@
-const has = Object.prototype.hasOwnProperty;
-
 class Mobile {
   update(dt) {
     this.x += this.velocityX * dt;

@@ -6,7 +6,7 @@ class Warhead {
     this.owner = owner;
     this.radial = utilities.deepObjectMerge.call({
       velocity: 6000,
-      decay: .2,
+      decay: 0.2,
       color: new utilities.ColorRGB({ r: 255, g: 0, b: 0 }),
       collisionProperties: {
         density: 2,

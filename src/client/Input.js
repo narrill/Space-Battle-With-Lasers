@@ -60,7 +60,7 @@ class Input {
 
   // Called once per client update, after the screen's update
   update() {
-    inputState.advanceStateDictionary(this.keystate);
+    inputState.advanceStateDictionary.call(this.keystate);
     this.wheel = 0;
     this.mouseTimer.check();
   }

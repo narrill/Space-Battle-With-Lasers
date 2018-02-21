@@ -521,7 +521,7 @@ class Input {
 
   // Called once per client update, after the screen's update
   update() {
-    inputState.advanceStateDictionary(this.keystate);
+    inputState.advanceStateDictionary.call(this.keystate);
     this.wheel = 0;
     this.mouseTimer.check();
   }
@@ -1959,55 +1959,50 @@ const commandList = [
   'BOOST_SHIELD',
   'BOOST_WEAPON',
   'TOGGLE_STABILIZER',
-  'TOGGLE_LIMITER'
+  'TOGGLE_LIMITER',
 ];
 
 const commands = {};
 
-for(let c = 0; c < commandList.length; c++) {
+for (let c = 0; c < commandList.length; c++) {
   commands[commandList[c]] = c;
 }
 
 module.exports = commands;
+
 },{}],32:[function(require,module,exports){
 const STATES = {
-	STARTING: 2,
-	ENABLED: 1,
-	DISABLED: 0
+  STARTING: 2,
+  ENABLED: 1,
+  DISABLED: 0,
 };
 
-const isStarting = (stateVal) => {
-	return stateVal === STATES.STARTING;
-};
+const isStarting = stateVal => stateVal === STATES.STARTING;
 
-const isEnabled = (stateVal) => {
-	return stateVal === STATES.ENABLED || isStarting(stateVal);
-};
+const isEnabled = stateVal => stateVal === STATES.ENABLED || isStarting(stateVal);
 
-const isDisabled = (stateVal) => {
-	return stateVal === STATES.DISABLED;
-};
+const isDisabled = stateVal => stateVal === STATES.DISABLED;
 
 const advanceState = (stateVal) => {
-	if(stateVal === STATES.STARTING)
-		return STATES.ENABLED;
-	return stateVal;
+  if (stateVal === STATES.STARTING) { return STATES.ENABLED; }
+  return stateVal;
 };
 
-const advanceStateDictionary = (dictionary) => {
-	const keys = Object.keys(dictionary);
-	for(let c = 0; c < keys.length; c++) {
-		dictionary[keys[c]] = advanceState(dictionary[keys[c]]);
-	}
+const advanceStateDictionary = function asd() {
+  const keys = Object.keys(this);
+  for (let c = 0; c < keys.length; c++) {
+    this[keys[c]] = advanceState(this[keys[c]]);
+  }
 };
 
 module.exports = {
-	STATES,
-	isStarting,
-	isEnabled,
-	isDisabled,
-	advanceStateDictionary
+  STATES,
+  isStarting,
+  isEnabled,
+  isDisabled,
+  advanceStateDictionary,
 };
+
 },{}],33:[function(require,module,exports){
 module.exports = Object.freeze({
   LEFT: 37,
@@ -2035,7 +2030,7 @@ module.exports = Object.freeze({
   ENTER: 13,
   LMB: 0,
   MMB: 1,
-  RMB: 2
+  RMB: 2,
 });
 
 },{}],34:[function(require,module,exports){

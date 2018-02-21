@@ -24,5 +24,5 @@ module.exports = Object.freeze({
   ENTER: 13,
   LMB: 0,
   MMB: 1,
-  RMB: 2
+  RMB: 2,
 });

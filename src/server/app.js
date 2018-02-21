@@ -52,25 +52,23 @@ const sendFile = (request, response, fileInfo) => {
 };
 
 const sendJSON = (request, response, json) => {
-  response.writeHead(200, {'content-type': 'application/json'});
+  response.writeHead(200, { 'content-type': 'application/json' });
   response.end(JSON.stringify(json));
 };
 
 const endPoints = {
   '/names': (request, response) => { sendJSON(request, response, game.names); },
-  '/activeShips': (request, response) => { sendJSON(request, response, game.activeShips); }
+  '/activeShips': (request, response) => { sendJSON(request, response, game.activeShips); },
 };
 
 const onRequest = (request, response) => {
   console.log(request.url);
   if (request.url === '/') { request.url = '/client.html'; }
-  if(hostedFiles[request.url]) {
+  if (hostedFiles[request.url]) {
     sendFile(request, response, hostedFiles[request.url]);
-  }
-  else if (endPoints[request.url]) {
+  } else if (endPoints[request.url]) {
     endPoints[request.url](request, response);
-  }
-  else {
+  } else {
     response.writeHead(404);
     response.end();
   }
@@ -94,7 +92,7 @@ io.on('connection', (s) => {
     if (chosenShipBP) {
       const bpCopy = utilities.deepObjectMerge.call({}, chosenShipBP);
       game.socketSubscriptions[s.id] = s;
-      bpCopy.remoteInput = {specialProperties:{socket: s}};
+      bpCopy.remoteInput = { specialProperties: { socket: s } };
       bpCopy.name = name;
       const shipModels = {};
       Object.values(game.objs).forEach((sh) => {
@@ -110,13 +108,11 @@ io.on('connection', (s) => {
   });
 
   s.on('name', (pName) => {
-    if(!names[pName]) {
+    if (!names[pName]) {
       name = pName;
       names[pName] = true;
       s.emit('goodName');
-    }
-    else
-      s.emit('badName');
+    } else { s.emit('badName'); }
   });
 
   s.on('input', (data) => {

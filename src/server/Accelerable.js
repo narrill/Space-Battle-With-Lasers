@@ -10,8 +10,10 @@ class Accelerable extends Mobile {
     this.forceY = 0;
     const torque = this.rotationalForce * this.destructible.radius;
     const angularAcceleration = torque / this.momentOfInertia;
-    this.rotation = utilities.correctOrientation(this.rotation + (this.rotationalVelocity * dt) + ((angularAcceleration *dt * dt) / 2));
-    this.rotationalVelocity += angularAcceleration * dt;        
+    this.rotation = utilities.correctOrientation(
+      this.rotation + (this.rotationalVelocity * dt) + ((angularAcceleration * dt * dt) / 2),
+    );
+    this.rotationalVelocity += angularAcceleration * dt;
     this.rotationalForce = 0;
 
     super.update(dt);

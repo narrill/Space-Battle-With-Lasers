@@ -10,12 +10,12 @@ const commandList = [
   'BOOST_SHIELD',
   'BOOST_WEAPON',
   'TOGGLE_STABILIZER',
-  'TOGGLE_LIMITER'
+  'TOGGLE_LIMITER',
 ];
 
 const commands = {};
 
-for(let c = 0; c < commandList.length; c++) {
+for (let c = 0; c < commandList.length; c++) {
   commands[commandList[c]] = c;
 }
 

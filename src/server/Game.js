@@ -72,7 +72,7 @@ class Game {
       hue += 360 / this.factions;
       if (hue >= 360) { hue -= 360; }
     }
-  
+
     this.lastTime = Date.now();
     this.elapsedGameTime = 0;
   }
@@ -404,19 +404,18 @@ class Game {
 
   get names() {
     const names = [];
-    for(let c = 0; c < this.objs.length; c++)
-      if(this.objs[c].name)
-        names.push(this.objs[c].name);
+    for (let c = 0; c < this.objs.length; c++) {
+      if (this.objs[c].name) { names.push(this.objs[c].name); }
+    }
     return names;
   }
 
   get activeShips() {
     const activeShips = {};
-    for(let c = 0; c < this.objs.length; c++) {
+    for (let c = 0; c < this.objs.length; c++) {
       const shipName = this.objs[c].shipName;
-      if(shipName) {
-        if(!activeShips[shipName])
-          activeShips[shipName] = 0;
+      if (shipName) {
+        if (!activeShips[shipName]) { activeShips[shipName] = 0; }
         activeShips[shipName]++;
       }
     }

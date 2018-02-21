@@ -39,7 +39,7 @@ class Thruster {
       thrusterDelta = utilities.clamp(
         -toZero,
         thrusterDelta,
-        toZero
+        toZero,
       );
     }
 

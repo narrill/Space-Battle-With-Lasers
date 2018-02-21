@@ -597,7 +597,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       _createClass(Input, [{
         key: "update",
         value: function update() {
-          inputState.advanceStateDictionary(this.keystate);
+          inputState.advanceStateDictionary.call(this.keystate);
           this.wheel = 0;
           this.mouseTimer.check();
         }
@@ -2130,14 +2130,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     var advanceState = function advanceState(stateVal) {
-      if (stateVal === STATES.STARTING) return STATES.ENABLED;
+      if (stateVal === STATES.STARTING) {
+        return STATES.ENABLED;
+      }
       return stateVal;
     };
 
-    var advanceStateDictionary = function advanceStateDictionary(dictionary) {
-      var keys = Object.keys(dictionary);
+    var advanceStateDictionary = function asd() {
+      var keys = Object.keys(this);
       for (var c = 0; c < keys.length; c++) {
-        dictionary[keys[c]] = advanceState(dictionary[keys[c]]);
+        this[keys[c]] = advanceState(this[keys[c]]);
       }
     };
 

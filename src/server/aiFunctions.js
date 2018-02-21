@@ -11,7 +11,7 @@ const aiFunctions = {
     let lowestDistance = Number.MAX_VALUE;
     for (let c = 0; c < this.game.objs.length; c++) {
       const ship = this.game.objs[c];
-      if (!(this.faction === ship.faction && this.faction !== -1) 
+      if (!(this.faction === ship.faction && this.faction !== -1)
         && this !== ship
         && !ship.owner) {
         const leftRoot = this.x - ship.x;
@@ -155,23 +155,22 @@ const aiFunctions = {
     const fetchInfo = this.game.spatialHash.boundedFetch(
       [this.x, this.y],
       this.ai.detonationRadius,
-      {obj:[]}
+      { obj: [] },
     );
     let shouldDetonate = false;
     const objs = fetchInfo.obj;
-    for(let c = 0; c < objs.length; c++) {
+    for (let c = 0; c < objs.length; c++) {
       const obj = objs[c];
-      if(obj.id !== this.owner.id 
-        && obj.id !== this.id 
+      if (obj.id !== this.owner.id
+        && obj.id !== this.id
         && (!obj.owner || obj.owner.id !== this.owner.id)) {
         shouldDetonate = true;
         break;
       }
     }
-    if(shouldDetonate)
-      this.destructible.hp = 0;
+    if (shouldDetonate) { this.destructible.hp = 0; }
     this.objMedialThrusters(this.thrusterSystem.medial.maxStrength);
-  }
+  },
 };
 
 module.exports = aiFunctions;

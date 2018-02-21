@@ -1,13 +1,9 @@
 const utilities = require('../utilities.js');
-const keys = require('../keys.js');
 const commands = require('../commands.js');
 const inputState = require('../inputState.js');
 const enums = require('../enums.js');
 const NetworkWorldInfo = require('../NetworkWorldInfo.js');
 const Serializer = require('../Serializer.js');
-
-const myKeys = keys.myKeys;
-const myMouse = keys.myMouse;
 
 const has = Object.prototype.hasOwnProperty;
 
@@ -97,7 +93,7 @@ class RemoteInput {
       owner.powerSystem.target[enums.SHIP_COMPONENTS.SHIELDS] = 1;
     }
 
-    inputState.advanceStateDictionary(this.commands);
+    inputState.advanceStateDictionary.call(this.commands);
 
     const sinceLastSend = owner.game.elapsedGameTime - this.lastSend;
     if (this.remoteSend && sinceLastSend >= this.sendInterval) {

@@ -4,7 +4,7 @@ const idDictionary = {};
 const takeIdTag = () => {
   while (idDictionary[idCounter] === true) {
     idCounter++;
-    if (idCounter > 65535) { 
+    if (idCounter > 65535) {
       idCounter = 0;
     }
   }
