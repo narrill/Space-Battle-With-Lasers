@@ -602,9 +602,8 @@ const drawing = {
 		ctx.restore();		
 	},
 
-	//draw pause screen in the given camera
-	drawChooseShipScreen:function(camera, entry, shipList = []){
-		var ctx = camera.ctx;
+	drawEntryScreen: function(camera, entryPrompt, entry) {
+		const ctx = camera.ctx;
 		ctx.save();
 		ctx.fillStyle = "black",
 		ctx.globalAlpha = .03;
@@ -612,7 +611,15 @@ const drawing = {
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
 		ctx.globalAlpha = 1;
-		utilities.fillText(ctx,"Enter ship name: "+entry,camera.width/2,camera.height/2 - 30,"24pt Aroma",'white');
+		utilities.fillText(ctx,entryPrompt+": "+entry,camera.width/2,camera.height/2 - 30,"24pt Aroma",'white');
+		ctx.restore();
+	},
+
+	//draw pause screen in the given camera
+	drawChooseShipScreen:function(camera, entry, shipList = []){
+		var ctx = camera.ctx;
+		ctx.textAlign = 'center';
+		ctx.textBaseline = 'middle';
 		var list = "Options: ";
 		for(var c = 0;c<shipList.length;c++)
 		{

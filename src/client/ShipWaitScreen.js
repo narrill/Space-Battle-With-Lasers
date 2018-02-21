@@ -1,6 +1,6 @@
 const Screen = require('./Screen.js');
 
-class WaitScreen extends Screen {
+class ShipWaitScreen extends Screen {
   constructor(client) {
     super();
     this.optionalBind('checkGameStart');
@@ -32,4 +32,4 @@ class WaitScreen extends Screen {
   }
 }
 
-module.exports = WaitScreen;
+module.exports = ShipWaitScreen;

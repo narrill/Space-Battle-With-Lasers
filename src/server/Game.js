@@ -19,7 +19,7 @@ class Game {
     this.timeStep = 0.0167;
     this.lastTime = 0; // used by calculateDeltaTime()
     this.objs = [];
-    this.maxNPCs = 300;
+    this.maxNPCs = 60;
     this.factions = 4;
     this.factionColors = [];
     this.hitscans = [];

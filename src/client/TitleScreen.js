@@ -24,7 +24,7 @@ class TitleScreen extends Screen {
   keyDown(e) {
     this.client.keyclick.play();
     if(e.key === 'Enter') {
-      this.client.switchScreen(this.client.chooseShipScreen);
+      this.client.switchScreen(this.client.nameScreen);
     }
   }
 

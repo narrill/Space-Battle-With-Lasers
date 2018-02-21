@@ -33,44 +33,30 @@ class Camera {
 }
 
 module.exports = Camera;
-},{"../server/utilities.js":32,"./Viewport.js":13}],2:[function(require,module,exports){
-const Screen = require('./Screen.js');
+},{"../server/utilities.js":35,"./Viewport.js":17}],2:[function(require,module,exports){
+const EntryScreen = require('./EntryScreen.js');
 const drawing = require('./drawing.js');
 
-class ChooseShipScreen extends Screen {
+class ChooseShipScreen extends EntryScreen {
   constructor(client) {
-    super();
+    super(client, client.shipWaitScreen, 'ship');
     this.client = client;
   }
 
   draw(now, dt) {
+    drawing.drawEntryScreen(this.client.camera, "Enter ship name", this.entry);
     drawing.drawChooseShipScreen(this.client.camera, this.entry, this.client.shipList);
-  }
-
-  keyDown(e) {
-    if(e.key === 'Backspace'){
-      if(this.entry.length > 0)
-        this.entry = this.entry.slice(0, -1);
-    }
-    else if(e.key === 'Enter') {
-      this.client.switchScreen(this.client.waitScreen);
-      this.client.socket.emit('ship', this.entry);
-    }
-    else
-      this.entry += e.key;
-  }
-
-  onEnter(){
-    this.entry = "";
   }
 }
 
 module.exports = ChooseShipScreen;
-},{"./Screen.js":9,"./drawing.js":15}],3:[function(require,module,exports){
+},{"./EntryScreen.js":5,"./drawing.js":18}],3:[function(require,module,exports){
 const TitleScreen = require('./TitleScreen.js');
 const GameScreen = require('./GameScreen.js');
 const ChooseShipScreen = require('./ChooseShipScreen.js');
-const WaitScreen = require('./WaitScreen.js');
+const ShipWaitScreen = require('./ShipWaitScreen.js');
+const NameScreen = require('./NameScreen.js');
+const NameWaitScreen = require('./NameWaitScreen.js');
 const DisconnectScreen = require('./DisconnectScreen.js');
 const Camera = require('./Camera.js');
 const Oscillator = require('./Oscillator.js');
@@ -172,8 +158,10 @@ class Client {
 
     this.titleScreen = new TitleScreen(this);
     this.gameScreen = new GameScreen(this);
+    this.shipWaitScreen = new ShipWaitScreen(this);
     this.chooseShipScreen = new ChooseShipScreen(this);
-    this.waitScreen = new WaitScreen(this);
+    this.nameWaitScreen = new NameWaitScreen(this);
+    this.nameScreen = new NameScreen(this);
     this.disconnectScreen = new DisconnectScreen(this);
 
     this.currentScreen = {};
@@ -282,7 +270,7 @@ class Client {
 }
 
 module.exports = Client;
-},{"../server/Deserializer.js":20,"../server/NetworkWorldInfo.js":27,"../server/utilities.js":32,"./Camera.js":1,"./ChooseShipScreen.js":2,"./DisconnectScreen.js":4,"./GameScreen.js":5,"./Input.js":6,"./Oscillator.js":8,"./Stinger.js":10,"./TitleScreen.js":11,"./WaitScreen.js":14,"./drawing.js":15,"./worldInfo.js":19}],4:[function(require,module,exports){
+},{"../server/Deserializer.js":23,"../server/NetworkWorldInfo.js":30,"../server/utilities.js":35,"./Camera.js":1,"./ChooseShipScreen.js":2,"./DisconnectScreen.js":4,"./GameScreen.js":6,"./Input.js":7,"./NameScreen.js":9,"./NameWaitScreen.js":10,"./Oscillator.js":11,"./ShipWaitScreen.js":13,"./Stinger.js":14,"./TitleScreen.js":15,"./drawing.js":18,"./worldInfo.js":22}],4:[function(require,module,exports){
 const Screen = require('./Screen.js');
 const drawing = require('./drawing.js');
 
@@ -305,7 +293,38 @@ class DisconnectScreen extends Screen {
 }
 
 module.exports = DisconnectScreen;
-},{"./Screen.js":9,"./drawing.js":15}],5:[function(require,module,exports){
+},{"./Screen.js":12,"./drawing.js":18}],5:[function(require,module,exports){
+const Screen = require('./Screen.js');
+const drawing = require('./drawing.js');
+
+class EntryScreen extends Screen {
+  constructor(client, waitScreen, message) {
+    super();
+    this.client = client;
+    this.waitScreen = waitScreen;
+    this.message = message;
+  }
+
+  keyDown(e) {
+    if(e.key === 'Backspace'){
+      if(this.entry.length > 0)
+        this.entry = this.entry.slice(0, -1);
+    }
+    else if(e.key === 'Enter') {
+      this.client.switchScreen(this.waitScreen);
+      this.client.socket.emit(this.message, this.entry);
+    }
+    else
+      this.entry += e.key;
+  }
+
+  onEnter(){
+    this.entry = "";
+  }
+}
+
+module.exports = EntryScreen;
+},{"./Screen.js":12,"./drawing.js":18}],6:[function(require,module,exports){
 const TrackShuffler = require('./TrackShuffler.js');
 const inputState = require('../server/inputState.js');
 const drawing = require('./drawing.js');
@@ -439,7 +458,7 @@ class GameScreen extends Screen {
 }
 
 module.exports = GameScreen;
-},{"../server/inputState.js":29,"../server/utilities.js":32,"./Screen.js":9,"./TrackShuffler.js":12,"./drawing.js":15,"./keymap.js":16}],6:[function(require,module,exports){
+},{"../server/inputState.js":32,"../server/utilities.js":35,"./Screen.js":12,"./TrackShuffler.js":16,"./drawing.js":18,"./keymap.js":19}],7:[function(require,module,exports){
 const LooseTimer = require('./LooseTimer.js');
 const inputState = require('../server/inputState.js');
 
@@ -541,7 +560,7 @@ class Input {
 }
 
 module.exports = Input;
-},{"../server/inputState.js":29,"./LooseTimer.js":7}],7:[function(require,module,exports){
+},{"../server/inputState.js":32,"./LooseTimer.js":8}],8:[function(require,module,exports){
 class LooseTimer {
   constructor(intervalMS, func) {
     this.interval = intervalMS;
@@ -558,7 +577,48 @@ class LooseTimer {
 }
 
 module.exports = LooseTimer;
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
+const EntryScreen = require('./EntryScreen.js');
+const drawing = require('./drawing.js');
+
+class NameScreen extends EntryScreen {
+  constructor(client) {
+    super(client, client.nameWaitScreen, 'name');
+    this.client = client;
+  }
+
+  draw(now, dt) {
+    drawing.drawEntryScreen(this.client.camera, "Enter a name", this.entry);
+  }
+}
+
+module.exports = NameScreen;
+},{"./EntryScreen.js":5,"./drawing.js":18}],10:[function(require,module,exports){
+const Screen = require('./Screen.js');
+
+class NameWaitScreen extends Screen {
+  constructor(client) {
+    super();
+    this.client = client;
+  }
+
+  onEnter() {
+    const client = this.client;
+    const socket = client.socket;
+    socket.on('badName', client.switchScreen.bind(client, client.nameScreen));
+    socket.on('goodName', client.switchScreen.bind(client, client.chooseShipScreen));
+  }
+
+  onExit() {
+    const client = this.client;
+    const socket = client.socket;
+    socket.off('badName');
+    socket.off('goodName');
+  }
+}
+
+module.exports = NameWaitScreen;
+},{"./Screen.js":12}],11:[function(require,module,exports){
 class Oscillator {
   constructor(periodSeconds) {
     this.start = Date.now() / 1000;
@@ -576,7 +636,7 @@ class Oscillator {
 }
 
 module.exports = Oscillator;
-},{}],9:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 require('./optionalBind.js');
 
 class Screen {
@@ -588,7 +648,43 @@ class Screen {
 }
 
 module.exports = Screen;
-},{"./optionalBind.js":18}],10:[function(require,module,exports){
+},{"./optionalBind.js":21}],13:[function(require,module,exports){
+const Screen = require('./Screen.js');
+
+class ShipWaitScreen extends Screen {
+  constructor(client) {
+    super();
+    this.optionalBind('checkGameStart');
+    this.client = client;
+    this.firstWI = false;
+  }
+
+  onEnter() {
+    const client = this.client;
+    const socket = client.socket;
+    client.worldInfo.reset();
+    socket.on('badShipError', client.switchScreen.bind(client, client.chooseShipScreen));
+    socket.on('worldInfoInit', this.checkGameStart);
+    socket.on('worldInfo', this.checkGameStart);
+  }
+
+  onExit() {
+    const client = this.client;
+    const socket = client.socket;
+    socket.off('badShipError');
+    socket.off('worldInfoInit', this.checkGameStart);
+    socket.off('worldInfo', this.checkGameStart);
+  }
+
+  checkGameStart() {
+    const wi = this.client.worldInfo;
+    if(wi.initialized && wi.hasData)
+      this.client.switchScreen(this.client.gameScreen);
+  }
+}
+
+module.exports = ShipWaitScreen;
+},{"./Screen.js":12}],14:[function(require,module,exports){
 class Stinger {
   constructor(id) {
     this.elem = document.querySelector(`#${id}`);
@@ -601,7 +697,7 @@ class Stinger {
 }
 
 module.exports = Stinger;
-},{}],11:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 const Oscillator = require('./Oscillator.js');
 const utilities = require('../server/utilities.js');
 const drawing = require('./drawing.js');
@@ -628,7 +724,7 @@ class TitleScreen extends Screen {
   keyDown(e) {
     this.client.keyclick.play();
     if(e.key === 'Enter') {
-      this.client.switchScreen(this.client.chooseShipScreen);
+      this.client.switchScreen(this.client.nameScreen);
     }
   }
 
@@ -638,7 +734,7 @@ class TitleScreen extends Screen {
 }
 
 module.exports = TitleScreen;
-},{"../server/utilities.js":32,"./Oscillator.js":8,"./Screen.js":9,"./drawing.js":15}],12:[function(require,module,exports){
+},{"../server/utilities.js":35,"./Oscillator.js":11,"./Screen.js":12,"./drawing.js":18}],16:[function(require,module,exports){
 const utilities = require('../server/utilities.js');
 
 class TrackShuffler {
@@ -702,7 +798,7 @@ class TrackShuffler {
 }
 
 module.exports = TrackShuffler;
-},{"../server/utilities.js":32}],13:[function(require,module,exports){
+},{"../server/utilities.js":35}],17:[function(require,module,exports){
 class Viewport {
   constructor(objectParams = {}) {
     this.startX = (objectParams.startX) ? objectParams.startX : 0;
@@ -714,43 +810,7 @@ class Viewport {
 }
 
 module.exports = Viewport;
-},{}],14:[function(require,module,exports){
-const Screen = require('./Screen.js');
-
-class WaitScreen extends Screen {
-  constructor(client) {
-    super();
-    this.optionalBind('checkGameStart');
-    this.client = client;
-    this.firstWI = false;
-  }
-
-  onEnter() {
-    const client = this.client;
-    const socket = client.socket;
-    client.worldInfo.reset();
-    socket.on('badShipError', client.switchScreen.bind(client, client.chooseShipScreen));
-    socket.on('worldInfoInit', this.checkGameStart);
-    socket.on('worldInfo', this.checkGameStart);
-  }
-
-  onExit() {
-    const client = this.client;
-    const socket = client.socket;
-    socket.off('badShipError');
-    socket.off('worldInfoInit', this.checkGameStart);
-    socket.off('worldInfo', this.checkGameStart);
-  }
-
-  checkGameStart() {
-    const wi = this.client.worldInfo;
-    if(wi.initialized && wi.hasData)
-      this.client.switchScreen(this.client.gameScreen);
-  }
-}
-
-module.exports = WaitScreen;
-},{"./Screen.js":9}],15:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/drawing.js
 
@@ -1355,9 +1415,8 @@ const drawing = {
 		ctx.restore();		
 	},
 
-	//draw pause screen in the given camera
-	drawChooseShipScreen:function(camera, entry, shipList = []){
-		var ctx = camera.ctx;
+	drawEntryScreen: function(camera, entryPrompt, entry) {
+		const ctx = camera.ctx;
 		ctx.save();
 		ctx.fillStyle = "black",
 		ctx.globalAlpha = .03;
@@ -1365,7 +1424,15 @@ const drawing = {
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
 		ctx.globalAlpha = 1;
-		utilities.fillText(ctx,"Enter ship name: "+entry,camera.width/2,camera.height/2 - 30,"24pt Aroma",'white');
+		utilities.fillText(ctx,entryPrompt+": "+entry,camera.width/2,camera.height/2 - 30,"24pt Aroma",'white');
+		ctx.restore();
+	},
+
+	//draw pause screen in the given camera
+	drawChooseShipScreen:function(camera, entry, shipList = []){
+		var ctx = camera.ctx;
+		ctx.textAlign = 'center';
+		ctx.textBaseline = 'middle';
 		var list = "Options: ";
 		for(var c = 0;c<shipList.length;c++)
 		{
@@ -1405,7 +1472,7 @@ const drawing = {
 };
 
 module.exports = drawing;
-},{"../server/utilities.js":32,"./worldInfo.js":19}],16:[function(require,module,exports){
+},{"../server/utilities.js":35,"./worldInfo.js":22}],19:[function(require,module,exports){
 const commands = require('../server/commands.js');
 const keys = require('../server/keys.js');
 
@@ -1425,18 +1492,18 @@ const keymap = {
 };
 
 module.exports = keymap;
-},{"../server/commands.js":28,"../server/keys.js":30}],17:[function(require,module,exports){
+},{"../server/commands.js":31,"../server/keys.js":33}],20:[function(require,module,exports){
 const Client = require('./Client.js');
 
 window.onload = () => {
 	new Client().frame();
 };
-},{"./Client.js":3}],18:[function(require,module,exports){
+},{"./Client.js":3}],21:[function(require,module,exports){
 Object.prototype.optionalBind = function(prop) {
 	if(this[prop])
 		this[prop] = this[prop].bind(this);
 };
-},{}],19:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
@@ -1595,7 +1662,7 @@ class ObjInfo {
 }
 
 module.exports = worldInfo;
-},{"../server/utilities.js":32}],20:[function(require,module,exports){
+},{"../server/utilities.js":35}],23:[function(require,module,exports){
 const { primitiveByteSizes, ARRAY_INDEX_TYPE } = require('./serializationConstants.js');
 
 class Deserializer {
@@ -1645,7 +1712,7 @@ class Deserializer {
 
 module.exports = Deserializer;
 
-},{"./serializationConstants.js":31}],21:[function(require,module,exports){
+},{"./serializationConstants.js":34}],24:[function(require,module,exports){
 class NetworkAsteroid {
   constructor(asteroid) {
     this.id = asteroid.id;
@@ -1666,7 +1733,7 @@ NetworkAsteroid.serializableProperties = [
 
 module.exports = NetworkAsteroid;
 
-},{}],22:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 const ColorHSL = require('./utilities.js').ColorHSL;
 
 class NetworkHitscan {
@@ -1695,7 +1762,7 @@ NetworkHitscan.serializableProperties = [
 
 module.exports = NetworkHitscan;
 
-},{"./utilities.js":32}],23:[function(require,module,exports){
+},{"./utilities.js":35}],26:[function(require,module,exports){
 const ColorHSL = require('./utilities.js').ColorHSL;
 
 class NetworkObj {
@@ -1734,7 +1801,7 @@ NetworkObj.serializableProperties = [
 
 module.exports = NetworkObj;
 
-},{"./utilities.js":32}],24:[function(require,module,exports){
+},{"./utilities.js":35}],27:[function(require,module,exports){
 class NetworkPlayerObj {
   constructor(obj) {
     this.x = obj.x;
@@ -1773,7 +1840,7 @@ NetworkPlayerObj.serializableProperties = [
 
 module.exports = NetworkPlayerObj;
 
-},{}],25:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 const ColorRGB = require('./utilities.js').ColorRGB;
 
 class NetworkPrj {
@@ -1800,7 +1867,7 @@ NetworkPrj.serializableProperties = [
 
 module.exports = NetworkPrj;
 
-},{"./utilities.js":32}],26:[function(require,module,exports){
+},{"./utilities.js":35}],29:[function(require,module,exports){
 const ColorRGB = require('./utilities.js').ColorRGB;
 
 class NetworkRadial {
@@ -1825,7 +1892,7 @@ NetworkRadial.serializableProperties = [
 
 module.exports = NetworkRadial;
 
-},{"./utilities.js":32}],27:[function(require,module,exports){
+},{"./utilities.js":35}],30:[function(require,module,exports){
 const NetworkObj = require('./NetworkObj.js');
 const NetworkPlayerObj = require('./NetworkPlayerObj.js');
 const NetworkAsteroid = require('./NetworkAsteroid.js');
@@ -1879,7 +1946,7 @@ NetworkWorldInfo.serializableProperties = [
 
 module.exports = NetworkWorldInfo;
 
-},{"./NetworkAsteroid.js":21,"./NetworkHitscan.js":22,"./NetworkObj.js":23,"./NetworkPlayerObj.js":24,"./NetworkPrj.js":25,"./NetworkRadial.js":26}],28:[function(require,module,exports){
+},{"./NetworkAsteroid.js":24,"./NetworkHitscan.js":25,"./NetworkObj.js":26,"./NetworkPlayerObj.js":27,"./NetworkPrj.js":28,"./NetworkRadial.js":29}],31:[function(require,module,exports){
 const commandList = [
   'FORWARD',
   'BACKWARD',
@@ -1902,7 +1969,7 @@ for(let c = 0; c < commandList.length; c++) {
 }
 
 module.exports = commands;
-},{}],29:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 const STATES = {
 	STARTING: 2,
 	ENABLED: 1,
@@ -1941,7 +2008,7 @@ module.exports = {
 	isDisabled,
 	advanceStateDictionary
 };
-},{}],30:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 module.exports = Object.freeze({
   LEFT: 37,
   UP: 38,
@@ -1971,7 +2038,7 @@ module.exports = Object.freeze({
   RMB: 2
 });
 
-},{}],31:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 const primitiveByteSizes = {
   Float32: 4,
   Uint8: 1,
@@ -1984,7 +2051,7 @@ const ARRAY_INDEX_TYPE = 'Uint32';
 
 module.exports = { primitiveByteSizes, ARRAY_INDEX_TYPE };
 
-},{}],32:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
@@ -2649,4 +2716,4 @@ const utilities = {
 
 module.exports = utilities;
 
-},{}]},{},[17]);
+},{}]},{},[20]);

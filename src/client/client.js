@@ -1,7 +1,9 @@
 const TitleScreen = require('./TitleScreen.js');
 const GameScreen = require('./GameScreen.js');
 const ChooseShipScreen = require('./ChooseShipScreen.js');
-const WaitScreen = require('./WaitScreen.js');
+const ShipWaitScreen = require('./ShipWaitScreen.js');
+const NameScreen = require('./NameScreen.js');
+const NameWaitScreen = require('./NameWaitScreen.js');
 const DisconnectScreen = require('./DisconnectScreen.js');
 const Camera = require('./Camera.js');
 const Oscillator = require('./Oscillator.js');
@@ -103,8 +105,10 @@ class Client {
 
     this.titleScreen = new TitleScreen(this);
     this.gameScreen = new GameScreen(this);
+    this.shipWaitScreen = new ShipWaitScreen(this);
     this.chooseShipScreen = new ChooseShipScreen(this);
-    this.waitScreen = new WaitScreen(this);
+    this.nameWaitScreen = new NameWaitScreen(this);
+    this.nameScreen = new NameScreen(this);
     this.disconnectScreen = new DisconnectScreen(this);
 
     this.currentScreen = {};

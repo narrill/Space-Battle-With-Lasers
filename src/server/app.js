@@ -31,33 +31,11 @@ const files = fs.readdirSync(`${__dirname}/../../hosted/`);
 const hostedFiles = {};
 for (let c = 0; c < files.length; c++) {
   const fileName = files[c];
-  hostedFiles[fileName] = {
+  hostedFiles[`/${fileName}`] = {
     data: readHostedFile(fileName),
     mimeType: getMimeTypeFromExtension(path.extname(fileName)),
   };
 }
-
-const onRequest = (request, response) => {
-  console.log(request.url);
-  if (request.url === '/') { request.url = '/client.html'; }
-  const fileNames = Object.keys(hostedFiles);
-  for (let c = 0; c < fileNames.length; c++) {
-    const fileName = fileNames[c];
-    if (request.url === `/${fileName}`) {
-      const fileInfo = hostedFiles[fileName];
-      response.writeHead(200, { 'content-type': fileInfo.mimeType });
-      response.end(fileInfo.data);
-      return;
-    }
-  }
-
-  response.writeHead(404);
-  response.end();
-};
-
-const app = http.createServer(onRequest).listen(port);
-
-console.log(`Listening on port ${port}`);
 
 const Game = require('./Game.js');
 const ships = require('./objBlueprints.js').ships;
@@ -67,6 +45,40 @@ const utilities = require('./utilities.js');
 const shipList = Object.keys(ships);
 
 const game = new Game();
+
+const sendFile = (request, response, fileInfo) => {
+  response.writeHead(200, { 'content-type': fileInfo.mimeType });
+  response.end(fileInfo.data);
+};
+
+const sendJSON = (request, response, json) => {
+  response.writeHead(200, {'content-type': 'application/json'});
+  response.end(JSON.stringify(json));
+};
+
+const endPoints = {
+  '/names': (request, response) => { sendJSON(request, response, game.names); },
+  '/activeShips': (request, response) => { sendJSON(request, response, game.activeShips); }
+};
+
+const onRequest = (request, response) => {
+  console.log(request.url);
+  if (request.url === '/') { request.url = '/client.html'; }
+  if(hostedFiles[request.url]) {
+    sendFile(request, response, hostedFiles[request.url]);
+  }
+  else if (endPoints[request.url]) {
+    endPoints[request.url](request, response);
+  }
+  else {
+    response.writeHead(404);
+    response.end();
+  }
+};
+
+const app = http.createServer(onRequest).listen(port);
+
+console.log(`Listening on port ${port}`);
 
 const names = {};
 
