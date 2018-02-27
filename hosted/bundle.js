@@ -544,9 +544,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.keystate = {};
         this.wheel = 0;
         this.mouseX = 0;
+        this.lastMouseX = 0;
 
         this.mouseTimer = new LooseTimer(50, function () {
-          if (_this7.mouseX !== 0) {
+          if (_this7.mouseX !== _this7.lastMouseX) {
+            _this7.lastMouseX = _this7.mouseX;
             if (_this7.mouseListener) _this7.mouseListener(_this7.mouseX);
             _this7.mouseX = 0;
           }

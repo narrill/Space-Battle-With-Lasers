@@ -73,7 +73,6 @@ class Obj extends Accelerable {
           let params = utilities.deepObjectMerge.call(defaultParams, newParams);
           if(Component.getBP) {
             params = Component.getBP(params);
-            //console.log(params);
           }
           const component = new Component(params, this);
           if (component.update) { this.updatableComponents.push(component); }
