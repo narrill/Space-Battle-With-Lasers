@@ -1,13 +1,18 @@
 const utilities = require('../utilities.js');
 
 class Shield {
-  constructor(objectParams = {}) {
-    this.current = (objectParams.max) ? objectParams.max : 0;
-    this.max = 0;
-    this.efficiency = 0;
-    this.recharge = 0;
+  constructor(bp) {
+    this.current = (bp.max) ? bp.max : 0;
 
-    utilities.veryShallowObjectMerge.call(this, objectParams);
+    utilities.veryShallowObjectMerge.call(this, bp);
+  }
+
+  static getBP(params = {}) {
+    return utilities.verShallowUnionOverwrite({
+      max: 0,
+      efficiency: 0,
+      recharge: 0
+    }, params);
   }
 }
 

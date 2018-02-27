@@ -4,13 +4,18 @@ const enums = require('../enums.js');
 const has = Object.prototype.hasOwnProperty;
 
 class PowerSystem {
-  constructor(objectParams = {}, owner) {
+  constructor(bp, owner) {
     this.owner = owner;
     this.current = [0, 0, 0];
     this.target = [0, 0, 0];
-    this.transferRate = 6;
 
-    utilities.veryShallowObjectMerge.call(this, objectParams);
+    utilities.veryShallowObjectMerge.call(this, bp);
+  }
+
+  static getBP(params = {}) {
+    return utilities.veryShallowUnionOverwrite({
+      transferRate: 6
+    }, params);
   }
 
   update(dt) {

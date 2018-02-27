@@ -2,16 +2,19 @@ const utilities = require('../utilities.js');
 const StabilizerClamps = require('./StabilizerClamps.js');
 
 class Stabilizer {
-  constructor(objectParams = {}) {
+  constructor(bp) {
     this.enabled = true;
-    this.strength = 6;
-    this.thrustRatio = 1.5;
-    this.precision = 10;
-    this.clamps = new StabilizerClamps(
-      utilities.deepObjectMerge.call({}, objectParams.clamps),
-    );
+    utilities.veryShallowObjectMerge.call(this, bp);
+    this.clamps = new StabilizerClamps(bp.clamps);
+  }
 
-    utilities.veryShallowObjectMerge.call(this, objectParams);
+  static getBP(params = {}) {
+    return utilities.veryShallowUnionOverwrite.call({
+      strength: 6,
+      thrustRatio: 1.5,
+      precision: 10,
+      clamps: StabilizerClamps.getBP(params.clamps)
+    }, params);
   }
 }
 

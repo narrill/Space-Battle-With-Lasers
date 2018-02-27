@@ -2,15 +2,19 @@ const utilities = require('../utilities.js');
 const Shield = require('./Shield.js');
 
 class Destructible {
-  constructor(objectParams = {}) {
-    this.hp = 500;
-    this.maxHp = (objectParams.hp) ? objectParams.hp : 500;
-    this.radius = 500;
-    this.shield = new Shield(
-      utilities.deepObjectMerge.call({}, objectParams.shield),
-    );
+  constructor(bp) {
+    this.hp = bp.maxHp;
 
     utilities.veryShallowObjectMerge.call(this, objectParams);
+    this.shield = new Shield(bp.shield);
+  }
+
+  static getBP(params = {}) {
+    return utilities.veryShallowUnionOverwrite({
+      maxHp: 500,
+      radius: 500,
+      shield: Shield.getBP(params.shield)
+    }, params);
   }
 
   update(dt) {

@@ -2,23 +2,28 @@ const utilities = require('../utilities.js');
 const missiles = require('../objBlueprints.js').missiles;
 
 class Launcher {
-  constructor(objectParams = {}, owner) {
+  constructor(bp, owner) {
     this.owner = owner;
-    this.tubes = [
-      { ammo: missiles.tomcat, lastFireTime: 0 },
-    ];
     this.firing = false;
-    this.cd = 1;
-    this.fireInterval = 0.1;
     this.lastFireTime = 0;
 
-    utilities.veryShallowObjectMerge.call(this, objectParams);
+    utilities.veryShallowObjectMerge.call(this, bp);
+
+    const missile = missiles[this.missile];
+    this.missile = (missile) ? missile : missiles.tomcat;
+  }
+
+  static getBP(params = {}) {
+    return utilities.veryShallowUnionOverwrite({
+      missile: 'tomcat',
+      cd: 1
+    }, params);
   }
 
   update() {
     if (this.firing) {
       const owner = this.owner;
-      const launchee = utilities.deepObjectMerge.call({}, this.tubes[0].ammo);
+      const launchee = utilities.deepObjectMerge.call({}, this.missile);
       const weaponPoint = this.owner.weaponPoint;
       launchee.x = owner.x + weaponPoint[0];
       launchee.y = owner.y + weaponPoint[1];

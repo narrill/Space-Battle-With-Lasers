@@ -595,6 +595,7 @@ const utilities = {
     return returnVal;
   },
 
+  // recursively merge src onto this, shallowly merging properties named "specialProperties"
   deepObjectMerge(src) {
     if (!src) { return this; }
     // loop through source's attributes
@@ -632,6 +633,7 @@ const utilities = {
   //   }
   // }
 
+  // merge src onto this, ignoring properties that are objects or arrays
   veryShallowObjectMerge(src) {
     if (!src) { return this; }
     // loop through source's attributes
@@ -650,6 +652,7 @@ const utilities = {
     return this;
   },
 
+  // merge src onto this. objects and arrays are copied by reference
   shallowObjectMerge(src) {
     if (!src) { return this; }
     Object.keys(src).forEach((key) => {
@@ -658,6 +661,31 @@ const utilities = {
 
     return this;
   },
+
+  // copy src onto this, ignoring properties that aren't present in this
+  // and properties that are objects or arrays
+  veryShallowUnionOverwrite(src) {
+    if(!src) { return this; }
+    Object.keys(src).forEach((key) => {
+      if(this[key] && !(src[key] instanceof Object || src[key] instanceof Array))
+        this[key] = src[key];
+    });
+
+    return this;
+  },
+
+  // copy src onto this recursively, ignoring properties that aren't present in this
+  // To-do
+  deepUnionOverwrite(src) {
+    if(!src) { return this; }
+    Object.keys(src).forEach((key) => {
+      if(!this[key]) return;
+        if(!(src[key] instanceof Object || src[key] instanceof Array))
+        this[key] = src[key];
+    });
+
+    return this;
+  }
 };
 
 module.exports = utilities;

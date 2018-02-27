@@ -62,6 +62,10 @@ class Obj extends Accelerable {
     };
 
     // Populate components
+
+    // TO-DO
+    // update this to use the new getBP statics
+
     this.updatableComponents = [];
     this.destructibleComponents = [];
     Object.keys(objectParams).forEach((key) => {

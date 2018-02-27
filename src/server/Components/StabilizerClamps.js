@@ -1,13 +1,18 @@
 const utilities = require('../utilities.js');
 
 class StabilizerClamps {
-  constructor(objectParams = {}) {
+  constructor(bp) {
     this.enabled = true;
-    this.medial = 1000;
-    this.lateral = 660;
-    this.rotational = 90;
 
-    utilities.veryShallowObjectMerge.call(this, objectParams);
+    utilities.veryShallowObjectMerge.call(this, bp);
+  }
+
+  static getBP(params = {}) {
+    return utilities.veryShallowUnionOverwrite({
+      medial: 1000,
+      lateral: 660,
+      rotational: 90
+    }, params);
   }
 }
 

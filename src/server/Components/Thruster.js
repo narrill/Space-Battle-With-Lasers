@@ -1,15 +1,20 @@
 const utilities = require('../utilities.js');
 
 class Thruster {
-  constructor(objectParams = {}) {
+  constructor(bp) {
     this.currentStrength = 0;
     this.targetStrength = 0;
-    this.maxStrength = 1000;
-    this.efficiency = 1000;
-    this.powerRampPercentage = 20;
-    this.powerRampLimit = 6000;
 
-    utilities.veryShallowObjectMerge.call(this, objectParams);
+    utilities.veryShallowObjectMerge.call(this, bp);
+  }
+
+  static getBP(params = {}) {
+    return utilities.veryShallowUnionOverwrite({
+      maxStrength: 1000,
+      efficiency: 1000,
+      powerRampPercentage: 20,
+      powerRampLimit: 6000
+    }, params);
   }
 
   update(dt) {

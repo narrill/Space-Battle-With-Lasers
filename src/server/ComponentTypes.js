@@ -20,4 +20,8 @@ filenames.forEach((filename) => {
   classes[className] = req(`./${COMPONENT_DIRECTORY_NAME}/${filename}`);
 });
 
+// TO-DO
+// update this to provide a collection of "top-level" components for use in the ship builder
+// this can be done with a static bool on the component classes
+
 module.exports = { TYPES, classes };

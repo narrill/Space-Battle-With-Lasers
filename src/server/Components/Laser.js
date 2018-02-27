@@ -2,20 +2,25 @@ const utilities = require('../utilities.js');
 const collisions = require('../collisions.js');
 
 class Laser {
-  constructor(objectParams = {}, owner) {
+  constructor(bp, owner) {
     this.owner = owner;
     this.lastFireTime = 0;
-    this.cd = 0.5;
-    this.range = 2000;
     this.color = utilities.getRandomBrightColor();
     this.currentPower = 0;
-    this.coherence = 0.997;
-    this.maxPower = 2000;
-    this.efficiency = 50;
-    this.spread = 0;
-    this.collisionFunction = 'basicLaserCollision';
 
-    utilities.veryShallowObjectMerge.call(this, objectParams);
+    utilities.veryShallowObjectMerge.call(this, bp);
+  }
+
+  static getBP(params = {}) {
+    return utilities.veryShallowUnionOverwrite({
+      cd: .5,
+      range: 2000,
+      coherence: .997,
+      maxPower: 2000,
+      efficiency: 50,
+      spread: 0,
+      collisionFunction: 'basicLaserCollision'
+    }, params);
   }
 
   update(dt) {

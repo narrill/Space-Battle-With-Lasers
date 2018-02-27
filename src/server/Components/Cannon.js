@@ -4,19 +4,24 @@ const Destructible = require('./Destructible.js');
 const collisions = require('../collisions.js');
 
 class Cannon {
-  constructor(objectParams = {}, owner) {
+  constructor(bp, owner) {
     this.owner = owner;
     this.firing = false;
     this.lastFireTime = 0;
-    this.cd = 0.12;
-    this.power = 10000;
-    this.spread = 5;
-    this.multiShot = 1;
-    this.ammo = new Ammo(
-      utilities.deepObjectMerge.call({}, objectParams.ammo),
-    );
 
-    utilities.veryShallowObjectMerge.call(this, objectParams);
+    utilities.veryShallowObjectMerge.call(this, bp);
+
+    this.ammo = new Ammo(bp.ammo);
+  }
+
+  static getBP(params = {}) {
+    return utilities.veryShallowUnionOverwrite({
+      cd: .21,
+      power: 10000,
+      spread: 5,
+      multiShot: 1,
+      ammo: Ammo.getBP(params.ammo)
+    }, params);
   }
 
   update() {

@@ -2,24 +2,29 @@ const utilities = require('../utilities.js');
 const Thruster = require('./Thruster.js');
 
 class ThrusterSystem {
-  constructor(objectParams = {}, owner) {
+  constructor(bp, owner) {
     this.owner = owner;
     this.color = utilities.getRandomBrightColor();
-    this.noiseLevel = 0;
-    this.medial = new Thruster(utilities.deepObjectMerge.call({
-      maxStrength: 1000,
-      efficiency: 3000,
-    }, objectParams.medial));
-    this.lateral = new Thruster(utilities.deepObjectMerge.call({
-      maxStrength: 660,
-      efficiency: 3000,
-    }, objectParams.lateral));
-    this.rotational = new Thruster(utilities.deepObjectMerge.call({
-      maxStrength: 250,
-      efficiency: 1000,
-    }, objectParams.rotational));
+    this.medial = new Thruster(bp.medial);
+    this.lateral = new Thruster(bp.lateral);
+    this.rotational = new Thruster(bp.rotational);
+  }
 
-    utilities.veryShallowObjectMerge.call(this, objectParams);
+  static getBP(params = {}) {
+    return utilities.veryShallowUnionOverwrite({
+      medial: Thruster.getBP(utilities.deepObjectMerge.call({
+        maxStrength: 1000,
+        efficiency: 3000,
+      }, params.medial)),
+      lateral: Thruster.getBP(utilities.deepObjectMerge.call({
+        maxStrength: 660,
+        efficiency: 3000,
+      }, params.lateral)),
+      rotational: Thrusters.getBP(utilities.deepObjectMerge.call({
+        maxStrength: 250,
+        efficiency: 1000,
+      }, params.rotational))
+    }, params);
   }
 
   update(dt) {

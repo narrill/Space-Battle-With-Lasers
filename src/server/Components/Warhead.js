@@ -15,6 +15,11 @@ class Warhead {
     }, objectParams.radial);
   }
 
+  static getBP(params = {}) {
+    // To-do
+    // radial needs to use deepUnionOverwrite, which isn't finished
+  }
+
   destroy() {
     const owner = this.owner;
     const radial = this.radial;
