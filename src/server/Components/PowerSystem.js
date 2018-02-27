@@ -13,7 +13,7 @@ class PowerSystem {
   }
 
   static getBP(params = {}) {
-    return utilities.veryShallowUnionOverwrite({
+    return utilities.veryShallowUnionOverwrite.call({
       transferRate: 6
     }, params);
   }

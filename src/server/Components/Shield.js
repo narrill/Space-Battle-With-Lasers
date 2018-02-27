@@ -8,7 +8,7 @@ class Shield {
   }
 
   static getBP(params = {}) {
-    return utilities.verShallowUnionOverwrite({
+    return utilities.veryShallowUnionOverwrite.call({
       max: 0,
       efficiency: 0,
       recharge: 0

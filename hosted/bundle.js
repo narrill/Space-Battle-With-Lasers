@@ -544,11 +544,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.keystate = {};
         this.wheel = 0;
         this.mouseX = 0;
-        this.lastMouseX = 0;
 
         this.mouseTimer = new LooseTimer(50, function () {
-          if (_this7.mouseX !== _this7.lastMouseX) {
-            _this7.lastMouseX = _this7.mouseX;
+          if (_this7.mouseX !== 0) {
             if (_this7.mouseListener) _this7.mouseListener(_this7.mouseX);
             _this7.mouseX = 0;
           }
@@ -1589,6 +1587,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var shipList = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
 
         var ctx = camera.ctx;
+        ctx.save();
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         var list = "Options: ";
@@ -2195,6 +2194,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
+    var has = Object.prototype.hasOwnProperty;
+
     var Capsule = function Capsule(x1, y1, x2, y2, r) {
       _classCallCheck(this, Capsule);
 
@@ -2798,6 +2799,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return returnVal;
       },
 
+      // recursively merge src onto this, shallowly merging properties named "specialProperties"
       deepObjectMerge: function deepObjectMerge(src) {
         var _this14 = this;
 
@@ -2809,7 +2811,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           // if the current attribute is an object in the source
           if (src[key] instanceof Object && !(src[key] instanceof Array)) {
             // if the current attribute isn't in the this, or isn't an object in the this
-            if (!_this14[key] || !(_this14[key] instanceof Object && !(_this14[key] instanceof Array))) {
+            if (!has.call(_this14, key) || !(_this14[key] instanceof Object && !(_this14[key] instanceof Array))) {
               // make it an empty object
               _this14[key] = {};
             }
@@ -2843,6 +2845,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       //   }
       // }
 
+      // merge src onto this, ignoring properties that are objects or arrays
       veryShallowObjectMerge: function veryShallowObjectMerge(src) {
         var _this15 = this;
 
@@ -2852,7 +2855,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         // loop through source's attributes
         Object.keys(src).forEach(function (key) {
           if (key === 'specialProperties') {
-            if (!_this15[key]) {
+            if (!has.call(_this15, key)) {
               _this15[key] = {};
             }
             utilities.shallowObjectMerge.call(_this15[key], src[key]);
@@ -2866,6 +2869,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return this;
       },
+
+
+      // merge src onto this. objects and arrays are copied by reference
       shallowObjectMerge: function shallowObjectMerge(src) {
         var _this16 = this;
 
@@ -2874,6 +2880,39 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
         Object.keys(src).forEach(function (key) {
           _this16[key] = src[key];
+        });
+
+        return this;
+      },
+
+
+      // copy src onto this, ignoring properties that aren't present in this
+      // and properties that are objects or arrays
+      veryShallowUnionOverwrite: function veryShallowUnionOverwrite(src) {
+        var _this17 = this;
+
+        if (!src) {
+          return this;
+        }
+        Object.keys(src).forEach(function (key) {
+          if (has.call(_this17, key) && !(src[key] instanceof Object || src[key] instanceof Array)) _this17[key] = src[key];
+        });
+
+        return this;
+      },
+
+
+      // copy src onto this recursively, ignoring properties that aren't present in this
+      // To-do
+      deepUnionOverwrite: function deepUnionOverwrite(src) {
+        var _this18 = this;
+
+        if (!src) {
+          return this;
+        }
+        Object.keys(src).forEach(function (key) {
+          if (!has.call(_this18, key)) return;
+          if (src[key] instanceof Object) utilities.deepUnionOverwrite.call(_this18[key], src[key]);else _this18[key] = src[key];
         });
 
         return this;

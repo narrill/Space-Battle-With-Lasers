@@ -6,11 +6,9 @@ class Input {
     this.keystate = {};
     this.wheel = 0;
     this.mouseX = 0;
-    this.lastMouseX = 0;
 
     this.mouseTimer = new LooseTimer(50, () => {
-      if(this.mouseX !== this.lastMouseX) {
-        this.lastMouseX = this.mouseX;
+      if(this.mouseX !== 0) {
         if(this.mouseListener)
           this.mouseListener(this.mouseX);
         this.mouseX = 0;

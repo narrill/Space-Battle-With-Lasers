@@ -14,7 +14,7 @@ class Launcher {
   }
 
   static getBP(params = {}) {
-    return utilities.veryShallowUnionOverwrite({
+    return utilities.veryShallowUnionOverwrite.call({
       missile: 'tomcat',
       cd: 1
     }, params);

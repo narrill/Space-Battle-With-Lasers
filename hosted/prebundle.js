@@ -467,11 +467,9 @@ class Input {
     this.keystate = {};
     this.wheel = 0;
     this.mouseX = 0;
-    this.lastMouseX = 0;
 
     this.mouseTimer = new LooseTimer(50, () => {
-      if(this.mouseX !== this.lastMouseX) {
-        this.lastMouseX = this.mouseX;
+      if(this.mouseX !== 0) {
         if(this.mouseListener)
           this.mouseListener(this.mouseX);
         this.mouseX = 0;
@@ -1431,6 +1429,7 @@ const drawing = {
 	//draw pause screen in the given camera
 	drawChooseShipScreen:function(camera, entry, shipList = []){
 		var ctx = camera.ctx;
+		ctx.save();
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
 		var list = "Options: ";
@@ -2050,6 +2049,8 @@ module.exports = { primitiveByteSizes, ARRAY_INDEX_TYPE };
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
+const has = Object.prototype.hasOwnProperty;
+
 class Capsule {
   constructor(x1, y1, x2, y2, r) {
     this.center1 = [x1, y1];
@@ -2644,6 +2645,7 @@ const utilities = {
     return returnVal;
   },
 
+  // recursively merge src onto this, shallowly merging properties named "specialProperties"
   deepObjectMerge(src) {
     if (!src) { return this; }
     // loop through source's attributes
@@ -2651,7 +2653,7 @@ const utilities = {
       // if the current attribute is an object in the source
       if (src[key] instanceof Object && !(src[key] instanceof Array)) {
         // if the current attribute isn't in the this, or isn't an object in the this
-        if (!this[key]
+        if (!has.call(this, key)
           || !(this[key] instanceof Object && !(this[key] instanceof Array))) {
           // make it an empty object
           this[key] = {};
@@ -2681,12 +2683,13 @@ const utilities = {
   //   }
   // }
 
+  // merge src onto this, ignoring properties that are objects or arrays
   veryShallowObjectMerge(src) {
     if (!src) { return this; }
     // loop through source's attributes
     Object.keys(src).forEach((key) => {
       if (key === 'specialProperties') {
-        if (!this[key]) { this[key] = {}; }
+        if (!has.call(this, key)) { this[key] = {}; }
         utilities.shallowObjectMerge.call(this[key], src[key]);
         return;
       }
@@ -2699,6 +2702,7 @@ const utilities = {
     return this;
   },
 
+  // merge src onto this. objects and arrays are copied by reference
   shallowObjectMerge(src) {
     if (!src) { return this; }
     Object.keys(src).forEach((key) => {
@@ -2707,6 +2711,33 @@ const utilities = {
 
     return this;
   },
+
+  // copy src onto this, ignoring properties that aren't present in this
+  // and properties that are objects or arrays
+  veryShallowUnionOverwrite(src) {
+    if(!src) { return this; }
+    Object.keys(src).forEach((key) => {
+      if(has.call(this, key) && !(src[key] instanceof Object || src[key] instanceof Array))
+        this[key] = src[key];
+    });
+
+    return this;
+  },
+
+  // copy src onto this recursively, ignoring properties that aren't present in this
+  // To-do
+  deepUnionOverwrite(src) {
+    if(!src) { return this; }
+    Object.keys(src).forEach((key) => {
+      if(!has.call(this, key)) return;
+      if(src[key] instanceof Object)
+        utilities.deepUnionOverwrite.call(this[key], src[key]);
+      else
+        this[key] = src[key];
+    });
+
+    return this;
+  }
 };
 
 module.exports = utilities;

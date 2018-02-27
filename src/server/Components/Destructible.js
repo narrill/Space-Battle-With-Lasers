@@ -5,12 +5,12 @@ class Destructible {
   constructor(bp) {
     this.hp = bp.maxHp;
 
-    utilities.veryShallowObjectMerge.call(this, objectParams);
+    utilities.veryShallowObjectMerge.call(this, bp);
     this.shield = new Shield(bp.shield);
   }
 
   static getBP(params = {}) {
-    return utilities.veryShallowUnionOverwrite({
+    return utilities.veryShallowUnionOverwrite.call({
       maxHp: 500,
       radius: 500,
       shield: Shield.getBP(params.shield)

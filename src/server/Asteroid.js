@@ -11,10 +11,10 @@ class Asteroid {
     this.y = y;
     this.radius = radius;
     this.colorIndex = colorIndex;
-    this.destructible = new Destructible({
+    this.destructible = new Destructible(Destructible.getBP({
       hp: (radius * radius) / 300,
       radius,
-    });
+    }));
     this.type = 'asteroid';
   }
 

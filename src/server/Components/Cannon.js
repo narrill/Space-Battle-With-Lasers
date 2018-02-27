@@ -15,7 +15,7 @@ class Cannon {
   }
 
   static getBP(params = {}) {
-    return utilities.veryShallowUnionOverwrite({
+    return utilities.veryShallowUnionOverwrite.call({
       cd: .21,
       power: 10000,
       spread: 5,

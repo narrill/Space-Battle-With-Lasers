@@ -1,5 +1,6 @@
 const id = require('./id.js');
 const NetworkRadial = require('./NetworkRadial.js');
+const utilities = require('./utilities.js');
 
 class Radial {
   constructor(game, x, y, vel, decay, color, owner, collisionFunction, collisionProperties) {
@@ -11,7 +12,7 @@ class Radial {
     this.initialVelocity = vel;
     this.velocity = vel;
     this.decay = decay;
-    this.color = color;
+    this.color = new utilities.ColorRGB(color);
     this.owner = owner;
     this.collisionFunction = collisionFunction;
     this.collisionProperties = collisionProperties;

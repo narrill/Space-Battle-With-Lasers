@@ -11,7 +11,7 @@ class ThrusterSystem {
   }
 
   static getBP(params = {}) {
-    return utilities.veryShallowUnionOverwrite({
+    return utilities.veryShallowUnionOverwrite.call({
       medial: Thruster.getBP(utilities.deepObjectMerge.call({
         maxStrength: 1000,
         efficiency: 3000,
@@ -20,7 +20,7 @@ class ThrusterSystem {
         maxStrength: 660,
         efficiency: 3000,
       }, params.lateral)),
-      rotational: Thrusters.getBP(utilities.deepObjectMerge.call({
+      rotational: Thruster.getBP(utilities.deepObjectMerge.call({
         maxStrength: 250,
         efficiency: 1000,
       }, params.rotational))

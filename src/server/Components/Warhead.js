@@ -2,22 +2,23 @@ const utilities = require('../utilities.js');
 const collisions = require('../collisions.js');
 
 class Warhead {
-  constructor(objectParams = {}, owner) {
+  constructor(bp, owner) {
     this.owner = owner;
-    this.radial = utilities.deepObjectMerge.call({
-      velocity: 6000,
-      decay: 0.2,
-      color: new utilities.ColorRGB({ r: 255, g: 0, b: 0 }),
-      collisionProperties: {
-        density: 2,
-      },
-      collisionFunction: 'basicBlastwaveCollision',
-    }, objectParams.radial);
+    this.radial = bp.radial;
   }
 
   static getBP(params = {}) {
-    // To-do
-    // radial needs to use deepUnionOverwrite, which isn't finished
+    return {
+      radial: utilities.deepUnionOverwrite.call({
+        velocity: 6000,
+        decay: 0.2,
+        color: { r: 255, g: 0, b: 0 },
+        collisionProperties: {
+          density: 2,
+        },
+        collisionFunction: 'basicBlastwaveCollision'
+      }, params.radial)
+    }
   }
 
   destroy() {

@@ -618,6 +618,7 @@ const drawing = {
 	//draw pause screen in the given camera
 	drawChooseShipScreen:function(camera, entry, shipList = []){
 		var ctx = camera.ctx;
+		ctx.save();
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
 		var list = "Options: ";

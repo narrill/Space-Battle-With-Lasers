@@ -3,6 +3,7 @@ const aiFunctions = require('../aiFunctions.js');
 
 class Ai {
   constructor(bp, owner) {
+    console.log(bp);
     this.owner = owner;
     utilities.veryShallowObjectMerge.call(this, bp);
   }
@@ -13,7 +14,8 @@ class Ai {
   }
 
   static getBP(params = {}) {
-  	return utilities.veryShallowUnionOverwrite.call({
+    console.log(params.aiFunction instanceof Object);
+  	return utilities.veryShallowObjectMerge.call({
   		aiFunction: undefined
   	}, params);
   }

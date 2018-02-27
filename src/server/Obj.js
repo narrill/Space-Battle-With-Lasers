@@ -62,10 +62,6 @@ class Obj extends Accelerable {
     };
 
     // Populate components
-
-    // TO-DO
-    // update this to use the new getBP statics
-
     this.updatableComponents = [];
     this.destructibleComponents = [];
     Object.keys(objectParams).forEach((key) => {
@@ -74,7 +70,11 @@ class Obj extends Accelerable {
         if (Component) {
           const newParams = objectParams[key];
           const defaultParams = defaults[key] || {};
-          const params = utilities.deepObjectMerge.call(defaultParams, newParams);
+          let params = utilities.deepObjectMerge.call(defaultParams, newParams);
+          if(Component.getBP) {
+            params = Component.getBP(params);
+            //console.log(params);
+          }
           const component = new Component(params, this);
           if (component.update) { this.updatableComponents.push(component); }
           if (component.destroy) {

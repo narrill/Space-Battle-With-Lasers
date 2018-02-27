@@ -1,6 +1,8 @@
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
+const has = Object.prototype.hasOwnProperty;
+
 class Capsule {
   constructor(x1, y1, x2, y2, r) {
     this.center1 = [x1, y1];
@@ -603,7 +605,7 @@ const utilities = {
       // if the current attribute is an object in the source
       if (src[key] instanceof Object && !(src[key] instanceof Array)) {
         // if the current attribute isn't in the this, or isn't an object in the this
-        if (!this[key]
+        if (!has.call(this, key)
           || !(this[key] instanceof Object && !(this[key] instanceof Array))) {
           // make it an empty object
           this[key] = {};
@@ -639,7 +641,7 @@ const utilities = {
     // loop through source's attributes
     Object.keys(src).forEach((key) => {
       if (key === 'specialProperties') {
-        if (!this[key]) { this[key] = {}; }
+        if (!has.call(this, key)) { this[key] = {}; }
         utilities.shallowObjectMerge.call(this[key], src[key]);
         return;
       }
@@ -667,7 +669,7 @@ const utilities = {
   veryShallowUnionOverwrite(src) {
     if(!src) { return this; }
     Object.keys(src).forEach((key) => {
-      if(this[key] && !(src[key] instanceof Object || src[key] instanceof Array))
+      if(has.call(this, key) && !(src[key] instanceof Object || src[key] instanceof Array))
         this[key] = src[key];
     });
 
@@ -679,8 +681,10 @@ const utilities = {
   deepUnionOverwrite(src) {
     if(!src) { return this; }
     Object.keys(src).forEach((key) => {
-      if(!this[key]) return;
-        if(!(src[key] instanceof Object || src[key] instanceof Array))
+      if(!has.call(this, key)) return;
+      if(src[key] instanceof Object)
+        utilities.deepUnionOverwrite.call(this[key], src[key]);
+      else
         this[key] = src[key];
     });
 
