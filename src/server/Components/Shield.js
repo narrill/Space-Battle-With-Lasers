@@ -11,7 +11,7 @@ class Shield {
     return utilities.veryShallowUnionOverwrite.call({
       max: 0,
       efficiency: 0,
-      recharge: 0
+      recharge: 0,
     }, params);
   }
 

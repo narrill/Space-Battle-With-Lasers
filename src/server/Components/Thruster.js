@@ -13,7 +13,7 @@ class Thruster {
       maxStrength: 1000,
       efficiency: 1000,
       powerRampPercentage: 20,
-      powerRampLimit: 6000
+      powerRampLimit: 6000,
     }, params);
   }
 

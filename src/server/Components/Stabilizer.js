@@ -13,7 +13,7 @@ class Stabilizer {
       strength: 6,
       thrustRatio: 1.5,
       precision: 10,
-      clamps: StabilizerClamps.getBP(params.clamps)
+      clamps: StabilizerClamps.getBP(params.clamps),
     }, params);
   }
 }

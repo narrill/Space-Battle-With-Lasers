@@ -13,7 +13,7 @@ class Launcher {
 
   static getBP(params = {}) {
     return utilities.veryShallowUnionOverwrite.call({
-      cd: 1
+      cd: 1,
     }, params);
   }
 

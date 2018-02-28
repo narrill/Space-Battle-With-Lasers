@@ -14,7 +14,7 @@ class PowerSystem {
 
   static getBP(params = {}) {
     return utilities.veryShallowUnionOverwrite.call({
-      transferRate: 6
+      transferRate: 6,
     }, params);
   }
 
@@ -52,7 +52,7 @@ class PowerSystem {
     if (has.call(owner, 'laser')) { owner.laser.maxPower /= (1 + laserPower); }
     if (has.call(owner, 'cannon')) { owner.cannon.power /= (1 + laserPower); }
     // shields
-    if(has.call(owner, 'shield')) {
+    if (has.call(owner, 'shield')) {
       owner.shield.current /= (1 + shieldPower);
       owner.shield.max /= (1 + shieldPower);
       owner.shield.recharge /= (1 + shieldPower);
@@ -86,7 +86,7 @@ class PowerSystem {
     if (has.call(owner, 'laser')) { owner.laser.maxPower *= (1 + laserPower); }
     if (has.call(owner, 'cannon')) { owner.cannon.power *= (1 + laserPower); }
     // shields
-    if(has.call(owner, 'shield')) {
+    if (has.call(owner, 'shield')) {
       owner.shield.current *= (1 + shieldPower);
       owner.shield.max *= (1 + shieldPower);
       owner.shield.recharge *= (1 + shieldPower);

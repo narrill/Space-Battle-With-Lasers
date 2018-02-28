@@ -11,7 +11,7 @@ class StabilizerClamps {
     return utilities.veryShallowUnionOverwrite.call({
       medial: 1000,
       lateral: 660,
-      rotational: 90
+      rotational: 90,
     }, params);
   }
 }

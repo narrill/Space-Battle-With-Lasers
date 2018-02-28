@@ -1,5 +1,4 @@
 const utilities = require('../utilities.js');
-const Shield = require('./Shield.js');
 
 class Destructible {
   constructor(bp) {
@@ -11,7 +10,7 @@ class Destructible {
   static getBP(params = {}) {
     return utilities.veryShallowUnionOverwrite.call({
       maxHp: 500,
-      radius: 500
+      radius: 500,
     }, params);
   }
 

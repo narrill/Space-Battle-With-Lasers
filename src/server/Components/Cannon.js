@@ -1,7 +1,6 @@
 const utilities = require('../utilities.js');
 const Ammo = require('./Ammo.js');
 const Destructible = require('./Destructible.js');
-const collisions = require('../collisions.js');
 
 class Cannon {
   constructor(bp, owner) {
@@ -16,11 +15,11 @@ class Cannon {
 
   static getBP(params = {}) {
     return utilities.veryShallowUnionOverwrite.call({
-      cd: .12,
+      cd: 0.12,
       power: 10000,
       spread: 5,
       multiShot: 1,
-      ammo: Ammo.getBP(params.ammo)
+      ammo: Ammo.getBP(params.ammo),
     }, params);
   }
 

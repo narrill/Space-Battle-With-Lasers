@@ -667,10 +667,12 @@ const utilities = {
   // copy src onto this, ignoring properties that aren't present in this
   // and properties that are objects or arrays
   veryShallowUnionOverwrite(src) {
-    if(!src) { return this; }
+    if (!src) { return this; }
     Object.keys(src).forEach((key) => {
-      if(has.call(this, key) && !(src[key] instanceof Object || src[key] instanceof Array))
+      if (has.call(this, key)
+        && !(src[key] instanceof Object || src[key] instanceof Array)) {
         this[key] = src[key];
+      }
     });
 
     return this;
@@ -679,17 +681,18 @@ const utilities = {
   // copy src onto this recursively, ignoring properties that aren't present in this
   // To-do
   deepUnionOverwrite(src) {
-    if(!src) { return this; }
+    if (!src) { return this; }
     Object.keys(src).forEach((key) => {
-      if(!has.call(this, key)) return;
-      if(src[key] instanceof Object)
+      if (!has.call(this, key)) return;
+      if (src[key] instanceof Object) {
         utilities.deepUnionOverwrite.call(this[key], src[key]);
-      else
+      } else {
         this[key] = src[key];
+      }
     });
 
     return this;
-  }
+  },
 };
 
 module.exports = utilities;

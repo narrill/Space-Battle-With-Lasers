@@ -1,5 +1,4 @@
 const utilities = require('./utilities.js');
-const componentTypes = require('./ComponentTypes.js');
 
 const ships = {
   cheetah: {
@@ -353,12 +352,12 @@ function processShip(shipName) {
 }
 
 const addShip = (ship) => {
-  if(!ships[ship.name]) {
+  if (!ships[ship.name]) {
     ships[ship.name] = ship.bp;
     processShip.call(ships, ship.name);
     return true;
   }
-  else return false;
+  return false;
 };
 
 Object.keys(ships).forEach(processShip.bind(ships));

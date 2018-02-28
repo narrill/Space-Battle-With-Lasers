@@ -13,9 +13,9 @@ class Ai {
   }
 
   static getBP(params = {}) {
-  	return utilities.veryShallowObjectMerge.call({
-  		aiFunction: undefined
-  	}, params);
+    return utilities.veryShallowObjectMerge.call({
+      aiFunction: undefined,
+    }, params);
   }
 }
 

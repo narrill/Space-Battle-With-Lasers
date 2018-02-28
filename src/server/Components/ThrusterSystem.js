@@ -23,7 +23,7 @@ class ThrusterSystem {
       rotational: Thruster.getBP(utilities.deepObjectMerge.call({
         maxStrength: 250,
         efficiency: 1000,
-      }, params.rotational))
+      }, params.rotational)),
     }, params);
   }
 

@@ -4,15 +4,14 @@
 const utilities = require('./utilities.js');
 
 const collisions = {
-  dealDamage(dmg) {
-    if(this.shield) {
+  dealDamage(damage) {
+    let dmg = damage;
+    if (this.shield) {
       this.shield.current -= dmg;
-      if(this.shield.current < 0) {
+      if (this.shield.current < 0) {
         dmg = this.shield.current * (-1);
         this.shield.current = 0;
-      }
-      else
-        dmg = 0;
+      } else { dmg = 0; }
     }
     this.destructible.hp -= dmg;
   },

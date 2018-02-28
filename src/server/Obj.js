@@ -8,10 +8,12 @@ const enums = require('./enums.js');
 const has = Object.prototype.hasOwnProperty;
 const componentClasses = require('./ComponentTypes.js').classes;
 const Accelerable = require('./Accelerable.js');
+
 const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
 
 class Obj extends Accelerable {
-  constructor(objectParams = {}, game, owner, playerId) {
+  constructor(oPar = {}, game, owner, playerId) {
+    const objectParams = oPar;
     super();
     const gridPosition = gridFunctions.randomGridPosition(game.grid);
     this.id = id.takeIdTag();
@@ -74,7 +76,7 @@ class Obj extends Accelerable {
           const newParams = objectParams[key];
           const defaultParams = defaults[key] || {};
           let params = utilities.deepObjectMerge.call(defaultParams, newParams);
-          if(Component.getBP) {
+          if (Component.getBP) {
             params = Component.getBP(params);
           }
           const component = new Component(params, this);
@@ -214,22 +216,20 @@ class Obj extends Accelerable {
     );
   }
 
-  static completeBP(params) {
-    if(!params.stabilizer)
-      params.stabilizer = {};
-    if(!params.thrusterSystem)
-      params.thrusterSystem = {};
-    if(!params.powerSystem)
-      params.powerSystem = {};
-    if(!params.laser && !params.cannon && !params.launcher)
-      params.laser = {};
+  static completeBP(par) {
+    const params = par;
+    if (!params.stabilizer) { params.stabilizer = {}; }
+    if (!params.thrusterSystem) { params.thrusterSystem = {}; }
+    if (!params.powerSystem) { params.powerSystem = {}; }
+    if (!params.laser && !params.cannon && !params.launcher) { params.laser = {}; }
     const bp = {};
     Object.keys(params).forEach((component) => {
       const Component = componentClasses[capitalize(component)];
-      if(Component && Component.getBP)
+      if (Component && Component.getBP) {
         bp[component] = Component.getBP(params[component]);
-      else
+      } else {
         bp[component] = params[component];
+      }
     });
     return bp;
   }

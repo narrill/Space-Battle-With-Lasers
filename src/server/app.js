@@ -42,9 +42,11 @@ for (let c = 0; c < files.length; c++) {
 const Game = require('./Game.js');
 const buildableBPs = require('./ComponentTypes.js').buildableBPs;
 const objBlueprints = require('./objBlueprints.js');
+
 const ships = objBlueprints.ships;
 const Obj = require('./Obj.js');
 const utilities = require('./utilities.js');
+
 let shipList = Object.keys(ships);
 
 const game = new Game();
@@ -55,15 +57,11 @@ const sendFile = (request, response, fileInfo) => {
 };
 
 const sendJSON = (request, response, json) => {
-  if(request.headers.accept.includes("application/json") 
-    || request.headers.accept.includes("text/html")) {
+  if (request.headers.accept.includes('application/json')
+    || request.headers.accept.includes('text/html')) {
     response.writeHead(200, { 'content-type': 'application/json' });
-    if(request.method === 'GET')
-      response.end(JSON.stringify(json));
-    else
-      response.end();
-  }
-  else {
+    if (request.method === 'GET') { response.end(JSON.stringify(json)); } else { response.end(); }
+  } else {
     response.writeHead(400);
     response.end();
   }
@@ -77,17 +75,15 @@ const sendCode = (request, response, code) => {
 const endPoints = {
   '/names': (request, response) => { sendJSON(request, response, game.names); },
   '/activeShips': (request, response) => { sendJSON(request, response, game.activeShips); },
-  '/components': (request, response) => { sendJSON(request, response, buildableBPs)},
+  '/components': (request, response) => { sendJSON(request, response, buildableBPs); },
   '/ship': (request, response, query) => {
-    if(query.ship && ships[query.ship]) {
+    if (query.ship && ships[query.ship]) {
       sendJSON(request, response, Obj.completeBP(ships[query.ship]));
-    }
-    else
-      sendCode(request, response, 400);
+    } else { sendCode(request, response, 400); }
   },
   '/addShip': (request, response) => {
     const body = [];
-    request.on('error', (err) => {
+    request.on('error', () => {
       sendCode(request, response, 400);
     });
     request.on('data', (chunk) => {
@@ -97,15 +93,14 @@ const endPoints = {
       const string = Buffer.concat(body).toString();
       const obj = JSON.parse(string);
       obj.bp = Obj.completeBP(obj.bp);
-      if(objBlueprints.addShip(obj)) {
+      if (objBlueprints.addShip(obj)) {
         shipList = Object.keys(ships);
         sendCode(request, response, 204);
-      }
-      else {
+      } else {
         sendCode(request, response, 400);
       }
     });
-  }
+  },
 };
 
 const onRequest = (request, response) => {

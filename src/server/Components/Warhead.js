@@ -16,9 +16,9 @@ class Warhead {
         collisionProperties: {
           density: 2,
         },
-        collisionFunction: 'basicBlastwaveCollision'
-      }, params.radial)
-    }
+        collisionFunction: 'basicBlastwaveCollision',
+      }, params.radial),
+    };
   }
 
   destroy() {
