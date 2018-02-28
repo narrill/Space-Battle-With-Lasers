@@ -352,7 +352,16 @@ function processShip(shipName) {
   this[shipName].shipName = shipName;
 }
 
+const addShip = (ship) => {
+  if(!ships[ship.name]) {
+    ships[ship.name] = ship.bp;
+    processShip.call(ships, ship.name);
+    return true;
+  }
+  else return false;
+};
+
 Object.keys(ships).forEach(processShip.bind(ships));
 Object.keys(missiles).forEach(populatePhysicalProperties.bind(missiles));
 
-module.exports = { ships, missiles };
+module.exports = { ships, missiles, addShip };

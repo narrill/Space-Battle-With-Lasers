@@ -26,8 +26,8 @@ class ModalScreen extends Screen {
   }
 
   exitModal(val) {
-    this.callback(val);
     this.client.exitModal(this.previousScreen);
+    this.callback(val);
   }
 }
 

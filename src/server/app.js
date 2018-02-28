@@ -45,7 +45,7 @@ const objBlueprints = require('./objBlueprints.js');
 const ships = objBlueprints.ships;
 const Obj = require('./Obj.js');
 const utilities = require('./utilities.js');
-const shipList = Object.keys(ships);
+let shipList = Object.keys(ships);
 
 const game = new Game();
 
@@ -55,12 +55,21 @@ const sendFile = (request, response, fileInfo) => {
 };
 
 const sendJSON = (request, response, json) => {
-  response.writeHead(200, { 'content-type': 'application/json' });
-  response.end(JSON.stringify(json));
+  if(request.headers.accept && request.headers.accept !== "application/json") {
+    response.writeHead(400);
+    response.end();
+  }
+  else {
+    response.writeHead(200, { 'content-type': 'application/json' });
+    if(request.method === 'GET')
+      response.end(JSON.stringify(json));
+    else
+      response.end();
+  }
 };
 
-const send400 = (request, response) => {
-  response.writeHead(400);
+const sendCode = (request, response, code) => {
+  response.writeHead(code);
   response.end();
 };
 
@@ -73,7 +82,28 @@ const endPoints = {
       sendJSON(request, response, Obj.completeBP(ships[query.ship]));
     }
     else
-      send400(request, response);
+      sendCode(request, response, 400);
+  },
+  '/addShip': (request, response) => {
+    const body = [];
+    request.on('error', (err) => {
+      sendCode(request, response, 400);
+    });
+    request.on('data', (chunk) => {
+      body.push(chunk);
+    });
+    request.on('end', () => {
+      const string = Buffer.concat(body).toString();
+      const obj = JSON.parse(string);
+      obj.bp = Obj.completeBP(obj.bp);
+      if(objBlueprints.addShip(obj)) {
+        shipList = Object.keys(ships);
+        sendCode(request, response, 204);
+      }
+      else {
+        sendCode(request, response, 400);
+      }
+    });
   }
 };
 
@@ -97,9 +127,9 @@ const app = http.createServer(onRequest).listen(port);
 
 console.log(`Listening on port ${port}`);
 
-const names = {};
-
 const io = socketio(app);
+
+const names = {};
 
 io.on('connection', (s) => {
   let ship;

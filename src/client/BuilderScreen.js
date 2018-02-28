@@ -1,6 +1,8 @@
 const Screen = require('./Screen.js');
 const ModalEntryScreen = require('./ModalEntryScreen.js');
+const ModalConfirmationScreen = require('./ModalConfirmationScreen.js');
 const drawing = require('./drawing.js');
+const Menu = require('./Menu.js');
 
 const drawHighlight = (ctx, x, y, text, height) => {
   ctx.save();
@@ -78,8 +80,11 @@ class Navigable {
   forward() {
     if(this.current && this.current.canForward)
       this.current.forward();
-    else
+    else {
       this.cursor = this._boundCursor(this.cursor + 1);
+      if(this.current && !this.current.canForward && this.current.toFirst)
+        this.current.toFirst();
+    }
   }
 
   backward() {
@@ -129,7 +134,7 @@ class ComponentEditor extends Navigable {
 
   get canBackward() {
     return this.cursor !== -1;
-  }
+  };
 
   get onName() {
     return this.cursor === -1;
@@ -139,6 +144,10 @@ class ComponentEditor extends Navigable {
     this.cursor = this.elements.length - 1;
     if(this.current.enabled)
       this.current.toLast();
+  }
+
+  toFirst() {
+    this.cursor = this.min;
   }
 
   select() {
@@ -168,6 +177,15 @@ class ShipEditor extends Navigable {
       y = this.elements[c].draw(ctx, x, y, height, lineHeight, active && this.cursor === c, indent);
     }
     ctx.restore();
+  }
+
+  get shipBP() {
+    const bp = {};
+    for(let c = 0; c < this.elements.length; ++c) {
+      if(this.elements[c].enabled)
+        bp[this.elements[c].name] = this.elements[c].data;
+    }
+    return bp;
   }
 
   _boundLineOffset(offset) {
@@ -258,7 +276,29 @@ class ModelEditor {
   }
 
   get model() {
-    return this.verts;
+    return {
+      vertices: this.verts,
+      thrusterPoints: {
+        medial: {
+          positive: [[0, 7]],
+          negative: [[0, 2]],
+        },
+        lateral: {
+          positive: [[10, -5]],
+          negative: [[-10, -5]],
+        },
+        rotational: {
+          positive: [[2, -10]],
+          negative: [[-2, -10]],
+        },
+        width: 5,
+      },
+      weaponOffset: [0, -30],
+      overlay: {
+        colorCircle: true,
+        destructible: true,
+      },
+    };
   }
 
   get currentVert() {
@@ -334,7 +374,8 @@ class BuilderScreen extends Screen {
     this.client = client;
     this.openRequests = 0;
     this.modelEditor = new ModelEditor();
-    this.activeEditor = this.modelEditor;
+    this.editors = [this.modelEditor];
+    this.cursor = 0;
   }
 
   update() {
@@ -346,8 +387,10 @@ class BuilderScreen extends Screen {
     if(this.openRequests !== 0)
       return;
     this.modelEditor.draw(this.client.camera, this.activeEditor === this.modelEditor);
-    if(this.shipEditor)
+    if(this.shipEditor) {
       this.shipEditor.draw(this.client.camera.ctx, 50, this.client.camera.height/2, this.activeEditor === this.shipEditor);
+      this.menu.draw(this.client.camera.ctx, this.client.camera.width - 100, this.client.camera.height/2, "20pt Orbitron", this.activeEditor === this.menu);
+    }
   }
 
   onEnter() {
@@ -357,12 +400,53 @@ class BuilderScreen extends Screen {
     this.client.camera.zoom = 15;
     this.getRequest('/components', (data) => {
       this.shipEditor = new ShipEditor(data);
+      this.editors.push(this.shipEditor);
+      this.menu = new Menu([
+        {text: "Submit", func: () => (client) => {
+          const bp = this.shipEditor.shipBP;
+          let weapons = 0;
+          if(bp.laser) weapons++;
+          if(bp.cannon) weapons++;
+          if(bp.launcher) weapons++;
+          if(!bp.powerSystem || !bp.stabilizer || !bp.thrusterSystem || weapons !== 1) {
+            client.enterModal(ModalConfirmationScreen, () => {}, "Your ship must have a power system, stabilizer, thruster system, and one weapon");
+            return;
+          }
+          client.enterModal(ModalEntryScreen, (shipName) => {            
+            bp.model = this.modelEditor.model;
+            const ship = {
+              name: shipName,
+              bp: bp
+            };
+            this.postRequest('/addShip', ship, (statusCode) => {
+              const message = (statusCode === 204) ? "Success" : "Name unavailable";
+              client.enterModal(ModalConfirmationScreen, () => {
+                if(statusCode === 204)
+                  client.switchScreen(client.titleScreen);
+              }, message);
+            });
+          }, "Enter a name for the ship");
+        }},
+        {text: "Back", func: () => (client) => client.switchScreen(client.titleScreen)}
+      ]);
+      this.editors.push(this.menu);
     });
+  }
+
+  onExit() {
+    this.editors.pop();
+    this.editors.pop();
+    delete this.shipEditor;
+    delete this.menu;
+  }
+
+  get activeEditor() {
+    return this.editors[this.cursor];
   }
 
   keyDown(e) {
     if(e.key === 'Tab')
-      this.activeEditor = (this.shipEditor && this.activeEditor !== this.shipEditor) ? this.shipEditor : this.modelEditor;
+      this.forward();
     this._handleSelect(this.activeEditor.key(e));
   }
 
@@ -373,8 +457,26 @@ class BuilderScreen extends Screen {
       this.openRequests--;
     };
     xhr.open('GET', url);
+    xhr.setRequestHeader('Accept', "application/json");
     xhr.send();
     this.openRequests++;
+  }
+
+  postRequest(url, data, callback) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.onload = () => {
+      callback(xhr.status);
+    };
+    xhr.send(JSON.stringify(data));
+  };
+
+  forward() {
+    this.cursor = this._boundCursor(this.cursor + 1);
+  }
+
+  _boundCursor(cursor) {
+    return (cursor + this.editors.length) % this.editors.length;
   }
 
   _handleSelect(callback) {

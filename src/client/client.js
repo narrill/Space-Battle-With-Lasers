@@ -198,8 +198,8 @@ class Client {
     this._switchScreen(screen, false, false);
   }
 
-  enterModal(Modal, callback) {
-    this._switchScreen(new Modal(this, this.currentScreen, callback), true, false);
+  enterModal(Modal, callback, ...args) {
+    this._switchScreen(new Modal(this, this.currentScreen, callback, ...args), true, false);
   }
 
   exitModal(previousScreen) {

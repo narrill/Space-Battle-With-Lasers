@@ -4,15 +4,16 @@ class Menu {
     this.cursor = 0;
   }
 
-  draw(ctx, x, y, font) {
+  draw(ctx, x, y, font, active) {
     ctx.save();
     ctx.font = font;
     ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     ctx.fillStyle = 'white';
     const height = ctx.measureText("M").width;
     const lineHeight = height * 1.5;
     for (let i = this.elements.length - 1; i >= 0; --i) {
-      if(this.cursor === i) {
+      if(active && this.cursor === i) {
         ctx.save();
         const width = ctx.measureText(this.elements[i].text).width;
         ctx.globalAlpha = 0.5;

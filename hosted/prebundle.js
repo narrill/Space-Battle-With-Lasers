@@ -1,7 +1,9 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 const Screen = require('./Screen.js');
 const ModalEntryScreen = require('./ModalEntryScreen.js');
+const ModalConfirmationScreen = require('./ModalConfirmationScreen.js');
 const drawing = require('./drawing.js');
+const Menu = require('./Menu.js');
 
 const drawHighlight = (ctx, x, y, text, height) => {
   ctx.save();
@@ -79,8 +81,11 @@ class Navigable {
   forward() {
     if(this.current && this.current.canForward)
       this.current.forward();
-    else
+    else {
       this.cursor = this._boundCursor(this.cursor + 1);
+      if(this.current && !this.current.canForward && this.current.toFirst)
+        this.current.toFirst();
+    }
   }
 
   backward() {
@@ -130,7 +135,7 @@ class ComponentEditor extends Navigable {
 
   get canBackward() {
     return this.cursor !== -1;
-  }
+  };
 
   get onName() {
     return this.cursor === -1;
@@ -140,6 +145,10 @@ class ComponentEditor extends Navigable {
     this.cursor = this.elements.length - 1;
     if(this.current.enabled)
       this.current.toLast();
+  }
+
+  toFirst() {
+    this.cursor = this.min;
   }
 
   select() {
@@ -169,6 +178,15 @@ class ShipEditor extends Navigable {
       y = this.elements[c].draw(ctx, x, y, height, lineHeight, active && this.cursor === c, indent);
     }
     ctx.restore();
+  }
+
+  get shipBP() {
+    const bp = {};
+    for(let c = 0; c < this.elements.length; ++c) {
+      if(this.elements[c].enabled)
+        bp[this.elements[c].name] = this.elements[c].data;
+    }
+    return bp;
   }
 
   _boundLineOffset(offset) {
@@ -259,7 +277,29 @@ class ModelEditor {
   }
 
   get model() {
-    return this.verts;
+    return {
+      vertices: this.verts,
+      thrusterPoints: {
+        medial: {
+          positive: [[0, 7]],
+          negative: [[0, 2]],
+        },
+        lateral: {
+          positive: [[10, -5]],
+          negative: [[-10, -5]],
+        },
+        rotational: {
+          positive: [[2, -10]],
+          negative: [[-2, -10]],
+        },
+        width: 5,
+      },
+      weaponOffset: [0, -30],
+      overlay: {
+        colorCircle: true,
+        destructible: true,
+      },
+    };
   }
 
   get currentVert() {
@@ -335,7 +375,8 @@ class BuilderScreen extends Screen {
     this.client = client;
     this.openRequests = 0;
     this.modelEditor = new ModelEditor();
-    this.activeEditor = this.modelEditor;
+    this.editors = [this.modelEditor];
+    this.cursor = 0;
   }
 
   update() {
@@ -347,8 +388,10 @@ class BuilderScreen extends Screen {
     if(this.openRequests !== 0)
       return;
     this.modelEditor.draw(this.client.camera, this.activeEditor === this.modelEditor);
-    if(this.shipEditor)
+    if(this.shipEditor) {
       this.shipEditor.draw(this.client.camera.ctx, 50, this.client.camera.height/2, this.activeEditor === this.shipEditor);
+      this.menu.draw(this.client.camera.ctx, this.client.camera.width - 100, this.client.camera.height/2, "20pt Orbitron", this.activeEditor === this.menu);
+    }
   }
 
   onEnter() {
@@ -358,12 +401,53 @@ class BuilderScreen extends Screen {
     this.client.camera.zoom = 15;
     this.getRequest('/components', (data) => {
       this.shipEditor = new ShipEditor(data);
+      this.editors.push(this.shipEditor);
+      this.menu = new Menu([
+        {text: "Submit", func: () => (client) => {
+          const bp = this.shipEditor.shipBP;
+          let weapons = 0;
+          if(bp.laser) weapons++;
+          if(bp.cannon) weapons++;
+          if(bp.launcher) weapons++;
+          if(!bp.powerSystem || !bp.stabilizer || !bp.thrusterSystem || weapons !== 1) {
+            client.enterModal(ModalConfirmationScreen, () => {}, "Your ship must have a power system, stabilizer, thruster system, and one weapon");
+            return;
+          }
+          client.enterModal(ModalEntryScreen, (shipName) => {            
+            bp.model = this.modelEditor.model;
+            const ship = {
+              name: shipName,
+              bp: bp
+            };
+            this.postRequest('/addShip', ship, (statusCode) => {
+              const message = (statusCode === 204) ? "Success" : "Name unavailable";
+              client.enterModal(ModalConfirmationScreen, () => {
+                if(statusCode === 204)
+                  client.switchScreen(client.titleScreen);
+              }, message);
+            });
+          }, "Enter a name for the ship");
+        }},
+        {text: "Back", func: () => (client) => client.switchScreen(client.titleScreen)}
+      ]);
+      this.editors.push(this.menu);
     });
+  }
+
+  onExit() {
+    this.editors.pop();
+    this.editors.pop();
+    delete this.shipEditor;
+    delete this.menu;
+  }
+
+  get activeEditor() {
+    return this.editors[this.cursor];
   }
 
   keyDown(e) {
     if(e.key === 'Tab')
-      this.activeEditor = (this.shipEditor && this.activeEditor !== this.shipEditor) ? this.shipEditor : this.modelEditor;
+      this.forward();
     this._handleSelect(this.activeEditor.key(e));
   }
 
@@ -374,8 +458,26 @@ class BuilderScreen extends Screen {
       this.openRequests--;
     };
     xhr.open('GET', url);
+    xhr.setRequestHeader('Accept', "application/json");
     xhr.send();
     this.openRequests++;
+  }
+
+  postRequest(url, data, callback) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.onload = () => {
+      callback(xhr.status);
+    };
+    xhr.send(JSON.stringify(data));
+  };
+
+  forward() {
+    this.cursor = this._boundCursor(this.cursor + 1);
+  }
+
+  _boundCursor(cursor) {
+    return (cursor + this.editors.length) % this.editors.length;
   }
 
   _handleSelect(callback) {
@@ -385,7 +487,7 @@ class BuilderScreen extends Screen {
 }
 
 module.exports = BuilderScreen;
-},{"./ModalEntryScreen.js":11,"./Screen.js":16,"./drawing.js":22}],2:[function(require,module,exports){
+},{"./Menu.js":10,"./ModalConfirmationScreen.js":11,"./ModalEntryScreen.js":12,"./Screen.js":17,"./drawing.js":23}],2:[function(require,module,exports){
 const utilities = require('../server/utilities.js');
 const Viewport = require('./Viewport.js');
 
@@ -420,7 +522,7 @@ class Camera {
 }
 
 module.exports = Camera;
-},{"../server/utilities.js":39,"./Viewport.js":21}],3:[function(require,module,exports){
+},{"../server/utilities.js":40,"./Viewport.js":22}],3:[function(require,module,exports){
 const EntryScreen = require('./EntryScreen.js');
 const drawing = require('./drawing.js');
 
@@ -437,7 +539,7 @@ class ChooseShipScreen extends EntryScreen {
 }
 
 module.exports = ChooseShipScreen;
-},{"./EntryScreen.js":6,"./drawing.js":22}],4:[function(require,module,exports){
+},{"./EntryScreen.js":6,"./drawing.js":23}],4:[function(require,module,exports){
 const TitleScreen = require('./TitleScreen.js');
 const GameScreen = require('./GameScreen.js');
 const ChooseShipScreen = require('./ChooseShipScreen.js');
@@ -638,8 +740,8 @@ class Client {
     this._switchScreen(screen, false, false);
   }
 
-  enterModal(Modal, callback) {
-    this._switchScreen(new Modal(this, this.currentScreen, callback), true, false);
+  enterModal(Modal, callback, ...args) {
+    this._switchScreen(new Modal(this, this.currentScreen, callback, ...args), true, false);
   }
 
   exitModal(previousScreen) {
@@ -671,7 +773,7 @@ class Client {
 }
 
 module.exports = Client;
-},{"../server/Deserializer.js":27,"../server/NetworkWorldInfo.js":34,"../server/utilities.js":39,"./BuilderScreen.js":1,"./Camera.js":2,"./ChooseShipScreen.js":3,"./DisconnectScreen.js":5,"./GameScreen.js":7,"./Input.js":8,"./NameScreen.js":13,"./NameWaitScreen.js":14,"./Oscillator.js":15,"./ShipWaitScreen.js":17,"./Stinger.js":18,"./TitleScreen.js":19,"./drawing.js":22,"./worldInfo.js":26}],5:[function(require,module,exports){
+},{"../server/Deserializer.js":28,"../server/NetworkWorldInfo.js":35,"../server/utilities.js":40,"./BuilderScreen.js":1,"./Camera.js":2,"./ChooseShipScreen.js":3,"./DisconnectScreen.js":5,"./GameScreen.js":7,"./Input.js":8,"./NameScreen.js":14,"./NameWaitScreen.js":15,"./Oscillator.js":16,"./ShipWaitScreen.js":18,"./Stinger.js":19,"./TitleScreen.js":20,"./drawing.js":23,"./worldInfo.js":27}],5:[function(require,module,exports){
 const Screen = require('./Screen.js');
 const drawing = require('./drawing.js');
 
@@ -694,7 +796,7 @@ class DisconnectScreen extends Screen {
 }
 
 module.exports = DisconnectScreen;
-},{"./Screen.js":16,"./drawing.js":22}],6:[function(require,module,exports){
+},{"./Screen.js":17,"./drawing.js":23}],6:[function(require,module,exports){
 const Screen = require('./Screen.js');
 
 class EntryScreen extends Screen {
@@ -724,7 +826,7 @@ class EntryScreen extends Screen {
 }
 
 module.exports = EntryScreen;
-},{"./Screen.js":16}],7:[function(require,module,exports){
+},{"./Screen.js":17}],7:[function(require,module,exports){
 const TrackShuffler = require('./TrackShuffler.js');
 const inputState = require('../server/inputState.js');
 const drawing = require('./drawing.js');
@@ -858,7 +960,7 @@ class GameScreen extends Screen {
 }
 
 module.exports = GameScreen;
-},{"../server/inputState.js":36,"../server/utilities.js":39,"./Screen.js":16,"./TrackShuffler.js":20,"./drawing.js":22,"./keymap.js":23}],8:[function(require,module,exports){
+},{"../server/inputState.js":37,"../server/utilities.js":40,"./Screen.js":17,"./TrackShuffler.js":21,"./drawing.js":23,"./keymap.js":24}],8:[function(require,module,exports){
 const LooseTimer = require('./LooseTimer.js');
 const inputState = require('../server/inputState.js');
 
@@ -960,7 +1062,7 @@ class Input {
 }
 
 module.exports = Input;
-},{"../server/inputState.js":36,"./LooseTimer.js":9}],9:[function(require,module,exports){
+},{"../server/inputState.js":37,"./LooseTimer.js":9}],9:[function(require,module,exports){
 class LooseTimer {
   constructor(intervalMS, func) {
     this.interval = intervalMS;
@@ -984,15 +1086,16 @@ class Menu {
     this.cursor = 0;
   }
 
-  draw(ctx, x, y, font) {
+  draw(ctx, x, y, font, active) {
     ctx.save();
     ctx.font = font;
     ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     ctx.fillStyle = 'white';
     const height = ctx.measureText("M").width;
     const lineHeight = height * 1.5;
     for (let i = this.elements.length - 1; i >= 0; --i) {
-      if(this.cursor === i) {
+      if(active && this.cursor === i) {
         ctx.save();
         const width = ctx.measureText(this.elements[i].text).width;
         ctx.globalAlpha = 0.5;
@@ -1031,16 +1134,49 @@ class Menu {
 module.exports = Menu;
 },{}],11:[function(require,module,exports){
 const ModalScreen = require('./ModalScreen.js');
+const utilities = require('../server/utilities.js');
+
+class ModalConfirmationScreen extends ModalScreen {
+	constructor(client, previousScreen, callback, message) {
+		super(client, previousScreen, callback);
+		this.message = message;
+	}
+
+	draw(now, dt) {
+		super.draw(now, dt);
+
+		const camera = this.client.camera;
+		const ctx = camera.ctx;
+		ctx.save();
+		ctx.fillStyle = "black",
+		ctx.globalAlpha = .03;
+		ctx.fillRect(0,0,camera.width,camera.height);
+		ctx.textAlign = 'center';
+		ctx.textBaseline = 'middle';
+		ctx.globalAlpha = 1;
+		utilities.fillText(ctx,this.message,camera.width/2,camera.height/2 - 30,"24pt Aroma",'white');
+		ctx.restore();
+	}
+
+	keyDown(e) {
+		this.exitModal();
+	}
+}
+
+module.exports = ModalConfirmationScreen;
+},{"../server/utilities.js":40,"./ModalScreen.js":13}],12:[function(require,module,exports){
+const ModalScreen = require('./ModalScreen.js');
 const drawing = require('./drawing.js');
 
 class ModalEntryScreen extends ModalScreen {
-  constructor(client, previousScreen, callback) {
+  constructor(client, previousScreen, callback, message) {
     super(client, previousScreen, callback);
+    this.message = message;
   }
 
   draw(now, dt) {
     super.draw(now, dt);
-    drawing.drawEntryScreen(this.client.camera, "Enter a value", this.entry);
+    drawing.drawEntryScreen(this.client.camera, this.message, this.entry);
   }
 
   keyDown(e) {
@@ -1067,7 +1203,7 @@ class ModalEntryScreen extends ModalScreen {
 }
 
 module.exports = ModalEntryScreen;
-},{"./ModalScreen.js":12,"./drawing.js":22}],12:[function(require,module,exports){
+},{"./ModalScreen.js":13,"./drawing.js":23}],13:[function(require,module,exports){
 const Screen = require('./Screen.js');
 const drawing = require('./drawing.js');
 
@@ -1096,13 +1232,13 @@ class ModalScreen extends Screen {
   }
 
   exitModal(val) {
-    this.callback(val);
     this.client.exitModal(this.previousScreen);
+    this.callback(val);
   }
 }
 
 module.exports = ModalScreen;
-},{"./Screen.js":16,"./drawing.js":22}],13:[function(require,module,exports){
+},{"./Screen.js":17,"./drawing.js":23}],14:[function(require,module,exports){
 const EntryScreen = require('./EntryScreen.js');
 const drawing = require('./drawing.js');
 
@@ -1118,7 +1254,7 @@ class NameScreen extends EntryScreen {
 }
 
 module.exports = NameScreen;
-},{"./EntryScreen.js":6,"./drawing.js":22}],14:[function(require,module,exports){
+},{"./EntryScreen.js":6,"./drawing.js":23}],15:[function(require,module,exports){
 const Screen = require('./Screen.js');
 
 class NameWaitScreen extends Screen {
@@ -1143,7 +1279,7 @@ class NameWaitScreen extends Screen {
 }
 
 module.exports = NameWaitScreen;
-},{"./Screen.js":16}],15:[function(require,module,exports){
+},{"./Screen.js":17}],16:[function(require,module,exports){
 class Oscillator {
   constructor(periodSeconds) {
     this.start = Date.now() / 1000;
@@ -1161,7 +1297,7 @@ class Oscillator {
 }
 
 module.exports = Oscillator;
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 require('./optionalBind.js');
 
 class Screen {
@@ -1173,7 +1309,7 @@ class Screen {
 }
 
 module.exports = Screen;
-},{"./optionalBind.js":25}],17:[function(require,module,exports){
+},{"./optionalBind.js":26}],18:[function(require,module,exports){
 const Screen = require('./Screen.js');
 
 class ShipWaitScreen extends Screen {
@@ -1209,7 +1345,7 @@ class ShipWaitScreen extends Screen {
 }
 
 module.exports = ShipWaitScreen;
-},{"./Screen.js":16}],18:[function(require,module,exports){
+},{"./Screen.js":17}],19:[function(require,module,exports){
 class Stinger {
   constructor(id) {
     this.elem = document.querySelector(`#${id}`);
@@ -1222,7 +1358,7 @@ class Stinger {
 }
 
 module.exports = Stinger;
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 const Oscillator = require('./Oscillator.js');
 const utilities = require('../server/utilities.js');
 const drawing = require('./drawing.js');
@@ -1268,7 +1404,7 @@ class TitleScreen extends Screen {
 }
 
 module.exports = TitleScreen;
-},{"../server/utilities.js":39,"./Menu.js":10,"./Oscillator.js":15,"./Screen.js":16,"./drawing.js":22}],20:[function(require,module,exports){
+},{"../server/utilities.js":40,"./Menu.js":10,"./Oscillator.js":16,"./Screen.js":17,"./drawing.js":23}],21:[function(require,module,exports){
 const utilities = require('../server/utilities.js');
 
 class TrackShuffler {
@@ -1332,7 +1468,7 @@ class TrackShuffler {
 }
 
 module.exports = TrackShuffler;
-},{"../server/utilities.js":39}],21:[function(require,module,exports){
+},{"../server/utilities.js":40}],22:[function(require,module,exports){
 class Viewport {
   constructor(objectParams = {}) {
     this.startX = (objectParams.startX) ? objectParams.startX : 0;
@@ -1344,7 +1480,7 @@ class Viewport {
 }
 
 module.exports = Viewport;
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/drawing.js
 
@@ -1918,7 +2054,7 @@ const drawing = {
 		utilities.fillText(ctx,"Space Battle With Lasers",camera.width/2,bigOffset + camera.height/5,"bold 64pt Aroma",'blue',.5);
 		utilities.fillText(ctx,"SPACE BATTLE WITH LASERS",camera.width/2,smallOffset + camera.height/5,"bold 24pt Aroma",'white');
 		if(menu) {
-			menu.draw(ctx, camera.width / 2, 4 * camera.height / 5, "24pt Orbitron");
+			menu.draw(ctx, camera.width / 2, 4 * camera.height / 5, "24pt Orbitron", true);
 		}
 		else {
 			utilities.fillText(ctx,"Press ENTER to start",camera.width/2,4*camera.height/5,"12pt Orbitron",'white');
@@ -2012,7 +2148,7 @@ const drawing = {
 };
 
 module.exports = drawing;
-},{"../server/utilities.js":39,"./worldInfo.js":26}],23:[function(require,module,exports){
+},{"../server/utilities.js":40,"./worldInfo.js":27}],24:[function(require,module,exports){
 const commands = require('../server/commands.js');
 const keys = require('../server/keys.js');
 
@@ -2032,18 +2168,18 @@ const keymap = {
 };
 
 module.exports = keymap;
-},{"../server/commands.js":35,"../server/keys.js":37}],24:[function(require,module,exports){
+},{"../server/commands.js":36,"../server/keys.js":38}],25:[function(require,module,exports){
 const Client = require('./Client.js');
 
 window.onload = () => {
 	new Client().frame();
 };
-},{"./Client.js":4}],25:[function(require,module,exports){
+},{"./Client.js":4}],26:[function(require,module,exports){
 Object.prototype.optionalBind = function(prop) {
 	if(this[prop])
 		this[prop] = this[prop].bind(this);
 };
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
@@ -2202,7 +2338,7 @@ class ObjInfo {
 }
 
 module.exports = worldInfo;
-},{"../server/utilities.js":39}],27:[function(require,module,exports){
+},{"../server/utilities.js":40}],28:[function(require,module,exports){
 const { primitiveByteSizes, ARRAY_INDEX_TYPE } = require('./serializationConstants.js');
 
 class Deserializer {
@@ -2252,7 +2388,7 @@ class Deserializer {
 
 module.exports = Deserializer;
 
-},{"./serializationConstants.js":38}],28:[function(require,module,exports){
+},{"./serializationConstants.js":39}],29:[function(require,module,exports){
 class NetworkAsteroid {
   constructor(asteroid) {
     this.id = asteroid.id;
@@ -2273,7 +2409,7 @@ NetworkAsteroid.serializableProperties = [
 
 module.exports = NetworkAsteroid;
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 const ColorHSL = require('./utilities.js').ColorHSL;
 
 class NetworkHitscan {
@@ -2302,7 +2438,7 @@ NetworkHitscan.serializableProperties = [
 
 module.exports = NetworkHitscan;
 
-},{"./utilities.js":39}],30:[function(require,module,exports){
+},{"./utilities.js":40}],31:[function(require,module,exports){
 const ColorHSL = require('./utilities.js').ColorHSL;
 
 class NetworkObj {
@@ -2341,7 +2477,7 @@ NetworkObj.serializableProperties = [
 
 module.exports = NetworkObj;
 
-},{"./utilities.js":39}],31:[function(require,module,exports){
+},{"./utilities.js":40}],32:[function(require,module,exports){
 class NetworkPlayerObj {
   constructor(obj) {
     this.x = obj.x;
@@ -2380,7 +2516,7 @@ NetworkPlayerObj.serializableProperties = [
 
 module.exports = NetworkPlayerObj;
 
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 const ColorRGB = require('./utilities.js').ColorRGB;
 
 class NetworkPrj {
@@ -2407,7 +2543,7 @@ NetworkPrj.serializableProperties = [
 
 module.exports = NetworkPrj;
 
-},{"./utilities.js":39}],33:[function(require,module,exports){
+},{"./utilities.js":40}],34:[function(require,module,exports){
 const ColorRGB = require('./utilities.js').ColorRGB;
 
 class NetworkRadial {
@@ -2432,7 +2568,7 @@ NetworkRadial.serializableProperties = [
 
 module.exports = NetworkRadial;
 
-},{"./utilities.js":39}],34:[function(require,module,exports){
+},{"./utilities.js":40}],35:[function(require,module,exports){
 const NetworkObj = require('./NetworkObj.js');
 const NetworkPlayerObj = require('./NetworkPlayerObj.js');
 const NetworkAsteroid = require('./NetworkAsteroid.js');
@@ -2486,7 +2622,7 @@ NetworkWorldInfo.serializableProperties = [
 
 module.exports = NetworkWorldInfo;
 
-},{"./NetworkAsteroid.js":28,"./NetworkHitscan.js":29,"./NetworkObj.js":30,"./NetworkPlayerObj.js":31,"./NetworkPrj.js":32,"./NetworkRadial.js":33}],35:[function(require,module,exports){
+},{"./NetworkAsteroid.js":29,"./NetworkHitscan.js":30,"./NetworkObj.js":31,"./NetworkPlayerObj.js":32,"./NetworkPrj.js":33,"./NetworkRadial.js":34}],36:[function(require,module,exports){
 const commandList = [
   'FORWARD',
   'BACKWARD',
@@ -2510,7 +2646,7 @@ for (let c = 0; c < commandList.length; c++) {
 
 module.exports = commands;
 
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 const STATES = {
   STARTING: 2,
   ENABLED: 1,
@@ -2543,7 +2679,7 @@ module.exports = {
   advanceStateDictionary,
 };
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 module.exports = Object.freeze({
   LEFT: 37,
   UP: 38,
@@ -2573,7 +2709,7 @@ module.exports = Object.freeze({
   RMB: 2,
 });
 
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 const primitiveByteSizes = {
   Float32: 4,
   Uint8: 1,
@@ -2586,7 +2722,7 @@ const ARRAY_INDEX_TYPE = 'Uint32';
 
 module.exports = { primitiveByteSizes, ARRAY_INDEX_TYPE };
 
-},{}],39:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
@@ -3283,4 +3419,4 @@ const utilities = {
 
 module.exports = utilities;
 
-},{}]},{},[24]);
+},{}]},{},[25]);

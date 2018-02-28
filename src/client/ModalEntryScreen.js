@@ -2,13 +2,14 @@ const ModalScreen = require('./ModalScreen.js');
 const drawing = require('./drawing.js');
 
 class ModalEntryScreen extends ModalScreen {
-  constructor(client, previousScreen, callback) {
+  constructor(client, previousScreen, callback, message) {
     super(client, previousScreen, callback);
+    this.message = message;
   }
 
   draw(now, dt) {
     super.draw(now, dt);
-    drawing.drawEntryScreen(this.client.camera, "Enter a value", this.entry);
+    drawing.drawEntryScreen(this.client.camera, this.message, this.entry);
   }
 
   keyDown(e) {

@@ -215,6 +215,14 @@ class Obj extends Accelerable {
   }
 
   static completeBP(params) {
+    if(!params.stabilizer)
+      params.stabilizer = {};
+    if(!params.thrusterSystem)
+      params.thrusterSystem = {};
+    if(!params.powerSystem)
+      params.powerSystem = {};
+    if(!params.laser && !params.cannon && !params.launcher)
+      params.laser = {};
     const bp = {};
     Object.keys(params).forEach((component) => {
       const Component = componentClasses[capitalize(component)];
