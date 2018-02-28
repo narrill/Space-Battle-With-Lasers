@@ -4,11 +4,17 @@ const drawing = require('./drawing.js');
 const Screen = require('./Screen.js');
 const keymap = require('./keymap.js');
 const utilities = require('../server/utilities.js');
+const requests = require('./requests.js');
+const ModalEntryScreen = require('./ModalEntryScreen.js');
 
 class GameScreen extends Screen {
   constructor(client) {
     super();
     this.client = client;
+    this.whoTime = 0;
+    this.who = null;
+    this.shipsTime = 0;
+    this.ships = null;
   }
 
   init() {
@@ -99,16 +105,50 @@ class GameScreen extends Screen {
     drawing.drawHUD(camera, now);
     drawing.drawMinimap(minimapCamera, grid, now);
 
+    if(now - this.whoTime < 6000)
+      drawing.drawMultiLineText(camera, this.who, camera.width/10, camera.height/11, "12pt Orbitron");
+    else if(now - this.shipsTime < 6000)
+      drawing.drawMultiLineText(camera, this.ships, camera.width/10, camera.height/11, "12pt Orbitron");
+
     if(now - this.client.startTime < 15000)
       drawing.drawTutorialGraphics(camera);
   }
 
   keyDown(e) {
-    this.client.socket.emit('input', { command: keymap[e.code], pos: inputState.STATES.STARTING });
+    const command = keymap[e.code];
+    if(command || command === 0) {
+      this.client.socket.emit('input', { command: command, pos: inputState.STATES.STARTING });
+    }
+    else if(e.key === 'Enter') {
+      this.client.enterModal(ModalEntryScreen, (val) => {
+        if(val === 'who') {
+          requests.getRequest('/names', (names) => {
+            let lines = ""
+            for(let c = 0; c < names.length; ++c)
+              lines += `${names[c]}\n`;
+            this.who = lines;
+            this.whoTime = Date.now();
+          });
+        }
+        else if(val === 'ships') {
+          requests.getRequest('/activeShips', (ships) => {
+            let lines = "";
+            Object.keys(ships).forEach((shipName) => {
+              lines += `${shipName}: ${ships[shipName]}\n`;
+            });
+            this.ships = lines;
+            this.shipsTime = Date.now();
+          });
+        }
+      }, "Enter a command");
+    }
   }
   
   keyUp(e) {
-    this.client.socket.emit('input', { command: keymap[e.code], pos: inputState.STATES.DISABLED });
+    const command = keymap[e.code];
+    if(command || command === 0) {
+      this.client.socket.emit('input', { command: keymap[e.code], pos: inputState.STATES.DISABLED });
+    }
   }
 
   mouse(x) {

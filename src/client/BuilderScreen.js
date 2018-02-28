@@ -3,6 +3,7 @@ const ModalEntryScreen = require('./ModalEntryScreen.js');
 const ModalConfirmationScreen = require('./ModalConfirmationScreen.js');
 const drawing = require('./drawing.js');
 const Menu = require('./Menu.js');
+const requests = require('./requests.js');
 
 const drawHighlight = (ctx, x, y, text, height) => {
   ctx.save();
@@ -372,7 +373,6 @@ class BuilderScreen extends Screen {
   constructor(client) {
     super();
     this.client = client;
-    this.openRequests = 0;
     this.modelEditor = new ModelEditor();
     this.editors = [this.modelEditor];
     this.cursor = 0;
@@ -384,8 +384,6 @@ class BuilderScreen extends Screen {
   }
 
   draw() {
-    if(this.openRequests !== 0)
-      return;
     this.modelEditor.draw(this.client.camera, this.activeEditor === this.modelEditor);
     if(this.shipEditor) {
       this.shipEditor.draw(this.client.camera.ctx, 50, this.client.camera.height/2, this.activeEditor === this.shipEditor);
@@ -398,7 +396,7 @@ class BuilderScreen extends Screen {
     this.client.camera.y = 0;
     this.client.camera.rotation = 0;
     this.client.camera.zoom = 15;
-    this.getRequest('/components', (data) => {
+    requests.getRequest('/components', (data) => {
       this.shipEditor = new ShipEditor(data);
       this.editors.push(this.shipEditor);
       this.menu = new Menu([
@@ -418,7 +416,7 @@ class BuilderScreen extends Screen {
               name: shipName,
               bp: bp
             };
-            this.postRequest('/addShip', ship, (statusCode) => {
+            requests.postRequest('/addShip', ship, (statusCode) => {
               const message = (statusCode === 204) ? "Success" : "Name unavailable";
               client.enterModal(ModalConfirmationScreen, () => {
                 if(statusCode === 204)
@@ -448,28 +446,7 @@ class BuilderScreen extends Screen {
     if(e.key === 'Tab')
       this.forward();
     this._handleSelect(this.activeEditor.key(e));
-  }
-
-  getRequest(url, callback) {
-    const xhr = new XMLHttpRequest();
-    xhr.onload = () => {
-      callback(JSON.parse(xhr.response));
-      this.openRequests--;
-    };
-    xhr.open('GET', url);
-    xhr.setRequestHeader('Accept', "application/json");
-    xhr.send();
-    this.openRequests++;
-  }
-
-  postRequest(url, data, callback) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', url);
-    xhr.onload = () => {
-      callback(xhr.status);
-    };
-    xhr.send(JSON.stringify(data));
-  };
+  }  
 
   forward() {
     this.cursor = this._boundCursor(this.cursor + 1);

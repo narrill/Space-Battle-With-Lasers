@@ -55,16 +55,17 @@ const sendFile = (request, response, fileInfo) => {
 };
 
 const sendJSON = (request, response, json) => {
-  if(request.headers.accept && request.headers.accept !== "application/json") {
-    response.writeHead(400);
-    response.end();
-  }
-  else {
+  if(request.headers.accept.includes("application/json") 
+    || request.headers.accept.includes("text/html")) {
     response.writeHead(200, { 'content-type': 'application/json' });
     if(request.method === 'GET')
       response.end(JSON.stringify(json));
     else
       response.end();
+  }
+  else {
+    response.writeHead(400);
+    response.end();
   }
 };
 

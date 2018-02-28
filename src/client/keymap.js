@@ -13,7 +13,8 @@ const keymap = {
 	0: commands.FIRE,
 	2: commands.BOOST_WEAPON,
 	Tab: commands.TOGGLE_STABILIZER,
-	KeyC: commands.TOGGLE_LIMITER
+	KeyC: commands.TOGGLE_LIMITER,
+	Space: commands.FIRE
 };
 
 module.exports = keymap;

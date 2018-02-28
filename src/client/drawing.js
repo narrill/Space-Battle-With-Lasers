@@ -527,6 +527,19 @@ const drawing = {
 		ctx.restore(); // NEW
 	},
 
+	drawMultiLineText(camera, text, x, y, font) {
+		const ctx = camera.ctx;
+		ctx.font = font;
+		ctx.textAlign = 'left';
+		ctx.fillStyle = 'white';
+		var lineHeight = ctx.measureText("M").width * 1.2;
+		var lines = text.split("\n");
+		for (var i = lines.length - 1; i >= 0; --i) {
+			ctx.fillText(lines[i], x, y);
+			y += lineHeight;
+		}
+	},
+
 	//draws the minimap to the given camera
 	//note that the minimap camera has a viewport
 	drawMinimap:function(camera, grid, time){

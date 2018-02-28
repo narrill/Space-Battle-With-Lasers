@@ -4,6 +4,7 @@ const ModalEntryScreen = require('./ModalEntryScreen.js');
 const ModalConfirmationScreen = require('./ModalConfirmationScreen.js');
 const drawing = require('./drawing.js');
 const Menu = require('./Menu.js');
+const requests = require('./requests.js');
 
 const drawHighlight = (ctx, x, y, text, height) => {
   ctx.save();
@@ -373,7 +374,6 @@ class BuilderScreen extends Screen {
   constructor(client) {
     super();
     this.client = client;
-    this.openRequests = 0;
     this.modelEditor = new ModelEditor();
     this.editors = [this.modelEditor];
     this.cursor = 0;
@@ -385,8 +385,6 @@ class BuilderScreen extends Screen {
   }
 
   draw() {
-    if(this.openRequests !== 0)
-      return;
     this.modelEditor.draw(this.client.camera, this.activeEditor === this.modelEditor);
     if(this.shipEditor) {
       this.shipEditor.draw(this.client.camera.ctx, 50, this.client.camera.height/2, this.activeEditor === this.shipEditor);
@@ -399,7 +397,7 @@ class BuilderScreen extends Screen {
     this.client.camera.y = 0;
     this.client.camera.rotation = 0;
     this.client.camera.zoom = 15;
-    this.getRequest('/components', (data) => {
+    requests.getRequest('/components', (data) => {
       this.shipEditor = new ShipEditor(data);
       this.editors.push(this.shipEditor);
       this.menu = new Menu([
@@ -419,7 +417,7 @@ class BuilderScreen extends Screen {
               name: shipName,
               bp: bp
             };
-            this.postRequest('/addShip', ship, (statusCode) => {
+            requests.postRequest('/addShip', ship, (statusCode) => {
               const message = (statusCode === 204) ? "Success" : "Name unavailable";
               client.enterModal(ModalConfirmationScreen, () => {
                 if(statusCode === 204)
@@ -449,28 +447,7 @@ class BuilderScreen extends Screen {
     if(e.key === 'Tab')
       this.forward();
     this._handleSelect(this.activeEditor.key(e));
-  }
-
-  getRequest(url, callback) {
-    const xhr = new XMLHttpRequest();
-    xhr.onload = () => {
-      callback(JSON.parse(xhr.response));
-      this.openRequests--;
-    };
-    xhr.open('GET', url);
-    xhr.setRequestHeader('Accept', "application/json");
-    xhr.send();
-    this.openRequests++;
-  }
-
-  postRequest(url, data, callback) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', url);
-    xhr.onload = () => {
-      callback(xhr.status);
-    };
-    xhr.send(JSON.stringify(data));
-  };
+  }  
 
   forward() {
     this.cursor = this._boundCursor(this.cursor + 1);
@@ -487,7 +464,7 @@ class BuilderScreen extends Screen {
 }
 
 module.exports = BuilderScreen;
-},{"./Menu.js":10,"./ModalConfirmationScreen.js":11,"./ModalEntryScreen.js":12,"./Screen.js":17,"./drawing.js":23}],2:[function(require,module,exports){
+},{"./Menu.js":10,"./ModalConfirmationScreen.js":11,"./ModalEntryScreen.js":12,"./Screen.js":17,"./drawing.js":23,"./requests.js":27}],2:[function(require,module,exports){
 const utilities = require('../server/utilities.js');
 const Viewport = require('./Viewport.js');
 
@@ -522,7 +499,7 @@ class Camera {
 }
 
 module.exports = Camera;
-},{"../server/utilities.js":40,"./Viewport.js":22}],3:[function(require,module,exports){
+},{"../server/utilities.js":41,"./Viewport.js":22}],3:[function(require,module,exports){
 const EntryScreen = require('./EntryScreen.js');
 const drawing = require('./drawing.js');
 
@@ -773,7 +750,7 @@ class Client {
 }
 
 module.exports = Client;
-},{"../server/Deserializer.js":28,"../server/NetworkWorldInfo.js":35,"../server/utilities.js":40,"./BuilderScreen.js":1,"./Camera.js":2,"./ChooseShipScreen.js":3,"./DisconnectScreen.js":5,"./GameScreen.js":7,"./Input.js":8,"./NameScreen.js":14,"./NameWaitScreen.js":15,"./Oscillator.js":16,"./ShipWaitScreen.js":18,"./Stinger.js":19,"./TitleScreen.js":20,"./drawing.js":23,"./worldInfo.js":27}],5:[function(require,module,exports){
+},{"../server/Deserializer.js":29,"../server/NetworkWorldInfo.js":36,"../server/utilities.js":41,"./BuilderScreen.js":1,"./Camera.js":2,"./ChooseShipScreen.js":3,"./DisconnectScreen.js":5,"./GameScreen.js":7,"./Input.js":8,"./NameScreen.js":14,"./NameWaitScreen.js":15,"./Oscillator.js":16,"./ShipWaitScreen.js":18,"./Stinger.js":19,"./TitleScreen.js":20,"./drawing.js":23,"./worldInfo.js":28}],5:[function(require,module,exports){
 const Screen = require('./Screen.js');
 const drawing = require('./drawing.js');
 
@@ -833,11 +810,17 @@ const drawing = require('./drawing.js');
 const Screen = require('./Screen.js');
 const keymap = require('./keymap.js');
 const utilities = require('../server/utilities.js');
+const requests = require('./requests.js');
+const ModalEntryScreen = require('./ModalEntryScreen.js');
 
 class GameScreen extends Screen {
   constructor(client) {
     super();
     this.client = client;
+    this.whoTime = 0;
+    this.who = null;
+    this.shipsTime = 0;
+    this.ships = null;
   }
 
   init() {
@@ -928,16 +911,50 @@ class GameScreen extends Screen {
     drawing.drawHUD(camera, now);
     drawing.drawMinimap(minimapCamera, grid, now);
 
+    if(now - this.whoTime < 6000)
+      drawing.drawMultiLineText(camera, this.who, camera.width/10, camera.height/11, "12pt Orbitron");
+    else if(now - this.shipsTime < 6000)
+      drawing.drawMultiLineText(camera, this.ships, camera.width/10, camera.height/11, "12pt Orbitron");
+
     if(now - this.client.startTime < 15000)
       drawing.drawTutorialGraphics(camera);
   }
 
   keyDown(e) {
-    this.client.socket.emit('input', { command: keymap[e.code], pos: inputState.STATES.STARTING });
+    const command = keymap[e.code];
+    if(command || command === 0) {
+      this.client.socket.emit('input', { command: command, pos: inputState.STATES.STARTING });
+    }
+    else if(e.key === 'Enter') {
+      this.client.enterModal(ModalEntryScreen, (val) => {
+        if(val === 'who') {
+          requests.getRequest('/names', (names) => {
+            let lines = ""
+            for(let c = 0; c < names.length; ++c)
+              lines += `${names[c]}\n`;
+            this.who = lines;
+            this.whoTime = Date.now();
+          });
+        }
+        else if(val === 'ships') {
+          requests.getRequest('/activeShips', (ships) => {
+            let lines = "";
+            Object.keys(ships).forEach((shipName) => {
+              lines += `${shipName}: ${ships[shipName]}\n`;
+            });
+            this.ships = lines;
+            this.shipsTime = Date.now();
+          });
+        }
+      }, "Enter a command");
+    }
   }
   
   keyUp(e) {
-    this.client.socket.emit('input', { command: keymap[e.code], pos: inputState.STATES.DISABLED });
+    const command = keymap[e.code];
+    if(command || command === 0) {
+      this.client.socket.emit('input', { command: keymap[e.code], pos: inputState.STATES.DISABLED });
+    }
   }
 
   mouse(x) {
@@ -960,7 +977,7 @@ class GameScreen extends Screen {
 }
 
 module.exports = GameScreen;
-},{"../server/inputState.js":37,"../server/utilities.js":40,"./Screen.js":17,"./TrackShuffler.js":21,"./drawing.js":23,"./keymap.js":24}],8:[function(require,module,exports){
+},{"../server/inputState.js":38,"../server/utilities.js":41,"./ModalEntryScreen.js":12,"./Screen.js":17,"./TrackShuffler.js":21,"./drawing.js":23,"./keymap.js":24,"./requests.js":27}],8:[function(require,module,exports){
 const LooseTimer = require('./LooseTimer.js');
 const inputState = require('../server/inputState.js');
 
@@ -1062,7 +1079,7 @@ class Input {
 }
 
 module.exports = Input;
-},{"../server/inputState.js":37,"./LooseTimer.js":9}],9:[function(require,module,exports){
+},{"../server/inputState.js":38,"./LooseTimer.js":9}],9:[function(require,module,exports){
 class LooseTimer {
   constructor(intervalMS, func) {
     this.interval = intervalMS;
@@ -1164,7 +1181,7 @@ class ModalConfirmationScreen extends ModalScreen {
 }
 
 module.exports = ModalConfirmationScreen;
-},{"../server/utilities.js":40,"./ModalScreen.js":13}],12:[function(require,module,exports){
+},{"../server/utilities.js":41,"./ModalScreen.js":13}],12:[function(require,module,exports){
 const ModalScreen = require('./ModalScreen.js');
 const drawing = require('./drawing.js');
 
@@ -1404,7 +1421,7 @@ class TitleScreen extends Screen {
 }
 
 module.exports = TitleScreen;
-},{"../server/utilities.js":40,"./Menu.js":10,"./Oscillator.js":16,"./Screen.js":17,"./drawing.js":23}],21:[function(require,module,exports){
+},{"../server/utilities.js":41,"./Menu.js":10,"./Oscillator.js":16,"./Screen.js":17,"./drawing.js":23}],21:[function(require,module,exports){
 const utilities = require('../server/utilities.js');
 
 class TrackShuffler {
@@ -1468,7 +1485,7 @@ class TrackShuffler {
 }
 
 module.exports = TrackShuffler;
-},{"../server/utilities.js":40}],22:[function(require,module,exports){
+},{"../server/utilities.js":41}],22:[function(require,module,exports){
 class Viewport {
   constructor(objectParams = {}) {
     this.startX = (objectParams.startX) ? objectParams.startX : 0;
@@ -2010,6 +2027,19 @@ const drawing = {
 		ctx.restore(); // NEW
 	},
 
+	drawMultiLineText(camera, text, x, y, font) {
+		const ctx = camera.ctx;
+		ctx.font = font;
+		ctx.textAlign = 'left';
+		ctx.fillStyle = 'white';
+		var lineHeight = ctx.measureText("M").width * 1.2;
+		var lines = text.split("\n");
+		for (var i = lines.length - 1; i >= 0; --i) {
+			ctx.fillText(lines[i], x, y);
+			y += lineHeight;
+		}
+	},
+
 	//draws the minimap to the given camera
 	//note that the minimap camera has a viewport
 	drawMinimap:function(camera, grid, time){
@@ -2148,7 +2178,7 @@ const drawing = {
 };
 
 module.exports = drawing;
-},{"../server/utilities.js":40,"./worldInfo.js":27}],24:[function(require,module,exports){
+},{"../server/utilities.js":41,"./worldInfo.js":28}],24:[function(require,module,exports){
 const commands = require('../server/commands.js');
 const keys = require('../server/keys.js');
 
@@ -2164,11 +2194,12 @@ const keymap = {
 	0: commands.FIRE,
 	2: commands.BOOST_WEAPON,
 	Tab: commands.TOGGLE_STABILIZER,
-	KeyC: commands.TOGGLE_LIMITER
+	KeyC: commands.TOGGLE_LIMITER,
+	Space: commands.FIRE
 };
 
 module.exports = keymap;
-},{"../server/commands.js":36,"../server/keys.js":38}],25:[function(require,module,exports){
+},{"../server/commands.js":37,"../server/keys.js":39}],25:[function(require,module,exports){
 const Client = require('./Client.js');
 
 window.onload = () => {
@@ -2180,6 +2211,28 @@ Object.prototype.optionalBind = function(prop) {
 		this[prop] = this[prop].bind(this);
 };
 },{}],27:[function(require,module,exports){
+module.exports = {
+  getRequest(url, callback) {
+    const xhr = new XMLHttpRequest();
+    xhr.onload = () => {
+      callback(JSON.parse(xhr.response));
+    };
+    xhr.open('GET', url);
+    xhr.setRequestHeader('Accept', "application/json");
+    xhr.send();
+    this.openRequests++;
+  },
+
+  postRequest(url, data, callback) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.onload = () => {
+      callback(xhr.status);
+    };
+    xhr.send(JSON.stringify(data));
+  }
+};
+},{}],28:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
@@ -2338,7 +2391,7 @@ class ObjInfo {
 }
 
 module.exports = worldInfo;
-},{"../server/utilities.js":40}],28:[function(require,module,exports){
+},{"../server/utilities.js":41}],29:[function(require,module,exports){
 const { primitiveByteSizes, ARRAY_INDEX_TYPE } = require('./serializationConstants.js');
 
 class Deserializer {
@@ -2388,7 +2441,7 @@ class Deserializer {
 
 module.exports = Deserializer;
 
-},{"./serializationConstants.js":39}],29:[function(require,module,exports){
+},{"./serializationConstants.js":40}],30:[function(require,module,exports){
 class NetworkAsteroid {
   constructor(asteroid) {
     this.id = asteroid.id;
@@ -2409,7 +2462,7 @@ NetworkAsteroid.serializableProperties = [
 
 module.exports = NetworkAsteroid;
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 const ColorHSL = require('./utilities.js').ColorHSL;
 
 class NetworkHitscan {
@@ -2438,7 +2491,7 @@ NetworkHitscan.serializableProperties = [
 
 module.exports = NetworkHitscan;
 
-},{"./utilities.js":40}],31:[function(require,module,exports){
+},{"./utilities.js":41}],32:[function(require,module,exports){
 const ColorHSL = require('./utilities.js').ColorHSL;
 
 class NetworkObj {
@@ -2477,7 +2530,7 @@ NetworkObj.serializableProperties = [
 
 module.exports = NetworkObj;
 
-},{"./utilities.js":40}],32:[function(require,module,exports){
+},{"./utilities.js":41}],33:[function(require,module,exports){
 class NetworkPlayerObj {
   constructor(obj) {
     this.x = obj.x;
@@ -2516,7 +2569,7 @@ NetworkPlayerObj.serializableProperties = [
 
 module.exports = NetworkPlayerObj;
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 const ColorRGB = require('./utilities.js').ColorRGB;
 
 class NetworkPrj {
@@ -2543,7 +2596,7 @@ NetworkPrj.serializableProperties = [
 
 module.exports = NetworkPrj;
 
-},{"./utilities.js":40}],34:[function(require,module,exports){
+},{"./utilities.js":41}],35:[function(require,module,exports){
 const ColorRGB = require('./utilities.js').ColorRGB;
 
 class NetworkRadial {
@@ -2568,7 +2621,7 @@ NetworkRadial.serializableProperties = [
 
 module.exports = NetworkRadial;
 
-},{"./utilities.js":40}],35:[function(require,module,exports){
+},{"./utilities.js":41}],36:[function(require,module,exports){
 const NetworkObj = require('./NetworkObj.js');
 const NetworkPlayerObj = require('./NetworkPlayerObj.js');
 const NetworkAsteroid = require('./NetworkAsteroid.js');
@@ -2622,7 +2675,7 @@ NetworkWorldInfo.serializableProperties = [
 
 module.exports = NetworkWorldInfo;
 
-},{"./NetworkAsteroid.js":29,"./NetworkHitscan.js":30,"./NetworkObj.js":31,"./NetworkPlayerObj.js":32,"./NetworkPrj.js":33,"./NetworkRadial.js":34}],36:[function(require,module,exports){
+},{"./NetworkAsteroid.js":30,"./NetworkHitscan.js":31,"./NetworkObj.js":32,"./NetworkPlayerObj.js":33,"./NetworkPrj.js":34,"./NetworkRadial.js":35}],37:[function(require,module,exports){
 const commandList = [
   'FORWARD',
   'BACKWARD',
@@ -2646,7 +2699,7 @@ for (let c = 0; c < commandList.length; c++) {
 
 module.exports = commands;
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 const STATES = {
   STARTING: 2,
   ENABLED: 1,
@@ -2679,7 +2732,7 @@ module.exports = {
   advanceStateDictionary,
 };
 
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 module.exports = Object.freeze({
   LEFT: 37,
   UP: 38,
@@ -2709,7 +2762,7 @@ module.exports = Object.freeze({
   RMB: 2,
 });
 
-},{}],39:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 const primitiveByteSizes = {
   Float32: 4,
   Uint8: 1,
@@ -2722,7 +2775,7 @@ const ARRAY_INDEX_TYPE = 'Uint32';
 
 module.exports = { primitiveByteSizes, ARRAY_INDEX_TYPE };
 
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
