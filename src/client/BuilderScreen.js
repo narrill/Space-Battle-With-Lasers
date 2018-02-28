@@ -1,5 +1,6 @@
 const Screen = require('./Screen.js');
 const ModalEntryScreen = require('./ModalEntryScreen.js');
+const drawing = require('./drawing.js');
 
 const drawHighlight = (ctx, x, y, text, height) => {
   ctx.save();
@@ -154,7 +155,7 @@ class ShipEditor extends Navigable {
     this.lineOffset = 0;
   }
 
-  draw(ctx, x, y) {
+  draw(ctx, x, y, active) {
     ctx.save();
     ctx.font = "12pt Orbitron";
     ctx.textAlign = 'left';
@@ -164,7 +165,7 @@ class ShipEditor extends Navigable {
     const lineHeight = height * 1.5;
     y -= lineHeight * this.lineOffset;
     for(let c = 0; c < this.elements.length; ++c) {
-      y = this.elements[c].draw(ctx, x, y, height, lineHeight, this.cursor === c, indent);
+      y = this.elements[c].draw(ctx, x, y, height, lineHeight, active && this.cursor === c, indent);
     }
     ctx.restore();
   }
@@ -192,28 +193,177 @@ class ShipEditor extends Navigable {
   }
 }
 
+class ModelEditor {
+  constructor() {
+    this.grid = {
+      gridLines: 500, // number of grid lines
+      gridSpacing: 1, // pixels per grid unit
+      gridStart: [-250, -250], // corner anchor in world coordinates
+      z:0,
+      colors: [
+        {
+          color: 'green',
+          interval: 50
+        },
+        {
+          color: 'blue',
+          interval: 2,
+        },
+        {
+          color: 'darkblue',
+          interval: 1,
+        },
+      ],
+    };
+    this.verts = [
+      [-20, 17],
+      [0, 7],
+      [20, 17],
+      [0, -23],
+    ];
+
+    this.cursor = 0;
+    this.vertSelected = false;
+  }
+
+  draw(camera, active) {
+    drawing.drawGrid(camera, this.grid);
+    const ctx = camera.ctx;
+    const screenVerts = [];
+    for(let c = 0; c < this.verts.length; ++c) {
+      screenVerts.push(camera.worldPointToCameraSpace(this.verts[c][0], this.verts[c][1]));
+    }
+    ctx.beginPath();
+    ctx.moveTo(screenVerts[0][0], screenVerts[0][1]);
+    for(let c = 1; c < screenVerts.length; ++c) {
+      ctx.lineTo(screenVerts[c][0], screenVerts[c][1]);
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'orange';
+    ctx.fill();
+
+    if(active) {
+      const selectedVert = screenVerts[this.cursor];
+      ctx.beginPath();
+      ctx.arc(selectedVert[0], selectedVert[1], 8, 0, 2 * Math.PI);
+      if(this.vertSelected) {
+        ctx.fillStyle = 'red';
+        ctx.fill();
+      }
+      else {
+        ctx.strokeStyle = 'red';
+        ctx.stroke();
+      }
+    }
+  }
+
+  get model() {
+    return this.verts;
+  }
+
+  get currentVert() {
+    return this.verts[this.cursor];
+  }
+
+  get nextVert() {
+    return this.verts[this._boundCursor(this.cursor - 1)];
+  }
+
+  addVert() {
+    const currentVert = this.currentVert;
+    const nextVert = this.nextVert;
+    const midVert = [
+      Math.round((currentVert[0] + nextVert[0]) / 2),
+      Math.round((currentVert[1] + nextVert[1]) / 2)
+    ];
+
+    this.verts.splice(this.cursor, 0, midVert);
+  }
+
+  removeVert() {
+    if(this.verts.length <= 3) return;
+    this.verts.splice(this.cursor, 1);
+    this.cursor = this._boundCursor(this.cursor);
+  }
+
+  forward() {
+    this.cursor = this._boundCursor(this.cursor + 1);
+  }
+
+  backward() {
+    this.cursor = this._boundCursor(this.cursor - 1);
+  }
+
+  _boundCursor(cursor) {
+    return (cursor + this.verts.length) % this.verts.length;
+  }
+
+  key(e) {
+    if(e.key === 'Enter')
+      this.vertSelected = !this.vertSelected;
+    else if(e.key === 'a') 
+      this.addVert();
+    else if(e.key === 'Backspace')
+      this.removeVert();
+    else if(this.vertSelected) {
+      if(e.key === 'ArrowUp')
+        this.currentVert[1]--;
+      else if(e.key === 'ArrowDown')
+        this.currentVert[1]++;
+      else if(e.key === 'ArrowLeft')
+        this.currentVert[0]--;
+      else if(e.key === 'ArrowRight')
+        this.currentVert[0]++;
+    }
+    else if(!this.vertSelected) {
+      if(e.key === 'ArrowUp')
+        this.forward();
+      else if(e.key === 'ArrowDown')
+        this.backward();
+      else if(e.key === 'ArrowLeft')
+        this.forward();
+      else if(e.key === 'ArrowRight')
+        this.backward();
+    }
+  }
+}
+
 class BuilderScreen extends Screen {
   constructor(client) {
     super();
     this.client = client;
     this.openRequests = 0;
+    this.modelEditor = new ModelEditor();
+    this.activeEditor = this.modelEditor;
+  }
+
+  update() {
+    if(this.client.input.wheel)
+      this.client.camera.zoom *= 1 + (this.client.input.wheel / 2000);
   }
 
   draw() {
     if(this.openRequests !== 0)
       return;
-    if(this.editor)
-      this.editor.draw(this.client.camera.ctx, 50, this.client.camera.height/2);
+    this.modelEditor.draw(this.client.camera, this.activeEditor === this.modelEditor);
+    if(this.shipEditor)
+      this.shipEditor.draw(this.client.camera.ctx, 50, this.client.camera.height/2, this.activeEditor === this.shipEditor);
   }
 
   onEnter() {
+    this.client.camera.x = 0;
+    this.client.camera.y = 0;
+    this.client.camera.rotation = 0;
+    this.client.camera.zoom = 15;
     this.getRequest('/components', (data) => {
-      this.editor = new ShipEditor(data);
+      this.shipEditor = new ShipEditor(data);
     });
   }
 
   keyDown(e) {
-    this._handleSelect(this.editor.key(e));
+    if(e.key === 'Tab')
+      this.activeEditor = (this.shipEditor && this.activeEditor !== this.shipEditor) ? this.shipEditor : this.modelEditor;
+    this._handleSelect(this.activeEditor.key(e));
   }
 
   getRequest(url, callback) {
