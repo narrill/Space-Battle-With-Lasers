@@ -556,7 +556,7 @@ const drawing = {
 		ctx.restore();
 	},
 
-	drawTitleScreen:function(camera, osc){
+	drawTitleScreen:function(camera, osc, menu){
 		var ctx = camera.ctx;
 		ctx.save();
 		ctx.fillStyle = 'black';
@@ -570,7 +570,12 @@ const drawing = {
 		const bigOffset = osc.getValue(now/1000 - osc.period/6) * 4;
 		utilities.fillText(ctx,"Space Battle With Lasers",camera.width/2,bigOffset + camera.height/5,"bold 64pt Aroma",'blue',.5);
 		utilities.fillText(ctx,"SPACE BATTLE WITH LASERS",camera.width/2,smallOffset + camera.height/5,"bold 24pt Aroma",'white');
-		utilities.fillText(ctx,"Press ENTER to start",camera.width/2,4*camera.height/5,"12pt Orbitron",'white');
+		if(menu) {
+			menu.draw(ctx, camera.width / 2, 4 * camera.height / 5, "24pt Orbitron");
+		}
+		else {
+			utilities.fillText(ctx,"Press ENTER to start",camera.width/2,4*camera.height/5,"12pt Orbitron",'white');
+		}
 		ctx.restore();
 	},
 

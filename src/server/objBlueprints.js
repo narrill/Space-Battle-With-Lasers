@@ -1,4 +1,5 @@
 const utilities = require('./utilities.js');
+const componentTypes = require('./ComponentTypes.js');
 
 const ships = {
   cheetah: {
@@ -37,7 +38,6 @@ const ships = {
     laser: {},
     stabilizer: {},
     powerSystem: {},
-    warhead: {},
     thrusterSystem: {
       medial: {
         maxStrength: 40000,
@@ -52,11 +52,9 @@ const ships = {
         powerRampLimit: 10000,
       },
     },
-    destructible: {
-      shield: {
-        max: 30,
-        efficiency: 4,
-      },
+    shield: {
+      max: 30,
+      efficiency: 4,
     },
   },
 
@@ -95,7 +93,6 @@ const ships = {
     cannon: {},
     stabilizer: {},
     powerSystem: {},
-    warhead: {},
     thrusterSystem: {
       medial: {
         maxStrength: 30000,
@@ -110,7 +107,7 @@ const ships = {
         powerRampLimit: 10000,
       },
     },
-    destructible: {},
+    shield: {},
   },
 
   tiger: {
@@ -157,7 +154,6 @@ const ships = {
     },
     stabilizer: {},
     powerSystem: {},
-    warhead: {},
     thrusterSystem: {
       medial: {
         maxStrength: 100000,
@@ -172,11 +168,9 @@ const ships = {
         powerRampLimit: 15000,
       },
     },
-    destructible: {
-      shield: {
-        max: 200,
-        efficiency: 8,
-      },
+    shield: {
+      max: 200,
+      efficiency: 8,
     },
   },
 
@@ -219,7 +213,6 @@ const ships = {
     },
     stabilizer: {},
     powerSystem: {},
-    warhead: {},
     thrusterSystem: {
       medial: {
         maxStrength: 100000,
@@ -234,11 +227,9 @@ const ships = {
         powerRampLimit: 15000,
       },
     },
-    destructible: {
-      shield: {
-        max: 200,
-        efficiency: 8,
-      },
+    shield: {
+      max: 200,
+      efficiency: 8,
     },
   },
 };
@@ -274,9 +265,6 @@ const missiles = {
     destructible: {
       hp: 15,
       radius: 15,
-      shield: {
-        max: 0,
-      },
     },
     thrusterSystem: {
       medial: {

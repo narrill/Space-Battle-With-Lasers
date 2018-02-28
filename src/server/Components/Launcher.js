@@ -38,4 +38,6 @@ class Launcher {
   }
 }
 
+Launcher.isBuildable = true;
+
 module.exports = Launcher;

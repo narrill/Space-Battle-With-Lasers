@@ -5,11 +5,16 @@ const utilities = require('./utilities.js');
 
 const collisions = {
   dealDamage(dmg) {
-    this.destructible.shield.current -= dmg;
-    if (this.destructible.shield.current < 0) {
-      this.destructible.hp += this.destructible.shield.current;
-      this.destructible.shield.current = 0;
+    if(this.shield) {
+      this.shield.current -= dmg;
+      if(this.shield.current < 0) {
+        dmg = this.shield.current * (-1);
+        this.shield.current = 0;
+      }
+      else
+        dmg = 0;
     }
+    this.destructible.hp -= dmg;
   },
   basicLaserCollision: (laser, obj, tValOfObj, dt) => {
     collisions.dealDamage.call(obj, laser.power * dt * (1 - tValOfObj));

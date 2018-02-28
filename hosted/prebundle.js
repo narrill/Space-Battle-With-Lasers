@@ -1,4 +1,220 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+const Screen = require('./Screen.js');
+const ModalEntryScreen = require('./ModalEntryScreen.js');
+
+const drawHighlight = (ctx, x, y, text, height) => {
+  ctx.save();
+  const width = ctx.measureText(text).width;
+  ctx.globalAlpha = 0.5;
+  ctx.fillStyle = 'blue';
+  ctx.fillRect(x, y - height, width, height);
+  ctx.restore();
+};
+
+class FieldView {
+  constructor(component, fieldName) {
+    this.component = component;
+    this.name = fieldName;
+  }
+
+  draw(ctx, x, y, textHeight, lineHeight, highlighted) {
+    const text = `${this.name}: ${this.value}`;
+    if(highlighted)
+      drawHighlight(ctx, x, y, text, textHeight);
+    ctx.globalAlpha = 1;
+    ctx.fillText(text, x, y);
+    return y + lineHeight;
+  }
+
+  get value() {
+    return this.component[this.name];
+  }
+
+  set value(val) {
+    if(typeof val === typeof this.value)
+      this.component[this.name] = val;
+  }
+
+  select() {
+    return (client) => {
+      client.enterModal(ModalEntryScreen, (value) => {
+        this.value = value;
+      });
+    }
+  }
+}
+
+class Navigable {
+  constructor(ob, toggleableElements) {
+    this.elements = [];
+    Object.keys(ob).forEach((key) => {
+      if(ob[key] instanceof Object)
+        this.elements.push(new ComponentEditor(key, ob[key], toggleableElements));
+      else
+        this.elements.push(new FieldView(ob, key));
+    });
+    this.cursor = toggleableElements - 1;
+    this.max = this.elements.length;
+    this.min = this.cursor;
+  }
+
+  _boundCursor(cursor) {
+    return (cursor - this.min + this.max - this.min) % (this.max - this.min) + this.min;
+  }
+
+  get current() {
+    return this.elements[this.cursor];
+  }
+
+  forward() {
+    if(this.current && this.current.canForward)
+      this.current.forward();
+    else
+      this.cursor = this._boundCursor(this.cursor + 1);
+  }
+
+  backward() {
+    if(this.current.canBackward)
+      this.current.backward();
+    else {
+      this.cursor = this._boundCursor(this.cursor - 1);
+      if(this.current && this.current.enabled)
+        this.current.toLast();
+    }
+  }
+}
+
+class ComponentEditor extends Navigable {
+  constructor(name, component, toggleable = true) {
+    super(component, false);
+    this.enabled = !toggleable;
+    this.toggleable = toggleable;
+    this.data = component;
+    this.name = name;
+  }
+
+  draw(ctx, x, y, textHeight, lineHeight, highlighted, indent) {
+    if(highlighted && this.onName) {
+      drawHighlight(ctx, x, y, this.name, textHeight);
+    }
+    ctx.globalAlpha = (this.enabled) ? 1 : 0.5;
+    ctx.fillText(this.name, x, y);
+    x += indent;
+    y += lineHeight;
+
+    if(this.enabled || !this.toggleable) {
+      for (let i = 0; i < this.elements.length; ++i) {
+        y = this.elements[i].draw(ctx, x, y, textHeight, lineHeight, highlighted && this.cursor === i, indent);
+      }
+    }
+    return y;
+  }
+
+  get lines() {
+    return this.elements.length + 1;
+  }
+
+  get canForward() {
+    return this.enabled && (this.cursor !== this.elements.length - 1 || this.current.canForward);
+  }
+
+  get canBackward() {
+    return this.cursor !== -1;
+  }
+
+  get onName() {
+    return this.cursor === -1;
+  }
+
+  toLast() {
+    this.cursor = this.elements.length - 1;
+    if(this.current.enabled)
+      this.current.toLast();
+  }
+
+  select() {
+    if(this.toggleable && this.onName)
+      this.enabled = !this.enabled;
+    else if(!this.onName)
+      return this.current.select();
+  }
+}
+
+class Editor extends Navigable {
+  constructor(availableComponents) {
+    super(availableComponents, true);
+  }
+
+  draw(ctx, x, y) {
+    ctx.save();
+    ctx.font = "12pt Orbitron";
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'white';
+    const height = ctx.measureText("M").width;
+    const indent = height * 4;
+    const lineHeight = height * 1.5;
+    for(let c = 0; c < this.elements.length; ++c) {
+      y = this.elements[c].draw(ctx, x, y, height, lineHeight, this.cursor === c, indent);
+    }
+    ctx.restore();
+  }
+
+  select() {
+    return this.current.select();
+  }
+
+  key(e) {
+    if(e.key === 'ArrowDown')
+      this.forward();
+    else if(e.key === 'ArrowUp')
+      this.backward();
+    else if(e.key === 'Enter')
+      return this.select();
+  }
+}
+
+class BuilderScreen extends Screen {
+  constructor(client) {
+    super();
+    this.client = client;
+    this.openRequests = 0;
+    this.model = undefined;
+  }
+
+  draw() {
+    if(this.editor)
+      this.editor.draw(this.client.camera.ctx, 50, 50);
+  }
+
+  onEnter() {
+    this.getRequest('/components', (data) => {
+      this.editor = new Editor(data);
+    });
+  }
+
+  keyDown(e) {
+    this._handleSelect(this.editor.key(e));
+  }
+
+  getRequest(url, callback) {
+    const xhr = new XMLHttpRequest();
+    xhr.onload = () => {
+      callback(JSON.parse(xhr.response));
+      this.openRequests--;
+    };
+    xhr.open('GET', url);
+    xhr.send();
+    this.openRequests++;
+  }
+
+  _handleSelect(callback) {
+    if(callback)
+      callback(this.client);
+  }
+}
+
+module.exports = BuilderScreen;
+},{"./ModalEntryScreen.js":10,"./Screen.js":15}],2:[function(require,module,exports){
 const utilities = require('../server/utilities.js');
 const Viewport = require('./Viewport.js');
 
@@ -33,7 +249,7 @@ class Camera {
 }
 
 module.exports = Camera;
-},{"../server/utilities.js":35,"./Viewport.js":17}],2:[function(require,module,exports){
+},{"../server/utilities.js":38,"./Viewport.js":20}],3:[function(require,module,exports){
 const EntryScreen = require('./EntryScreen.js');
 const drawing = require('./drawing.js');
 
@@ -50,7 +266,7 @@ class ChooseShipScreen extends EntryScreen {
 }
 
 module.exports = ChooseShipScreen;
-},{"./EntryScreen.js":5,"./drawing.js":18}],3:[function(require,module,exports){
+},{"./EntryScreen.js":6,"./drawing.js":21}],4:[function(require,module,exports){
 const TitleScreen = require('./TitleScreen.js');
 const GameScreen = require('./GameScreen.js');
 const ChooseShipScreen = require('./ChooseShipScreen.js');
@@ -58,6 +274,7 @@ const ShipWaitScreen = require('./ShipWaitScreen.js');
 const NameScreen = require('./NameScreen.js');
 const NameWaitScreen = require('./NameWaitScreen.js');
 const DisconnectScreen = require('./DisconnectScreen.js');
+const BuilderScreen = require('./BuilderScreen.js');
 const Camera = require('./Camera.js');
 const Oscillator = require('./Oscillator.js');
 const Stinger = require('./Stinger.js');
@@ -163,6 +380,7 @@ class Client {
     this.nameWaitScreen = new NameWaitScreen(this);
     this.nameScreen = new NameScreen(this);
     this.disconnectScreen = new DisconnectScreen(this);
+    this.builderScreen = new BuilderScreen(this);
 
     this.currentScreen = {};
     this.switchScreen(this.titleScreen);
@@ -246,12 +464,24 @@ class Client {
   }
 
   switchScreen(screen) {
-    if(this.currentScreen.onExit) this.currentScreen.onExit();
+    this._switchScreen(screen, false, false);
+  }
+
+  enterModal(Modal, callback) {
+    this._switchScreen(new Modal(this, this.currentScreen, callback), true, false);
+  }
+
+  exitModal(previousScreen) {
+    this._switchScreen(previousScreen, false, true);
+  }
+
+  _switchScreen(screen, toModal, fromModal) {
+    if(!toModal && this.currentScreen.onExit) this.currentScreen.onExit();
     if(screen.init && !screen.initialized) {
       screen.init();
       screen.initialized = true;
     }
-    if(screen.onEnter) screen.onEnter();
+    if(!fromModal && screen.onEnter) screen.onEnter();
     this.input.setListeners(screen.keyDown, screen.keyUp, screen.mouse);
     this.currentScreen = screen;
   }
@@ -270,7 +500,7 @@ class Client {
 }
 
 module.exports = Client;
-},{"../server/Deserializer.js":23,"../server/NetworkWorldInfo.js":30,"../server/utilities.js":35,"./Camera.js":1,"./ChooseShipScreen.js":2,"./DisconnectScreen.js":4,"./GameScreen.js":6,"./Input.js":7,"./NameScreen.js":9,"./NameWaitScreen.js":10,"./Oscillator.js":11,"./ShipWaitScreen.js":13,"./Stinger.js":14,"./TitleScreen.js":15,"./drawing.js":18,"./worldInfo.js":22}],4:[function(require,module,exports){
+},{"../server/Deserializer.js":26,"../server/NetworkWorldInfo.js":33,"../server/utilities.js":38,"./BuilderScreen.js":1,"./Camera.js":2,"./ChooseShipScreen.js":3,"./DisconnectScreen.js":5,"./GameScreen.js":7,"./Input.js":8,"./NameScreen.js":12,"./NameWaitScreen.js":13,"./Oscillator.js":14,"./ShipWaitScreen.js":16,"./Stinger.js":17,"./TitleScreen.js":18,"./drawing.js":21,"./worldInfo.js":25}],5:[function(require,module,exports){
 const Screen = require('./Screen.js');
 const drawing = require('./drawing.js');
 
@@ -293,9 +523,8 @@ class DisconnectScreen extends Screen {
 }
 
 module.exports = DisconnectScreen;
-},{"./Screen.js":12,"./drawing.js":18}],5:[function(require,module,exports){
+},{"./Screen.js":15,"./drawing.js":21}],6:[function(require,module,exports){
 const Screen = require('./Screen.js');
-const drawing = require('./drawing.js');
 
 class EntryScreen extends Screen {
   constructor(client, waitScreen, message) {
@@ -324,7 +553,7 @@ class EntryScreen extends Screen {
 }
 
 module.exports = EntryScreen;
-},{"./Screen.js":12,"./drawing.js":18}],6:[function(require,module,exports){
+},{"./Screen.js":15}],7:[function(require,module,exports){
 const TrackShuffler = require('./TrackShuffler.js');
 const inputState = require('../server/inputState.js');
 const drawing = require('./drawing.js');
@@ -458,7 +687,7 @@ class GameScreen extends Screen {
 }
 
 module.exports = GameScreen;
-},{"../server/inputState.js":32,"../server/utilities.js":35,"./Screen.js":12,"./TrackShuffler.js":16,"./drawing.js":18,"./keymap.js":19}],7:[function(require,module,exports){
+},{"../server/inputState.js":35,"../server/utilities.js":38,"./Screen.js":15,"./TrackShuffler.js":19,"./drawing.js":21,"./keymap.js":22}],8:[function(require,module,exports){
 const LooseTimer = require('./LooseTimer.js');
 const inputState = require('../server/inputState.js');
 
@@ -560,7 +789,7 @@ class Input {
 }
 
 module.exports = Input;
-},{"../server/inputState.js":32,"./LooseTimer.js":8}],8:[function(require,module,exports){
+},{"../server/inputState.js":35,"./LooseTimer.js":9}],9:[function(require,module,exports){
 class LooseTimer {
   constructor(intervalMS, func) {
     this.interval = intervalMS;
@@ -577,7 +806,80 @@ class LooseTimer {
 }
 
 module.exports = LooseTimer;
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
+const ModalScreen = require('./ModalScreen.js');
+const drawing = require('./drawing.js');
+
+class ModalEntryScreen extends ModalScreen {
+  constructor(client, previousScreen, callback) {
+    super(client, previousScreen, callback);
+  }
+
+  draw(now, dt) {
+    super.draw(now, dt);
+    drawing.drawEntryScreen(this.client.camera, "Enter a value", this.entry);
+  }
+
+  keyDown(e) {
+    if(e.key === 'Backspace'){
+      if(this.entry.length > 0)
+        this.entry = this.entry.slice(0, -1);
+    }
+    else if(e.key === 'Enter') {
+      const number = Number.parseFloat(this.entry);
+      if(!Number.isNaN(number))
+        this.exitModal(number);
+      else if(this.entry === 'true' || this.entry === 'false')
+        this.exitModal((this.entry === 'true') ? true : false);
+      else
+        this.exitModal(this.entry);
+    }
+    else
+      this.entry += e.key;
+  }
+
+  onEnter(){
+    this.entry = "";
+  }
+}
+
+module.exports = ModalEntryScreen;
+},{"./ModalScreen.js":11,"./drawing.js":21}],11:[function(require,module,exports){
+const Screen = require('./Screen.js');
+const drawing = require('./drawing.js');
+
+class ModalScreen extends Screen {
+  constructor(client, previousScreen, callback) {
+    super();
+    this.client = client;
+    this.previousScreen = previousScreen;
+    this.callback = callback;
+  }
+
+  update(dt) {
+    if(this.previousScreen.update)
+      this.previousScreen.update(dt);
+  }
+
+  draw(now, dt) {
+    if(this.previousScreen.draw)
+      this.previousScreen.draw(now, dt);
+    const camera = this.client.camera;
+    const ctx = camera.ctx;
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    drawing.clearCamera(camera);
+    ctx.restore();
+  }
+
+  exitModal(val) {
+    this.callback(val);
+    this.client.exitModal(this.previousScreen);
+  }
+}
+
+module.exports = ModalScreen;
+},{"./Screen.js":15,"./drawing.js":21}],12:[function(require,module,exports){
 const EntryScreen = require('./EntryScreen.js');
 const drawing = require('./drawing.js');
 
@@ -593,7 +895,7 @@ class NameScreen extends EntryScreen {
 }
 
 module.exports = NameScreen;
-},{"./EntryScreen.js":5,"./drawing.js":18}],10:[function(require,module,exports){
+},{"./EntryScreen.js":6,"./drawing.js":21}],13:[function(require,module,exports){
 const Screen = require('./Screen.js');
 
 class NameWaitScreen extends Screen {
@@ -618,7 +920,7 @@ class NameWaitScreen extends Screen {
 }
 
 module.exports = NameWaitScreen;
-},{"./Screen.js":12}],11:[function(require,module,exports){
+},{"./Screen.js":15}],14:[function(require,module,exports){
 class Oscillator {
   constructor(periodSeconds) {
     this.start = Date.now() / 1000;
@@ -636,19 +938,19 @@ class Oscillator {
 }
 
 module.exports = Oscillator;
-},{}],12:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 require('./optionalBind.js');
 
 class Screen {
-	constructor() {
-		this.optionalBind('keyDown');
-		this.optionalBind('keyUp');
-		this.optionalBind('mouse');
-	}
+  constructor() {
+    this.optionalBind('keyDown');
+    this.optionalBind('keyUp');
+    this.optionalBind('mouse');
+  }
 }
 
 module.exports = Screen;
-},{"./optionalBind.js":21}],13:[function(require,module,exports){
+},{"./optionalBind.js":24}],16:[function(require,module,exports){
 const Screen = require('./Screen.js');
 
 class ShipWaitScreen extends Screen {
@@ -684,7 +986,7 @@ class ShipWaitScreen extends Screen {
 }
 
 module.exports = ShipWaitScreen;
-},{"./Screen.js":12}],14:[function(require,module,exports){
+},{"./Screen.js":15}],17:[function(require,module,exports){
 class Stinger {
   constructor(id) {
     this.elem = document.querySelector(`#${id}`);
@@ -697,11 +999,52 @@ class Stinger {
 }
 
 module.exports = Stinger;
-},{}],15:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 const Oscillator = require('./Oscillator.js');
 const utilities = require('../server/utilities.js');
 const drawing = require('./drawing.js');
 const Screen = require('./Screen.js');
+
+class Menu {
+  constructor(elements) {
+    this.elements = elements;
+    this.cursor = 0;
+  }
+
+  draw(ctx, x, y, font) {
+    ctx.save();
+    ctx.font = font;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'white';
+    const height = ctx.measureText("M").width;
+    const lineHeight = height * 1.5;
+    for (let i = this.elements.length - 1; i >= 0; --i) {
+      if(this.cursor === i) {
+        ctx.save();
+        const width = ctx.measureText(this.elements[i].text).width;
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(x - width/2, y - height/2, width, height);
+        ctx.restore();
+      }
+      ctx.fillText(this.elements[i].text, x, y);
+      y -= lineHeight;
+    }
+    ctx.restore();
+  }
+
+  forward() {
+    this.cursor = (this.cursor + 1) % this.elements.length;
+  }
+
+  backward() {
+    this.cursor = (this.cursor - 1) % this.elements.length;
+  }
+
+  select() {
+    this.elements[this.cursor].func(this.elements[this.cursor]);
+  }
+}
 
 class TitleScreen extends Screen {
   constructor(client) {
@@ -709,7 +1052,7 @@ class TitleScreen extends Screen {
     this.client = client;
 
     this.titleOsc = new Oscillator(6);
-    this.titleCameraOsc = new Oscillator(60);
+    this.titleCameraOsc = new Oscillator(60);   
   }
 
   draw(now, dt) {
@@ -718,14 +1061,27 @@ class TitleScreen extends Screen {
     camera.x = this.titleCameraOsc.getValue(nowS) * 100000;
     camera.y = this.titleCameraOsc.getValue(nowS + this.titleCameraOsc.period/4) * 100000;
     camera.rotation = utilities.correctOrientation(camera.rotation + .1 * dt);
-    drawing.drawTitleScreen(camera, this.titleOsc);
+    drawing.drawTitleScreen(camera, this.titleOsc, this.menu);
   }
 
   keyDown(e) {
     this.client.keyclick.play();
-    if(e.key === 'Enter') {
-      this.client.switchScreen(this.client.nameScreen);
+    if(this.menu) {
+      if(e.key === 'Enter')
+        this.menu.select();
+      else if(e.key === 'ArrowDown')
+        this.menu.forward();
+      else if(e.key === 'ArrowUp')
+        this.menu.backward();
     }
+    else {
+      if(e.key === 'Enter') {
+        this.menu = new Menu([
+          { text: 'Play', func: () => this.client.switchScreen(this.client.nameScreen) },
+          { text: 'Build', func: () => this.client.switchScreen(this.client.builderScreen) }
+        ]);
+      }
+    }    
   }
 
   onExit() {
@@ -734,7 +1090,7 @@ class TitleScreen extends Screen {
 }
 
 module.exports = TitleScreen;
-},{"../server/utilities.js":35,"./Oscillator.js":11,"./Screen.js":12,"./drawing.js":18}],16:[function(require,module,exports){
+},{"../server/utilities.js":38,"./Oscillator.js":14,"./Screen.js":15,"./drawing.js":21}],19:[function(require,module,exports){
 const utilities = require('../server/utilities.js');
 
 class TrackShuffler {
@@ -798,7 +1154,7 @@ class TrackShuffler {
 }
 
 module.exports = TrackShuffler;
-},{"../server/utilities.js":35}],17:[function(require,module,exports){
+},{"../server/utilities.js":38}],20:[function(require,module,exports){
 class Viewport {
   constructor(objectParams = {}) {
     this.startX = (objectParams.startX) ? objectParams.startX : 0;
@@ -810,7 +1166,7 @@ class Viewport {
 }
 
 module.exports = Viewport;
-},{}],18:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/drawing.js
 
@@ -1369,7 +1725,7 @@ const drawing = {
 		ctx.restore();
 	},
 
-	drawTitleScreen:function(camera, osc){
+	drawTitleScreen:function(camera, osc, menu){
 		var ctx = camera.ctx;
 		ctx.save();
 		ctx.fillStyle = 'black';
@@ -1383,7 +1739,12 @@ const drawing = {
 		const bigOffset = osc.getValue(now/1000 - osc.period/6) * 4;
 		utilities.fillText(ctx,"Space Battle With Lasers",camera.width/2,bigOffset + camera.height/5,"bold 64pt Aroma",'blue',.5);
 		utilities.fillText(ctx,"SPACE BATTLE WITH LASERS",camera.width/2,smallOffset + camera.height/5,"bold 24pt Aroma",'white');
-		utilities.fillText(ctx,"Press ENTER to start",camera.width/2,4*camera.height/5,"12pt Orbitron",'white');
+		if(menu) {
+			menu.draw(ctx, camera.width / 2, 4 * camera.height / 5, "24pt Orbitron");
+		}
+		else {
+			utilities.fillText(ctx,"Press ENTER to start",camera.width/2,4*camera.height/5,"12pt Orbitron",'white');
+		}
 		ctx.restore();
 	},
 
@@ -1473,7 +1834,7 @@ const drawing = {
 };
 
 module.exports = drawing;
-},{"../server/utilities.js":35,"./worldInfo.js":22}],19:[function(require,module,exports){
+},{"../server/utilities.js":38,"./worldInfo.js":25}],22:[function(require,module,exports){
 const commands = require('../server/commands.js');
 const keys = require('../server/keys.js');
 
@@ -1493,18 +1854,18 @@ const keymap = {
 };
 
 module.exports = keymap;
-},{"../server/commands.js":31,"../server/keys.js":33}],20:[function(require,module,exports){
+},{"../server/commands.js":34,"../server/keys.js":36}],23:[function(require,module,exports){
 const Client = require('./Client.js');
 
 window.onload = () => {
 	new Client().frame();
 };
-},{"./Client.js":3}],21:[function(require,module,exports){
+},{"./Client.js":4}],24:[function(require,module,exports){
 Object.prototype.optionalBind = function(prop) {
 	if(this[prop])
 		this[prop] = this[prop].bind(this);
 };
-},{}],22:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
@@ -1663,7 +2024,7 @@ class ObjInfo {
 }
 
 module.exports = worldInfo;
-},{"../server/utilities.js":35}],23:[function(require,module,exports){
+},{"../server/utilities.js":38}],26:[function(require,module,exports){
 const { primitiveByteSizes, ARRAY_INDEX_TYPE } = require('./serializationConstants.js');
 
 class Deserializer {
@@ -1713,7 +2074,7 @@ class Deserializer {
 
 module.exports = Deserializer;
 
-},{"./serializationConstants.js":34}],24:[function(require,module,exports){
+},{"./serializationConstants.js":37}],27:[function(require,module,exports){
 class NetworkAsteroid {
   constructor(asteroid) {
     this.id = asteroid.id;
@@ -1734,7 +2095,7 @@ NetworkAsteroid.serializableProperties = [
 
 module.exports = NetworkAsteroid;
 
-},{}],25:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 const ColorHSL = require('./utilities.js').ColorHSL;
 
 class NetworkHitscan {
@@ -1763,7 +2124,7 @@ NetworkHitscan.serializableProperties = [
 
 module.exports = NetworkHitscan;
 
-},{"./utilities.js":35}],26:[function(require,module,exports){
+},{"./utilities.js":38}],29:[function(require,module,exports){
 const ColorHSL = require('./utilities.js').ColorHSL;
 
 class NetworkObj {
@@ -1802,7 +2163,7 @@ NetworkObj.serializableProperties = [
 
 module.exports = NetworkObj;
 
-},{"./utilities.js":35}],27:[function(require,module,exports){
+},{"./utilities.js":38}],30:[function(require,module,exports){
 class NetworkPlayerObj {
   constructor(obj) {
     this.x = obj.x;
@@ -1841,7 +2202,7 @@ NetworkPlayerObj.serializableProperties = [
 
 module.exports = NetworkPlayerObj;
 
-},{}],28:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 const ColorRGB = require('./utilities.js').ColorRGB;
 
 class NetworkPrj {
@@ -1868,7 +2229,7 @@ NetworkPrj.serializableProperties = [
 
 module.exports = NetworkPrj;
 
-},{"./utilities.js":35}],29:[function(require,module,exports){
+},{"./utilities.js":38}],32:[function(require,module,exports){
 const ColorRGB = require('./utilities.js').ColorRGB;
 
 class NetworkRadial {
@@ -1893,7 +2254,7 @@ NetworkRadial.serializableProperties = [
 
 module.exports = NetworkRadial;
 
-},{"./utilities.js":35}],30:[function(require,module,exports){
+},{"./utilities.js":38}],33:[function(require,module,exports){
 const NetworkObj = require('./NetworkObj.js');
 const NetworkPlayerObj = require('./NetworkPlayerObj.js');
 const NetworkAsteroid = require('./NetworkAsteroid.js');
@@ -1947,7 +2308,7 @@ NetworkWorldInfo.serializableProperties = [
 
 module.exports = NetworkWorldInfo;
 
-},{"./NetworkAsteroid.js":24,"./NetworkHitscan.js":25,"./NetworkObj.js":26,"./NetworkPlayerObj.js":27,"./NetworkPrj.js":28,"./NetworkRadial.js":29}],31:[function(require,module,exports){
+},{"./NetworkAsteroid.js":27,"./NetworkHitscan.js":28,"./NetworkObj.js":29,"./NetworkPlayerObj.js":30,"./NetworkPrj.js":31,"./NetworkRadial.js":32}],34:[function(require,module,exports){
 const commandList = [
   'FORWARD',
   'BACKWARD',
@@ -1971,7 +2332,7 @@ for (let c = 0; c < commandList.length; c++) {
 
 module.exports = commands;
 
-},{}],32:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 const STATES = {
   STARTING: 2,
   ENABLED: 1,
@@ -2004,7 +2365,7 @@ module.exports = {
   advanceStateDictionary,
 };
 
-},{}],33:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 module.exports = Object.freeze({
   LEFT: 37,
   UP: 38,
@@ -2034,7 +2395,7 @@ module.exports = Object.freeze({
   RMB: 2,
 });
 
-},{}],34:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 const primitiveByteSizes = {
   Float32: 4,
   Uint8: 1,
@@ -2047,7 +2408,7 @@ const ARRAY_INDEX_TYPE = 'Uint32';
 
 module.exports = { primitiveByteSizes, ARRAY_INDEX_TYPE };
 
-},{}],35:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
@@ -2744,4 +3105,4 @@ const utilities = {
 
 module.exports = utilities;
 
-},{}]},{},[20]);
+},{}]},{},[23]);

@@ -14,6 +14,20 @@ class Shield {
       recharge: 0
     }, params);
   }
+
+  update(dt) {
+    // refresh shields
+    if (this.current < this.max
+      && this.recharge > 0) {
+      this.current += this.recharge * dt;
+
+      if (this.current > this.max) {
+        this.current = this.max;
+      }
+    }
+  }
 }
+
+Shield.isBuildable = true;
 
 module.exports = Shield;

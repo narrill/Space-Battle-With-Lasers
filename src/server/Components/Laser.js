@@ -59,4 +59,6 @@ class Laser {
   }
 }
 
+Laser.isBuildable = true;
+
 module.exports = Laser;

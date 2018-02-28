@@ -2,6 +2,8 @@ const http = require('http');
 const fs = require('fs');
 const socketio = require('socket.io');
 const path = require('path');
+const url = require('url');
+const querystring = require('querystring');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
@@ -38,10 +40,11 @@ for (let c = 0; c < files.length; c++) {
 }
 
 const Game = require('./Game.js');
-const ships = require('./objBlueprints.js').ships;
+const buildableBPs = require('./ComponentTypes.js').buildableBPs;
+const objBlueprints = require('./objBlueprints.js');
+const ships = objBlueprints.ships;
 const Obj = require('./Obj.js');
 const utilities = require('./utilities.js');
-
 const shipList = Object.keys(ships);
 
 const game = new Game();
@@ -56,18 +59,34 @@ const sendJSON = (request, response, json) => {
   response.end(JSON.stringify(json));
 };
 
+const send400 = (request, response) => {
+  response.writeHead(400);
+  response.end();
+};
+
 const endPoints = {
   '/names': (request, response) => { sendJSON(request, response, game.names); },
   '/activeShips': (request, response) => { sendJSON(request, response, game.activeShips); },
+  '/components': (request, response) => { sendJSON(request, response, buildableBPs)},
+  '/ship': (request, response, query) => {
+    if(query.ship && ships[query.ship]) {
+      sendJSON(request, response, Obj.completeBP(ships[query.ship]));
+    }
+    else
+      send400(request, response);
+  }
 };
 
 const onRequest = (request, response) => {
-  console.log(request.url);
-  if (request.url === '/') { request.url = '/client.html'; }
-  if (hostedFiles[request.url]) {
-    sendFile(request, response, hostedFiles[request.url]);
-  } else if (endPoints[request.url]) {
-    endPoints[request.url](request, response);
+  const urlInfo = url.parse(request.url);
+  let pathname = urlInfo.pathname;
+  const queryParams = querystring.parse(urlInfo.query);
+  console.log(urlInfo.path);
+  if (pathname === '/') { pathname = '/client.html'; }
+  if (hostedFiles[pathname]) {
+    sendFile(request, response, hostedFiles[pathname]);
+  } else if (endPoints[pathname]) {
+    endPoints[pathname](request, response, queryParams);
   } else {
     response.writeHead(404);
     response.end();

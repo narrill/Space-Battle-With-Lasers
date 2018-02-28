@@ -5,6 +5,7 @@ const ShipWaitScreen = require('./ShipWaitScreen.js');
 const NameScreen = require('./NameScreen.js');
 const NameWaitScreen = require('./NameWaitScreen.js');
 const DisconnectScreen = require('./DisconnectScreen.js');
+const BuilderScreen = require('./BuilderScreen.js');
 const Camera = require('./Camera.js');
 const Oscillator = require('./Oscillator.js');
 const Stinger = require('./Stinger.js');
@@ -110,6 +111,7 @@ class Client {
     this.nameWaitScreen = new NameWaitScreen(this);
     this.nameScreen = new NameScreen(this);
     this.disconnectScreen = new DisconnectScreen(this);
+    this.builderScreen = new BuilderScreen(this);
 
     this.currentScreen = {};
     this.switchScreen(this.titleScreen);
@@ -193,12 +195,24 @@ class Client {
   }
 
   switchScreen(screen) {
-    if(this.currentScreen.onExit) this.currentScreen.onExit();
+    this._switchScreen(screen, false, false);
+  }
+
+  enterModal(Modal, callback) {
+    this._switchScreen(new Modal(this, this.currentScreen, callback), true, false);
+  }
+
+  exitModal(previousScreen) {
+    this._switchScreen(previousScreen, false, true);
+  }
+
+  _switchScreen(screen, toModal, fromModal) {
+    if(!toModal && this.currentScreen.onExit) this.currentScreen.onExit();
     if(screen.init && !screen.initialized) {
       screen.init();
       screen.initialized = true;
     }
-    if(screen.onEnter) screen.onEnter();
+    if(!fromModal && screen.onEnter) screen.onEnter();
     this.input.setListeners(screen.keyDown, screen.keyUp, screen.mouse);
     this.currentScreen = screen;
   }

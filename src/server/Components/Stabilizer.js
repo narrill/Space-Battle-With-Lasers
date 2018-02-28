@@ -18,4 +18,6 @@ class Stabilizer {
   }
 }
 
+Stabilizer.isBuildable = true;
+
 module.exports = Stabilizer;

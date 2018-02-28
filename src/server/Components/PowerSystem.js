@@ -52,9 +52,11 @@ class PowerSystem {
     if (has.call(owner, 'laser')) { owner.laser.maxPower /= (1 + laserPower); }
     if (has.call(owner, 'cannon')) { owner.cannon.power /= (1 + laserPower); }
     // shields
-    owner.destructible.shield.current /= (1 + shieldPower);
-    owner.destructible.shield.max /= (1 + shieldPower);
-    owner.destructible.shield.recharge /= (1 + shieldPower);
+    if(has.call(owner, 'shield')) {
+      owner.shield.current /= (1 + shieldPower);
+      owner.shield.max /= (1 + shieldPower);
+      owner.shield.recharge /= (1 + shieldPower);
+    }
 
     // update the power values
     scalePowerTarget();
@@ -84,9 +86,11 @@ class PowerSystem {
     if (has.call(owner, 'laser')) { owner.laser.maxPower *= (1 + laserPower); }
     if (has.call(owner, 'cannon')) { owner.cannon.power *= (1 + laserPower); }
     // shields
-    owner.destructible.shield.current *= (1 + shieldPower);
-    owner.destructible.shield.max *= (1 + shieldPower);
-    owner.destructible.shield.recharge *= (1 + shieldPower);
+    if(has.call(owner, 'shield')) {
+      owner.shield.current *= (1 + shieldPower);
+      owner.shield.max *= (1 + shieldPower);
+      owner.shield.recharge *= (1 + shieldPower);
+    }
   }
 
   getPowerForComponent(component) {
@@ -100,5 +104,7 @@ class PowerSystem {
     );
   }
 }
+
+PowerSystem.isBuildable = true;
 
 module.exports = PowerSystem;

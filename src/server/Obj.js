@@ -8,6 +8,7 @@ const enums = require('./enums.js');
 const has = Object.prototype.hasOwnProperty;
 const componentClasses = require('./ComponentTypes.js').classes;
 const Accelerable = require('./Accelerable.js');
+const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
 
 class Obj extends Accelerable {
   constructor(objectParams = {}, game, owner, playerId) {
@@ -45,21 +46,23 @@ class Obj extends Accelerable {
     this.physicalProperties = objectParams.physicalProperties;
     this.type = 'obj';
 
-    const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
     const physProp = objectParams.physicalProperties;
 
     // Set defaults
     const defaults = {
-      destructible: {
-        hp: physProp.mass,
-        radius: physProp.radius,
-        shield: {
-          max: 100,
-          recharge: 3,
-          efficiency: 8,
-        },
+      shield: {
+        max: 100,
+        recharge: 3,
+        efficiency: 8,
       },
     };
+
+    objectParams.destructible = {
+      hp: physProp.mass,
+      radius: physProp.radius,
+    };
+
+    objectParams.warhead = {};
 
     // Populate components
     this.updatableComponents = [];
@@ -161,11 +164,12 @@ class Obj extends Accelerable {
 
   get networkRepresentation() {
     const dest = this.destructible;
+    const shield = this.shield;
     const ts = this.thrusterSystem;
     const transformedParams = {
       radius: dest.radius,
-      shp: (dest.shield.max > 0) ? (dest.shield.current / dest.shield.max) : 0,
-      shc: (dest.shield.max / dest.shield.efficiency),
+      shp: (shield) ? (shield.current / shield.max) : 0,
+      shc: (shield) ? (shield.max / shield.efficiency) : 0,
       hp: dest.hp / dest.maxHp,
       medial: ts.medial.currentStrength / ts.medial.efficiency,
       lateral: ts.lateral.currentStrength / ts.lateral.efficiency,
@@ -208,6 +212,18 @@ class Obj extends Accelerable {
       weaponOffset[1],
       -this.rotation,
     );
+  }
+
+  static completeBP(params) {
+    const bp = {};
+    Object.keys(params).forEach((component) => {
+      const Component = componentClasses[capitalize(component)];
+      if(Component && Component.getBP)
+        bp[component] = Component.getBP(params[component]);
+      else
+        bp[component] = params[component];
+    });
+    return bp;
   }
 
   // add given strength to main thruster

@@ -47,4 +47,6 @@ class ThrusterSystem {
   }
 }
 
+ThrusterSystem.isBuildable = true;
+
 module.exports = ThrusterSystem;

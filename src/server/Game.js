@@ -342,12 +342,8 @@ class Game {
           if (this.frameCount < 25) { asteroid.destructible.hp = -1; } else {
             const objectSpeed = Math.sqrt((ship.velocityX * ship.velocityX)
               + (ship.velocityY * ship.velocityY));
-            ship.destructible.shield.current -= 0.1 * dt * objectSpeed;
-            asteroid.destructible.hp -= 0.2 * dt * objectSpeed;
-            if (ship.destructible.shield.current < 0) {
-              ship.destructible.hp += ship.destructible.shield.current;
-              ship.destructible.shield.current = 0;
-            }
+            collisions.dealDamage.call(ship, 0.1 * dt * objectSpeed);
+            collisions.dealDamage.call(asteroid, 0.2 * dt * objectSpeed);
             ship.velocityX *= (1 - (2 * dt));
             ship.velocityY *= (1 - (2 * dt));
           }

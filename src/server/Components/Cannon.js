@@ -61,4 +61,6 @@ class Cannon {
   }
 }
 
+Cannon.isBuildable = true;
+
 module.exports = Cannon;

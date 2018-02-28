@@ -1,5 +1,4 @@
 const Screen = require('./Screen.js');
-const drawing = require('./drawing.js');
 
 class EntryScreen extends Screen {
   constructor(client, waitScreen, message) {
