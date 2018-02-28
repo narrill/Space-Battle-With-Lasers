@@ -58,7 +58,7 @@ class Obj extends Accelerable {
     };
 
     objectParams.destructible = {
-      hp: physProp.mass,
+      maxHp: physProp.mass,
       radius: physProp.radius,
     };
 

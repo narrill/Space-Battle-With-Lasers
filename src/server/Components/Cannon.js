@@ -53,7 +53,7 @@ class Cannon {
           ammo.decayTimeSeconds,
           ammo.color,
           this.owner,
-          collisions[ammo.collisionFunction],
+          ammo.collisionFunction,
         );
       }
       this.firing = false;

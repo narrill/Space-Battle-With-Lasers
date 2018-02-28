@@ -14,13 +14,15 @@ const filenames = fs.readdirSync(dir);
 // really dumb, so suck it.
 const req = require;
 
+const decapitalize = (str) => str.charAt(0).toLowerCase() + str.slice(1);
+
 filenames.forEach((filename) => {
   const className = /(.+).js$/.exec(filename)[1];
   const splitClassName = className.split(/(?=[A-Z])/).join('_');
   TYPES[splitClassName.toUpperCase()] = counter++;
   classes[className] = req(`./${COMPONENT_DIRECTORY_NAME}/${filename}`);
   if(classes[className].isBuildable)
-  	buildableBPs[className.toLowerCase()] = classes[className].getBP();
+  	buildableBPs[decapitalize(className)] = classes[className].getBP();
 });
 
 module.exports = { TYPES, classes, buildableBPs };

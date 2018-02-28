@@ -66,6 +66,15 @@ class Navigable {
     return this.elements[this.cursor];
   }
 
+  get lines() {
+    let lines = this.min * -1;
+    for(let c = 0; c < this.elements.length; ++c) {
+      const l = this.elements[c].lines;
+      lines += (l) ? l : 1;
+    }
+    return lines;
+  }
+
   forward() {
     if(this.current && this.current.canForward)
       this.current.forward();
@@ -111,7 +120,7 @@ class ComponentEditor extends Navigable {
   }
 
   get lines() {
-    return this.elements.length + 1;
+    return (this.enabled) ? super.lines : 1;
   }
 
   get canForward() {
@@ -140,9 +149,10 @@ class ComponentEditor extends Navigable {
   }
 }
 
-class Editor extends Navigable {
+class ShipEditor extends Navigable {
   constructor(availableComponents) {
     super(availableComponents, true);
+    this.lineOffset = 0;
   }
 
   draw(ctx, x, y) {
@@ -153,10 +163,16 @@ class Editor extends Navigable {
     const height = ctx.measureText("M").width;
     const indent = height * 4;
     const lineHeight = height * 1.5;
+    y -= lineHeight * this.lineOffset;
     for(let c = 0; c < this.elements.length; ++c) {
       y = this.elements[c].draw(ctx, x, y, height, lineHeight, this.cursor === c, indent);
     }
     ctx.restore();
+  }
+
+  _boundLineOffset(offset) {
+    const lines = this.lines;
+    return (offset + lines) % lines;
   }
 
   select() {
@@ -164,10 +180,14 @@ class Editor extends Navigable {
   }
 
   key(e) {
-    if(e.key === 'ArrowDown')
+    if(e.key === 'ArrowDown') {
+      this.lineOffset = this._boundLineOffset(this.lineOffset + 1);
       this.forward();
-    else if(e.key === 'ArrowUp')
+    }
+    else if(e.key === 'ArrowUp') {
+      this.lineOffset = this._boundLineOffset(this.lineOffset - 1);
       this.backward();
+    }
     else if(e.key === 'Enter')
       return this.select();
   }
@@ -178,17 +198,18 @@ class BuilderScreen extends Screen {
     super();
     this.client = client;
     this.openRequests = 0;
-    this.model = undefined;
   }
 
   draw() {
+    if(this.openRequests !== 0)
+      return;
     if(this.editor)
-      this.editor.draw(this.client.camera.ctx, 50, 50);
+      this.editor.draw(this.client.camera.ctx, 50, this.client.camera.height/2);
   }
 
   onEnter() {
     this.getRequest('/components', (data) => {
-      this.editor = new Editor(data);
+      this.editor = new ShipEditor(data);
     });
   }
 

@@ -6,16 +6,13 @@ class Launcher {
     this.owner = owner;
     this.firing = false;
     this.lastFireTime = 0;
+    this.missile = missiles.tomcat;
 
     utilities.veryShallowObjectMerge.call(this, bp);
-
-    const missile = missiles[this.missile];
-    this.missile = (missile) ? missile : missiles.tomcat;
   }
 
   static getBP(params = {}) {
     return utilities.veryShallowUnionOverwrite.call({
-      missile: 'tomcat',
       cd: 1
     }, params);
   }

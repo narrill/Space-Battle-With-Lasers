@@ -7,7 +7,7 @@ class Laser {
     this.lastFireTime = 0;
     this.color = utilities.getRandomBrightColor();
     this.currentPower = 0;
-
+    this.collisionFunction = collisions.basicLaserCollision;
     utilities.veryShallowObjectMerge.call(this, bp);
   }
 
@@ -19,7 +19,6 @@ class Laser {
       maxPower: 2000,
       efficiency: 50,
       spread: 0,
-      collisionFunction: 'basicLaserCollision'
     }, params);
   }
 
@@ -45,7 +44,7 @@ class Laser {
         owner.y + currentLaserVector[1],
         this.color,
         owner,
-        collisions[this.collisionFunction],
+        this.collisionFunction,
         {
           power: this.currentPower,
           efficiency: this.efficiency,

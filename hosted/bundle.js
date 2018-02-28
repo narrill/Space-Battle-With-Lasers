@@ -116,6 +116,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         get: function get() {
           return this.elements[this.cursor];
         }
+      }, {
+        key: "lines",
+        get: function get() {
+          var lines = this.min * -1;
+          for (var c = 0; c < this.elements.length; ++c) {
+            var l = this.elements[c].lines;
+            lines += l ? l : 1;
+          }
+          return lines;
+        }
       }]);
 
       return Navigable;
@@ -170,7 +180,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: "lines",
         get: function get() {
-          return this.elements.length + 1;
+          return this.enabled ? _get(ComponentEditor.prototype.__proto__ || Object.getPrototypeOf(ComponentEditor.prototype), "lines", this) : 1;
         }
       }, {
         key: "canForward",
@@ -192,16 +202,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       return ComponentEditor;
     }(Navigable);
 
-    var Editor = function (_Navigable2) {
-      _inherits(Editor, _Navigable2);
+    var ShipEditor = function (_Navigable2) {
+      _inherits(ShipEditor, _Navigable2);
 
-      function Editor(availableComponents) {
-        _classCallCheck(this, Editor);
+      function ShipEditor(availableComponents) {
+        _classCallCheck(this, ShipEditor);
 
-        return _possibleConstructorReturn(this, (Editor.__proto__ || Object.getPrototypeOf(Editor)).call(this, availableComponents, true));
+        var _this4 = _possibleConstructorReturn(this, (ShipEditor.__proto__ || Object.getPrototypeOf(ShipEditor)).call(this, availableComponents, true));
+
+        _this4.lineOffset = 0;
+        return _this4;
       }
 
-      _createClass(Editor, [{
+      _createClass(ShipEditor, [{
         key: "draw",
         value: function draw(ctx, x, y) {
           ctx.save();
@@ -211,10 +224,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           var height = ctx.measureText("M").width;
           var indent = height * 4;
           var lineHeight = height * 1.5;
+          y -= lineHeight * this.lineOffset;
           for (var c = 0; c < this.elements.length; ++c) {
             y = this.elements[c].draw(ctx, x, y, height, lineHeight, this.cursor === c, indent);
           }
           ctx.restore();
+        }
+      }, {
+        key: "_boundLineOffset",
+        value: function _boundLineOffset(offset) {
+          var lines = this.lines;
+          return (offset + lines) % lines;
         }
       }, {
         key: "select",
@@ -224,11 +244,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: "key",
         value: function key(e) {
-          if (e.key === 'ArrowDown') this.forward();else if (e.key === 'ArrowUp') this.backward();else if (e.key === 'Enter') return this.select();
+          if (e.key === 'ArrowDown') {
+            this.lineOffset = this._boundLineOffset(this.lineOffset + 1);
+            this.forward();
+          } else if (e.key === 'ArrowUp') {
+            this.lineOffset = this._boundLineOffset(this.lineOffset - 1);
+            this.backward();
+          } else if (e.key === 'Enter') return this.select();
         }
       }]);
 
-      return Editor;
+      return ShipEditor;
     }(Navigable);
 
     var BuilderScreen = function (_Screen) {
@@ -241,14 +267,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         _this5.client = client;
         _this5.openRequests = 0;
-        _this5.model = undefined;
         return _this5;
       }
 
       _createClass(BuilderScreen, [{
         key: "draw",
         value: function draw() {
-          if (this.editor) this.editor.draw(this.client.camera.ctx, 50, 50);
+          if (this.openRequests !== 0) return;
+          if (this.editor) this.editor.draw(this.client.camera.ctx, 50, this.client.camera.height / 2);
         }
       }, {
         key: "onEnter",
@@ -256,7 +282,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           var _this6 = this;
 
           this.getRequest('/components', function (data) {
-            _this6.editor = new Editor(data);
+            _this6.editor = new ShipEditor(data);
           });
         }
       }, {

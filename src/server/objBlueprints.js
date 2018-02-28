@@ -262,10 +262,6 @@ const missiles = {
 
       },
     },
-    destructible: {
-      hp: 15,
-      radius: 15,
-    },
     thrusterSystem: {
       medial: {
         maxStrength: 28000,
