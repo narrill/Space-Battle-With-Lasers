@@ -5,6 +5,33 @@ const utilities = require('./utilities.js');
 
 const has = Object.prototype.hasOwnProperty;
 
+// Gets the time (as offset from present) and orientation at which the obj's velocity
+// would hit 0 if it immediately began firing its rotational thruster fully against
+// it's current angular velocity
+const getStopInfo = (obj) => {
+  const r = obj.destructible.radius;
+  const mo = obj.momentOfInertia;
+  const fo = obj.thrusterSystem.rotational.currentStrength;
+  const wo = obj.rotationalVelocity;
+  const wSign = wo / Math.abs(wo);
+  const ao = (fo * r) / mo;
+  // Angular jerk is assumed to be opposite angular velocity
+  const z = (r / mo) * obj.thrusterSystem.rotational.powerRampLimit * (-wSign);
+  // This is the quadratic formula - we need addition when w is negative and
+  // subtraction when it's positive, hence wSign
+  const t = ((-ao) - (wSign * Math.sqrt((ao * ao) - (2 * wo * z)))) / z;
+
+  // To-do: calculate time to thruster max
+  // If it's less than our t value we integrate to it, then repeat the problem from there with
+  // constant acceleration rather than constant jerk
+  // If it isn't, we can integrate to our t value as shown below
+
+  const thetao = obj.rotation;
+  const theta = thetao + (wo * t) + (0.5 * ao * t * t) + ((1 / 6) * z * t * t * t);
+
+  return {finalOrientation}
+};
+
 const aiFunctions = {
   basic(dt) {
     let target;
@@ -38,15 +65,20 @@ const aiFunctions = {
 
     const rotMaxStrength = this.thrusterSystem.rotational.maxStrength;
     const stabRatio = this.stabilizer.thrustRatio;
-    if (relativeAngleToTarget > 0) {
-      this.objRotationalThrusters(
-        ((-relativeAngleToTarget) * dt * this.ai.accuracy * rotMaxStrength) / stabRatio,
-      );
-    } else if (relativeAngleToTarget < 0) {
-      this.objRotationalThrusters(
-        ((relativeAngleToTarget) * dt * this.ai.accuracy * -rotMaxStrength) / stabRatio,
-      );
-    }
+    // if (relativeAngleToTarget > 0) {
+    //   this.objRotationalThrusters(
+    //     ((-relativeAngleToTarget) * dt * this.ai.accuracy * rotMaxStrength) / stabRatio,
+    //   );
+    // } else if (relativeAngleToTarget < 0) {
+    //   this.objRotationalThrusters(
+    //     ((relativeAngleToTarget) * dt * this.ai.accuracy * -rotMaxStrength) / stabRatio,
+    //   );
+    // }
+    const r = this.destructible.radius;
+    const mo = this.momentOfInertia;
+    const v = this.rotationalVelocity;
+    const f = ((2 * mo)/(dt * dt * r)) * (relativeAngleToTarget + (v * dt));
+    this.objRotationalThrusters(f);
 
     const distanceSqr = utilities.vectorMagnitudeSqr(vectorToTarget[0], vectorToTarget[1]);
 

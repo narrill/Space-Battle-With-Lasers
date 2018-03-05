@@ -27,11 +27,12 @@ class Thruster {
 
     // lerp current thruster strength to target strength at the power ramp rate, 
     // then set current strength and the target strength to the lerped value
-    let thrusterDelta = utilities.lerp(
-      this.currentStrength,
-      strength,
-      this.powerRampPercentage * dt,
-    ) - this.currentStrength;
+    // let thrusterDelta = utilities.lerp(
+    //   this.currentStrength,
+    //   strength,
+    //   this.powerRampPercentage * dt,
+    // ) - this.currentStrength;
+    let thrusterDelta = strength - this.currentStrength;
 
     if (thrusterDelta * this.currentStrength >= 0) {
       thrusterDelta = utilities.clamp(
