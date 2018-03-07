@@ -19,7 +19,7 @@ class Game {
     this.timeStep = 0.0167;
     this.lastTime = 0; // used by calculateDeltaTime()
     this.objs = [];
-    this.maxNPCs = 60;
+    this.maxNPCs = 1;
     this.factions = 4;
     this.factionColors = [];
     this.hitscans = [];
@@ -29,7 +29,7 @@ class Game {
     this.functionQueue = [];
     this.socketSubscriptions = {};
     this.grid = {
-      gridLines: 500, // number of grid lines
+      gridLines: 5, // number of grid lines
       gridSpacing: 100, // pixels per grid unit
       gridStart: [-25000, -25000], // corner anchor in world coordinates
       colors: [
@@ -58,7 +58,7 @@ class Game {
     };
     this.spatialHash = new SpatialHash();
     this.asteroids = {
-      total: 60,
+      total: 0,
       colors: [
         '#6B2A06',
         'sienna',

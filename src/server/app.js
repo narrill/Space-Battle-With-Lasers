@@ -143,7 +143,7 @@ io.on('connection', (s) => {
       Object.values(game.objs).forEach((sh) => {
         shipModels[sh.id] = sh.model;
       });
-      ship = new Obj(bpCopy, game, s.id);
+      ship = new Obj(bpCopy, game, null, s.id);
       game.objs.push(ship);
       s.emit('grid', game.grid);
       s.emit('ships', shipModels);

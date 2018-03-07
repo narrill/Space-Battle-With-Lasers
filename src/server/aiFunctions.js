@@ -5,31 +5,59 @@ const utilities = require('./utilities.js');
 
 const has = Object.prototype.hasOwnProperty;
 
+// Takes initial angular velocity, initial angular acceleration, constant angular jerk, and a t value
+// Returns the change in orientation after t time has passed under the given constant angular jerk
+const integrateConstantAngularJerkToDeltaTheta = (wo, ao, z, t) => {
+  return (wo * t) + (0.5 * ao * t * t) + ((1 / 6) * z * t * t * t);
+};
+
+const integrateConstantAngularJerkIntoDeltaV = (ao, z, t) => {
+  return (ao * t) + (.5 * z * t * t);
+};
+
+const integrateConstantAccelerationIntoDeltaTheta = (wo, a, t) => {
+  return (wo * t) + (.5 * a * t * t);
+};
+
 // Gets the time (as offset from present) and orientation at which the obj's velocity
 // would hit 0 if it immediately began firing its rotational thruster fully against
-// it's current angular velocity
+// its current angular velocity
 const getStopInfo = (obj) => {
+  const prl = obj.thrusterSystem.rotational.powerRampLimit;
   const r = obj.destructible.radius;
   const mo = obj.momentOfInertia;
   const fo = obj.thrusterSystem.rotational.currentStrength;
-  const wo = obj.rotationalVelocity;
+  let wo = obj.rotationalVelocity;
+  if(wo === 0)
+    return {deltaTheta: 0, t: 0};
   const wSign = wo / Math.abs(wo);
   const ao = (fo * r) / mo;
   // Angular jerk is assumed to be opposite angular velocity
-  const z = (r / mo) * obj.thrusterSystem.rotational.powerRampLimit * (-wSign);
+  const z = (r / mo) * prl * (-wSign);
   // This is the quadratic formula - we need addition when w is negative and
   // subtraction when it's positive, hence wSign
   const t = ((-ao) - (wSign * Math.sqrt((ao * ao) - (2 * wo * z)))) / z;
 
-  // To-do: calculate time to thruster max
-  // If it's less than our t value we integrate to it, then repeat the problem from there with
-  // constant acceleration rather than constant jerk
-  // If it isn't, we can integrate to our t value as shown below
+  const thrusterMax = obj.thrusterSystem.rotational.maxStrength;
+  const thrusterCurrent = obj.thrusterSystem.rotational.currentStrength;
+  const thrusterSign = thrusterCurrent * wSign;
+  const thrusterStart = (thrusterSign >= 0) ? 0 : Math.abs(thrusterCurrent);
+  const thrusterT = (thrusterMax - thrusterCurrent) / prl;
 
+  let theta;
   const thetao = obj.rotation;
-  const theta = thetao + (wo * t) + (0.5 * ao * t * t) + ((1 / 6) * z * t * t * t);
 
-  return {finalOrientation}
+  if(thrusterT < t) {
+    const accelerationAtThrusterMax = (thrusterMax * r) / mo;
+    theta = integrateConstantAngularJerkToDeltaTheta(wo, ao, z, thrusterT);
+    wo = integrateConstantAngularJerkIntoDeltaV(ao, z, thrusterT);
+    theta += integrateConstantAccelerationIntoDeltaTheta(wo, accelerationAtThrusterMax, t - thrusterT);
+  }
+  else {
+    theta = integrateConstantAngularJerkToDeltaTheta(wo, ao, z, t);
+  }
+
+  return {deltaTheta: theta, t};
 };
 
 const aiFunctions = {
@@ -63,22 +91,37 @@ const aiFunctions = {
       vectorToTarget[1],
     );
 
-    const rotMaxStrength = this.thrusterSystem.rotational.maxStrength;
+    // const rotMaxStrength = this.thrusterSystem.rotational.maxStrength;
     const stabRatio = this.stabilizer.thrustRatio;
-    // if (relativeAngleToTarget > 0) {
-    //   this.objRotationalThrusters(
-    //     ((-relativeAngleToTarget) * dt * this.ai.accuracy * rotMaxStrength) / stabRatio,
-    //   );
-    // } else if (relativeAngleToTarget < 0) {
-    //   this.objRotationalThrusters(
-    //     ((relativeAngleToTarget) * dt * this.ai.accuracy * -rotMaxStrength) / stabRatio,
-    //   );
-    // }
-    const r = this.destructible.radius;
-    const mo = this.momentOfInertia;
-    const v = this.rotationalVelocity;
-    const f = ((2 * mo)/(dt * dt * r)) * (relativeAngleToTarget + (v * dt));
-    this.objRotationalThrusters(f);
+    // // if (relativeAngleToTarget > 0) {
+    // //   this.objRotationalThrusters(
+    // //     ((-relativeAngleToTarget) * dt * this.ai.accuracy * rotMaxStrength) / stabRatio,
+    // //   );
+    // // } else if (relativeAngleToTarget < 0) {
+    // //   this.objRotationalThrusters(
+    // //     ((relativeAngleToTarget) * dt * this.ai.accuracy * -rotMaxStrength) / stabRatio,
+    // //   );
+    // // }
+    // const r = this.destructible.radius;
+    // const mo = this.momentOfInertia;
+    // const v = this.rotationalVelocity;
+    // const f = ((2 * mo)/(dt * dt * r)) * (relativeAngleToTarget + (v * dt));
+    // this.objRotationalThrusters(f);
+    if(relativeAngleToTarget !== 0) {
+      const wSign = relativeAngleToTarget / Math.abs(relativeAngleToTarget);
+      const towardTarget = wSign * this.thrusterSystem.rotational.maxStrength;
+      const awayTarget = -towardTarget;
+      if(relativeAngleToTarget * this.rotationalVelocity <= 0) {
+        this.objRotationalThrusters(awayTarget);
+      }
+      else {
+        const stopInfo = getStopInfo(this);
+        if(Math.abs(stopInfo.deltaTheta) < Math.abs(relativeAngleToTarget))
+          this.objRotationalThrusters(awayTarget);
+        else
+          this.objRotationalThrusters(towardTarget);
+      }
+    }
 
     const distanceSqr = utilities.vectorMagnitudeSqr(vectorToTarget[0], vectorToTarget[1]);
 
@@ -96,15 +139,15 @@ const aiFunctions = {
       }
     }
 
-    if (distanceSqr > this.ai.followMax * this.ai.followMax || distanceSqr > myRange * myRange) {
-      this.objMedialThrusters(
-        this.thrusterSystem.medial.maxStrength / this.stabilizer.thrustRatio,
-      );
-    } else if (distanceSqr < this.ai.followMin * this.ai.followMin) {
-      this.objMedialThrusters(
-        (-this.thrusterSystem.medial.maxStrength) / this.stabilizer.thrustRatio,
-      );
-    }
+    // if (distanceSqr > this.ai.followMax * this.ai.followMax || distanceSqr > myRange * myRange) {
+    //   this.objMedialThrusters(
+    //     this.thrusterSystem.medial.maxStrength / this.stabilizer.thrustRatio,
+    //   );
+    // } else if (distanceSqr < this.ai.followMin * this.ai.followMin) {
+    //   this.objMedialThrusters(
+    //     (-this.thrusterSystem.medial.maxStrength) / this.stabilizer.thrustRatio,
+    //   );
+    // }
 
     const vectorFromTarget = [-vectorToTarget[0], -vectorToTarget[1]];
     const relativeAngleToMe = utilities.angleBetweenVectors(
@@ -117,20 +160,20 @@ const aiFunctions = {
 
     const targetRange = (has.call(target, 'laser')) ? target.laser.range : 10000;
 
-    const latMaxStrength = this.thrusterSystem.lateral.maxStrength;
-    if (distanceSqr < 2 * (targetRange * targetRange)
-      && relativeAngleToMe < 90
-      && relativeAngleToMe > 0) {
-      this.objLateralThrusters(latMaxStrength / stabRatio);
-    } else if (distanceSqr < 2 * (targetRange * targetRange)
-      && relativeAngleToMe > -90
-      && relativeAngleToMe < 0) {
-      this.objLateralThrusters.call(this, -latMaxStrength / stabRatio);
-    }
+    // const latMaxStrength = this.thrusterSystem.lateral.maxStrength;
+    // if (distanceSqr < 2 * (targetRange * targetRange)
+    //   && relativeAngleToMe < 90
+    //   && relativeAngleToMe > 0) {
+    //   this.objLateralThrusters(latMaxStrength / stabRatio);
+    // } else if (distanceSqr < 2 * (targetRange * targetRange)
+    //   && relativeAngleToMe > -90
+    //   && relativeAngleToMe < 0) {
+    //   this.objLateralThrusters.call(this, -latMaxStrength / stabRatio);
+    // }
 
-    this.objMedialStabilizers();
-    this.objLateralStabilizers();
-    this.objRotationalStabilizers();
+    // this.objMedialStabilizers();
+    // this.objLateralStabilizers();
+    // this.objRotationalStabilizers();
   },
 
   basicGuidedMissile(dt) {
