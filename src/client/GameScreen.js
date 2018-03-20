@@ -165,7 +165,9 @@ class GameScreen extends Screen {
   }
 
   onEnter() {
+    this.musicShuffler.play();
     const client = this.client;
+    client.enterGameStinger.play();
 
     const socket = client.socket;
     socket.on('destroyed', () => {

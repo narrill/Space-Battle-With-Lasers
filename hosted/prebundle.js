@@ -971,7 +971,9 @@ class GameScreen extends Screen {
   }
 
   onEnter() {
+    this.musicShuffler.play();
     const client = this.client;
+    client.enterGameStinger.play();
 
     const socket = client.socket;
     socket.on('destroyed', () => {
@@ -1440,6 +1442,7 @@ class TrackShuffler {
 			const audio = new Audio();
 			audio.setAttribute('src', `${name}.mp3`);
 			tracks.push(audio);
+			document.body.appendChild(audio);
 		}
 		this.tracks = tracks;
 		this.currentTrack = tracks[0];
@@ -1709,8 +1712,20 @@ const drawing = {
       || shipPosInCameraSpace[1] - radius * camera.zoom> camera.height || shipPosInCameraSpace[1] + radius * camera.zoom< 0)
       return;
 
+    const states = ship.states;
+
     var ctx = camera.ctx;
+
     ctx.save();
+
+    for(let c = 0; c < states.length; ++c) {
+      const statePosInCameraPos = camera.worldPointToCameraSpace(states[c].x, states[c].y);
+      ctx.beginPath();
+      ctx.arc(statePosInCameraPos[0], statePosInCameraPos[1], 5, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.fillStyle = 'red';
+      ctx.fill();
+    }
     ctx.translate(shipPosInCameraSpace[0],shipPosInCameraSpace[1]); //translate to camera space position
     ctx.rotate((rotation-camera.rotation) * (Math.PI / 180)); //rotate by difference in rotations
 
@@ -2011,6 +2026,7 @@ const drawing = {
     ctx.save(); // NEW
     ctx.textAlign = 'center';
     ctx.textBaseline = 'center';
+    ctx.fillStyle = 'black';
     ctx.fillRect(0,camera.height,camera.width, - 30);
     utilities.fillText(ctx, ((hudInfo.current.stabilized) ? 'assisted' : 'manual'), camera.width / 2, camera.height - 10, "bold 12pt Orbitron", (hudInfo.current.stabilized) ? 'green' : 'red');
     ctx.textAlign = 'left';
@@ -2254,7 +2270,11 @@ module.exports = {
 
 const utilities = require('../server/utilities.js');
 
-const STATE_BUFFER_LENGTH = 2;
+const STATE_BUFFER_LENGTH = 3;
+let lastStateTime = 0;
+let jitterAccumulator = 0;
+let totalStates = 0;
+let lastPerc = 0;
 
 class WorldInfo {
 	constructor() {
@@ -2275,17 +2295,18 @@ class WorldInfo {
 		this.wiInterval = 0;
 		this.playerInfo = null;
 		this.modelInfo = {};
+		this.startTime = 0;
 	}
-	pushCollectionFromDataToWI(dwi, type, now) {
+	pushCollectionFromDataToWI(dwi, type, now, stateIndex) {
 		const dwiCollection = dwi[type] || [];
 		for(let c = 0;c<dwiCollection.length;c++){
 			const obj = dwiCollection[c];
 			this.objTracker[obj.id] = true;
 			if(this.objInfos[obj.id]) {
-				this.objInfos[obj.id].pushState(obj, now);
+				this.objInfos[obj.id].pushState(obj, stateIndex);
 			}
 			else {
-				const newObjInfo = new ObjInfo(this, now, obj);
+				const newObjInfo = new ObjInfo(this, now, obj, stateIndex);
 				this.objInfos[obj.id] = newObjInfo;
 				this[type].push(newObjInfo);
 			}
@@ -2321,19 +2342,32 @@ class WorldInfo {
 		this.initialized = true;
 	}
 	pushWiData(data) {
-		const now = Date.now().valueOf();
+		const stateIndex = data.stateIndex;
+		let now = Date.now().valueOf();
+		if(totalStates > 0) {			
+			const sinceLastState = now - lastStateTime;
+			//console.log(sinceLastState);
+			jitterAccumulator += sinceLastState;
+			//console.log(jitterAccumulator / totalStates);
+		}
+		lastStateTime = now;
+		totalStates++;
+
+		if(this.startTime === 0)
+			this.startTime = now;
+		now = stateIndex * this.wiInterval + this.startTime;
+
 		if(!this.playerInfo)
-			this.playerInfo = new ObjInfo(this, now, data.playerInfo);
+			this.playerInfo = new ObjInfo(this, now, data.playerInfo, stateIndex);
 		else
-			this.playerInfo.pushState(data.playerInfo, now);
+			this.playerInfo.pushState(data.playerInfo, stateIndex);
+
 		const dwi = data;
 		this.prep();
-		this.pushCollectionFromDataToWI(dwi,'objs', now);
+		this.pushCollectionFromDataToWI(dwi,'objs', now, stateIndex);
 		this.pushNonInterpCollectionFromDataToWI(dwi,'prjs', now);
-		if(this.prjs && this.prjs.length > 0)
-			console.log(this.prjs[0]);
-		this.pushCollectionFromDataToWI(dwi,'hitscans', now);
-		this.pushCollectionFromDataToWI(dwi,'radials', now);
+		this.pushCollectionFromDataToWI(dwi,'hitscans', now, stateIndex);
+		this.pushCollectionFromDataToWI(dwi,'radials', now, stateIndex);
 		this.pushNonInterpCollectionFromDataToWI(dwi, 'asteroids', now);
 
 		this.hasData = true;
@@ -2368,20 +2402,24 @@ class WorldInfo {
 const worldInfo = new WorldInfo();
 
 class ObjInfo {
-	constructor(worldInfo, time = Date.now(), initialState) {
+	constructor(worldInfo, time = Date.now(), initialState, initialStateIndex) {
 		this.worldInfo = worldInfo;
 		this.states = [];
+		this.stateIndices = [];
 		this.stateCount = STATE_BUFFER_LENGTH;
-		this.lastStateTime = time;
+		this.creationTime = time;
+		this.initialStateIndex = initialStateIndex;
 		this.id = initialState.id;
 		if(initialState)
-			this.pushState(initialState, time)
+			this.pushState(initialState, initialStateIndex);
 	}
-	pushState(obj, time) {
-		this.lastStateTime = time;
+	pushState(obj, index) {
 		this.states.push(obj);
-		while(this.states.length > this.stateCount)
+		this.stateIndices.push(index - this.initialStateIndex);
+		while(this.states.length > this.stateCount) {
 			this.states.shift();
+			this.stateIndices.shift();
+		}
 	}
 	interpolateWiValue(val, time) {
 		return this.interpolateValue(val, time, utilities.lerp);
@@ -2390,12 +2428,22 @@ class ObjInfo {
 		return this.interpolateValue(val, time, utilities.rotationLerp);
 	}
 	interpolateValue(val, time, lerp) {
-		if(!this.worldInfo.wiInterval) return this.getMostRecentValue(val);
-		const perc = (time - this.lastStateTime) / this.worldInfo.wiInterval;
-		if(perc <= this.stateCount - 1) {
+		const oldestStateIndex = this.stateIndices[0];
+		const desiredStateIndex = (time - this.creationTime - this.worldInfo.interpDelay) / this.worldInfo.wiInterval;
+		if(!this.worldInfo.wiInterval || desiredStateIndex < oldestStateIndex) return this.getMostRecentValue(val);
+		
+		const perc = desiredStateIndex - oldestStateIndex;
+		if(perc !== lastPerc) {
+			const forwardDiff = Math.abs(perc - lastPerc);
+			const wrapDiff = Math.abs(perc + 1 - lastPerc);
+			//console.log(Math.min(forwardDiff, wrapDiff));
+			lastPerc = perc;			
+		}
+		if(perc < this.stateCount - 1) {
 			return lerp(this.states[Math.floor(perc)][val], this.states[Math.ceil(perc)][val], perc - Math.floor(perc));
 		}
 		else {
+			console.log('interp max');
 			return this.states[this.stateCount - 1][val];
 		}
 	}
@@ -2677,7 +2725,8 @@ NetworkPrjInfo.serializableProperties = [
 ];
 
 class NetworkWorldInfo {
-  constructor({ objs, asteroids, prjs, hitscans, radials, playerInfo }) {
+  constructor({ stateIndex, objs, asteroids, prjs, hitscans, radials, playerInfo }) {
+    this.stateIndex = stateIndex;
     this.objs = objs;
     this.asteroids = asteroids;
     this.prjs = prjs;
@@ -2688,6 +2737,7 @@ class NetworkWorldInfo {
 }
 
 NetworkWorldInfo.serializableProperties = [
+  { key: 'stateIndex', type: 'Uint32' },
   { key: 'objs', type: NetworkObj, isArray: true },
   { key: 'asteroids', type: NetworkAsteroidInfo },
   { key: 'prjs', type: NetworkPrjInfo },

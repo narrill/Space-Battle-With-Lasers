@@ -12,9 +12,10 @@ class RemoteInput {
     this.owner = owner;
     this.commands = {};
     this.mouseDirection = 0;
-    this.sendInterval = 15;
+    this.sendInterval = 500;
+    this.stateIndex = 0;
     this.radius = (objectParams.radius) ? objectParams.radius : 15000;
-    this.lastSend = Math.random() * this.sendInterval;
+    this.lastSend = owner.game.elapsedGameTime + Math.random() * this.sendInterval;
     this.nonInterp = {};
     this.sentInitial = false;
     const socket = objectParams.specialProperties.socket;
@@ -143,7 +144,6 @@ class RemoteInput {
       for (let c = 0; c < newKeys.length; c++) {
         const aid = newKeys[c];
         if (!previousItemsById[aid]) {
-          console.log('new noninterp');
           const item = newItemsById[aid];
           wiCollection.push(item.networkRepresentation);
         }
@@ -172,6 +172,7 @@ class RemoteInput {
     const fetchInfo = owner.game.spatialHash.boundedFetch([owner.x, owner.y], this.radius);
 
     const worldInfo = new NetworkWorldInfo({
+      stateIndex: this.stateIndex++,
       objs: populateWICategory(fetchInfo, 'obj'),
       asteroids: populateNonInterpWICategory(fetchInfo, 'asteroid'),
       prjs: populateNonInterpWICategory(fetchInfo, 'prj'),

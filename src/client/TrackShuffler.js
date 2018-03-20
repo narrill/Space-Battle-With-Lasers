@@ -7,6 +7,7 @@ class TrackShuffler {
 			const audio = new Audio();
 			audio.setAttribute('src', `${name}.mp3`);
 			tracks.push(audio);
+			document.body.appendChild(audio);
 		}
 		this.tracks = tracks;
 		this.currentTrack = tracks[0];

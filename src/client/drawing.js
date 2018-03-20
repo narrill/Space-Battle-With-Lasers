@@ -200,8 +200,20 @@ const drawing = {
       || shipPosInCameraSpace[1] - radius * camera.zoom> camera.height || shipPosInCameraSpace[1] + radius * camera.zoom< 0)
       return;
 
+    const states = ship.states;
+
     var ctx = camera.ctx;
+
     ctx.save();
+
+    for(let c = 0; c < states.length; ++c) {
+      const statePosInCameraPos = camera.worldPointToCameraSpace(states[c].x, states[c].y);
+      ctx.beginPath();
+      ctx.arc(statePosInCameraPos[0], statePosInCameraPos[1], 5, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.fillStyle = 'red';
+      ctx.fill();
+    }
     ctx.translate(shipPosInCameraSpace[0],shipPosInCameraSpace[1]); //translate to camera space position
     ctx.rotate((rotation-camera.rotation) * (Math.PI / 180)); //rotate by difference in rotations
 
@@ -502,6 +514,7 @@ const drawing = {
     ctx.save(); // NEW
     ctx.textAlign = 'center';
     ctx.textBaseline = 'center';
+    ctx.fillStyle = 'black';
     ctx.fillRect(0,camera.height,camera.width, - 30);
     utilities.fillText(ctx, ((hudInfo.current.stabilized) ? 'assisted' : 'manual'), camera.width / 2, camera.height - 10, "bold 12pt Orbitron", (hudInfo.current.stabilized) ? 'green' : 'red');
     ctx.textAlign = 'left';

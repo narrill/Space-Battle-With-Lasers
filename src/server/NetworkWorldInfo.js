@@ -30,7 +30,8 @@ NetworkPrjInfo.serializableProperties = [
 ];
 
 class NetworkWorldInfo {
-  constructor({ objs, asteroids, prjs, hitscans, radials, playerInfo }) {
+  constructor({ stateIndex, objs, asteroids, prjs, hitscans, radials, playerInfo }) {
+    this.stateIndex = stateIndex;
     this.objs = objs;
     this.asteroids = asteroids;
     this.prjs = prjs;
@@ -41,6 +42,7 @@ class NetworkWorldInfo {
 }
 
 NetworkWorldInfo.serializableProperties = [
+  { key: 'stateIndex', type: 'Uint32' },
   { key: 'objs', type: NetworkObj, isArray: true },
   { key: 'asteroids', type: NetworkAsteroidInfo },
   { key: 'prjs', type: NetworkPrjInfo },
