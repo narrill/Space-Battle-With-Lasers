@@ -42,9 +42,9 @@ class GameScreen extends Screen {
     ambientLoop.volume = utilities.clamp(0, ambientLoop.volume + dt, 1);
     //camera shenanigans
     //camera zoom controls
-    if(input.isDown('ArrowUp') && camera.zoom<=camera.maxZoom)
+    if(input.isDown('ArrowUp') && camera.zoom <= camera.maxZoom)
       camera.zoom*=1+(3-1)*dt;
-    if(input.isDown('ArrowDown') && camera.zoom>=camera.minZoom)
+    if(input.isDown('ArrowDown') && camera.zoom >= camera.minZoom)
       camera.zoom*=1+(.33-1)*dt;
     if(input.wheel)
       camera.zoom*=1+(input.wheel/2000);
@@ -61,11 +61,18 @@ class GameScreen extends Screen {
     const camera = client.camera;
     const minimapCamera = client.minimapCamera;
     const grid = client.grid;
+    let x;
+    let y;
 
     if(playerInfo && playerInfo.isDrawable) {
-      camera.x = playerInfo.interpolateWiValue('x', now) + playerInfo.interpolateWiValue('velocityX', now)/10;
-      camera.y = playerInfo.interpolateWiValue('y', now) + playerInfo.interpolateWiValue('velocityY', now)/10;
+      camera.lastX = camera.x;
+      camera.lastY = camera.y;
+      x = playerInfo.interpolateWiValue('x', now);
+      y = playerInfo.interpolateWiValue('y', now);
+      camera.x = x;// + playerInfo.interpolateWiValue('velocityX', now)/10;
+      camera.y = y;// + playerInfo.interpolateWiValue('velocityY', now)/10;
 
+      //console.log([camera.x - camera.lastX, camera.y - camera.lastY]);
       let rotDiff = playerInfo.interpolateRotationValue('rotation', now) + playerInfo.interpolateWiValue('rotationalVelocity', now)/10 - camera.rotation;
       if(rotDiff > 180)
         rotDiff -= 360;
@@ -93,6 +100,8 @@ class GameScreen extends Screen {
     }
     drawing.drawProjectiles(worldInfo.prjs, camera, dt, now);
     drawing.drawHitscans(worldInfo.hitscans, camera, now);
+    //console.log('player');
+    //console.log(camera.worldPointToCameraSpace(x, y));
     for(let c = 0; c < worldInfo.objs.length; c++){
       const ship = worldInfo.objs[c];
       if(ship.isDrawable && ship.hasModel) {

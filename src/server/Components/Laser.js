@@ -14,7 +14,7 @@ class Laser {
   static getBP(params = {}) {
     return utilities.veryShallowUnionOverwrite.call({
       cd: 0.5,
-      range: 2000,
+      range: 200,
       coherence: 0.997,
       maxPower: 2000,
       efficiency: 50,

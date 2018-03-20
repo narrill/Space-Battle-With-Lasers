@@ -19,7 +19,7 @@ class Game {
     this.timeStep = 0.0167;
     this.lastTime = 0; // used by calculateDeltaTime()
     this.objs = [];
-    this.maxNPCs = 60;
+    this.maxNPCs = 0;
     this.factions = 4;
     this.factionColors = [];
     this.hitscans = [];
@@ -118,13 +118,13 @@ class Game {
         {},
         ships[shipName],
       );
-      newShip.ai = {
-        aiFunction: 'basic',
-        followMin: 1500,
-        followMax: 2000,
-        accuracy: 0.5,
-        fireSpread: 25,
-      };
+      // newShip.ai = {
+      //   aiFunction: 'basic',
+      //   followMin: 1500,
+      //   followMax: 2000,
+      //   accuracy: 0.5,
+      //   fireSpread: 25,
+      // };
       newShip.faction = -1;
       this.objs.push(new Obj(newShip, this));
     }
@@ -136,6 +136,7 @@ class Game {
     Asteroid.makeAsteroids(this);
     updateCollection(this.asteroids.objs);
     updateCollection(this.projectiles);
+    
     updateCollection(this.radials);
     updateCollection(this.objs);
     updateCollection(this.hitscans);

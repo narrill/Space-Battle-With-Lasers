@@ -3,6 +3,8 @@
 
 const utilities = require('../server/utilities.js');
 
+const STATE_BUFFER_LENGTH = 2;
+
 class WorldInfo {
 	constructor() {
 		this.reset();
@@ -77,6 +79,8 @@ class WorldInfo {
 		this.prep();
 		this.pushCollectionFromDataToWI(dwi,'objs', now);
 		this.pushNonInterpCollectionFromDataToWI(dwi,'prjs', now);
+		if(this.prjs && this.prjs.length > 0)
+			console.log(this.prjs[0]);
 		this.pushCollectionFromDataToWI(dwi,'hitscans', now);
 		this.pushCollectionFromDataToWI(dwi,'radials', now);
 		this.pushNonInterpCollectionFromDataToWI(dwi, 'asteroids', now);
@@ -105,6 +109,9 @@ class WorldInfo {
 		delete this.objInfos[obj.id];
 		collection.splice(index,1);
 	}
+	get interpDelay() {
+		return (STATE_BUFFER_LENGTH - 1) * this.wiInterval;
+	}
 }
 
 const worldInfo = new WorldInfo();
@@ -113,7 +120,7 @@ class ObjInfo {
 	constructor(worldInfo, time = Date.now(), initialState) {
 		this.worldInfo = worldInfo;
 		this.states = [];
-		this.stateCount = 3;
+		this.stateCount = STATE_BUFFER_LENGTH;
 		this.lastStateTime = time;
 		this.id = initialState.id;
 		if(initialState)
@@ -134,11 +141,11 @@ class ObjInfo {
 	interpolateValue(val, time, lerp) {
 		if(!this.worldInfo.wiInterval) return this.getMostRecentValue(val);
 		const perc = (time - this.lastStateTime) / this.worldInfo.wiInterval;
-		if(perc <= 1) {
-			return lerp(this.states[0][val], this.states[1][val], perc);
+		if(perc <= this.stateCount - 1) {
+			return lerp(this.states[Math.floor(perc)][val], this.states[Math.ceil(perc)][val], perc - Math.floor(perc));
 		}
 		else {
-			return lerp(this.states[1][val], this.states[2][val], utilities.clamp(0, perc - 1, 1));
+			return this.states[this.stateCount - 1][val];
 		}
 	}
 	getMostRecentValue(val) {

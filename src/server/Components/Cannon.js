@@ -16,7 +16,7 @@ class Cannon {
   static getBP(params = {}) {
     return utilities.veryShallowUnionOverwrite.call({
       cd: 0.12,
-      power: 10000,
+      power: 100,
       spread: 5,
       multiShot: 1,
       ammo: Ammo.getBP(params.ammo),
@@ -28,6 +28,13 @@ class Cannon {
     if (this.firing) {
       const forwardVector = utilities.getForwardVector.call(this.owner);
       const weaponPoint = this.owner.weaponPoint;
+      const rotatedWeaponPoint = utilities.rotate(
+        0,
+        0,
+        weaponPoint[0],
+        weaponPoint[1],
+        this.owner.rotation
+      );
       for (let c = 0; c < this.multiShot; c++) {
         const angle = (Math.random() * this.spread) - (this.spread / 2);
         const angledForwardVector = utilities.rotate(

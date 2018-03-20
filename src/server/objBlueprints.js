@@ -34,21 +34,21 @@ const ships = {
         },
       },
     },
-    laser: {},
+    laser: { range: 200 },
     stabilizer: {},
     powerSystem: {},
     thrusterSystem: {
       medial: {
-        maxStrength: 40000,
-        powerRampLimit: 10000,
+        maxStrength: 100000,
+        powerRampLimit: 100000,
       },
       lateral: {
-        maxStrength: 40000,
-        powerRampLimit: 10000,
+        maxStrength: 100000,
+        powerRampLimit: 100000,
       },
       rotational: {
-        maxStrength: 40000,
-        powerRampLimit: 10000,
+        maxStrength: 30000,
+        powerRampLimit: 30000,
       },
     },
     shield: {

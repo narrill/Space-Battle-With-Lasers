@@ -250,13 +250,14 @@ class Obj extends Accelerable {
   }
 
   // rotational stabilizer
-  objRotationalStabilizers() {
+  objRotationalStabilizers(vel = 0) {
     if (!this.stabilizer) { return; }
-
-    if (this.thrusterSystem.rotational.targetStrength * this.rotationalVelocity >= -10
-      && Math.abs(this.rotationalVelocity) > this.stabilizer.precision / 6) {
+    const diff = this.rotationalVelocity - vel;
+    if (this.thrusterSystem.rotational.targetStrength * diff >= 0
+      && Math.abs(diff) > this.stabilizer.precision / 6) {
       this.objRotationalThrusters(
-        this.rotationalVelocity * this.stabilizer.strength * this.physicalProperties.mass,
+        //diff * this.stabilizer.strength * this.physicalProperties.mass,
+        diff * this.thrusterSystem.rotational.maxStrength
       );
     } else if (this.stabilizer.clamps.enabled
       && Math.abs(this.rotationalVelocity) >= this.stabilizer.clamps.rotational
@@ -274,7 +275,8 @@ class Obj extends Accelerable {
     if (this.thrusterSystem.medial.targetStrength * medialVelocity >= 0
       && Math.abs(medialVelocity) > this.stabilizer.precision) {
       this.objMedialThrusters(
-        medialVelocity * this.stabilizer.strength * this.physicalProperties.mass,
+        //medialVelocity * this.stabilizer.strength * this.physicalProperties.mass,
+        medialVelocity * this.thrusterSystem.medial.maxStrength
       );
     } else if (this.stabilizer.clamps.enabled
       && Math.abs(medialVelocity) >= this.stabilizer.clamps.medial
@@ -291,7 +293,8 @@ class Obj extends Accelerable {
     if (this.thrusterSystem.lateral.targetStrength * lateralVelocity >= 0
       && Math.abs(lateralVelocity) > this.stabilizer.precision) {
       this.objLateralThrusters(
-        lateralVelocity * this.stabilizer.strength * this.physicalProperties.mass,
+        //lateralVelocity * this.stabilizer.strength * this.physicalProperties.mass,
+        lateralVelocity * this.thrusterSystem.lateral.maxStrength
       );
     } else if (this.stabilizer.clamps.enabled
       && Math.abs(lateralVelocity) >= this.stabilizer.clamps.lateral

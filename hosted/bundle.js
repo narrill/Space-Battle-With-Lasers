@@ -989,11 +989,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           var camera = client.camera;
           var minimapCamera = client.minimapCamera;
           var grid = client.grid;
+          var x = void 0;
+          var y = void 0;
 
           if (playerInfo && playerInfo.isDrawable) {
-            camera.x = playerInfo.interpolateWiValue('x', now) + playerInfo.interpolateWiValue('velocityX', now) / 10;
-            camera.y = playerInfo.interpolateWiValue('y', now) + playerInfo.interpolateWiValue('velocityY', now) / 10;
+            camera.lastX = camera.x;
+            camera.lastY = camera.y;
+            x = playerInfo.interpolateWiValue('x', now);
+            y = playerInfo.interpolateWiValue('y', now);
+            camera.x = x; // + playerInfo.interpolateWiValue('velocityX', now)/10;
+            camera.y = y; // + playerInfo.interpolateWiValue('velocityY', now)/10;
 
+            //console.log([camera.x - camera.lastX, camera.y - camera.lastY]);
             var rotDiff = playerInfo.interpolateRotationValue('rotation', now) + playerInfo.interpolateWiValue('rotationalVelocity', now) / 10 - camera.rotation;
             if (rotDiff > 180) rotDiff -= 360;else if (rotDiff < -180) rotDiff += 360;
             camera.rotation += utilities.lerp(0, rotDiff, 12 * dt);
@@ -1015,6 +1022,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           }
           drawing.drawProjectiles(worldInfo.prjs, camera, dt, now);
           drawing.drawHitscans(worldInfo.hitscans, camera, now);
+          //console.log('player');
+          //console.log(camera.worldPointToCameraSpace(x, y));
           for (var c = 0; c < worldInfo.objs.length; c++) {
             var ship = worldInfo.objs[c];
             if (ship.isDrawable && ship.hasModel) {
@@ -1955,13 +1964,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       drawShip: function drawShip(ship, camera, time) {
         var x = ship.interpolateWiValue('x', time);
         var y = ship.interpolateWiValue('y', time);
+        //console.log(`Ship world: ${x}, ${y}`);
         var rotation = ship.interpolateRotationValue('rotation', time);
         var radius = ship.getMostRecentValue('radius');
         var thrusterColor = ship.getMostRecentValue('thrusterColor');
         var color = ship.getMostRecentValue('color').colorString;
 
         var shipPosInCameraSpace = camera.worldPointToCameraSpace(x, y); //get ship's position in camera space
-
+        //console.log(`Ship camera: ${shipPosInCameraSpace[0]}, ${shipPosInCameraSpace[1]}`);
         if (shipPosInCameraSpace[0] - radius * camera.zoom > camera.width || shipPosInCameraSpace[0] + radius * camera.zoom < 0 || shipPosInCameraSpace[1] - radius * camera.zoom > camera.height || shipPosInCameraSpace[1] + radius * camera.zoom < 0) return;
 
         var ctx = camera.ctx;
@@ -2004,7 +2014,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               }
             }
 
-          //rotational thrusters	
+          //rotational thrusters  
           var rotational = ship.interpolateWiValue('rotational', time);
           trailLength = 40 * rotational * (1 - c / (thrusterDetail + 1));
           //ccw
@@ -2128,25 +2138,30 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var ctx = camera.ctx;
         for (var c = 0; c < projectiles.length; c++) {
           var prj = projectiles[c];
-          var ageSeconds = (time - prj.arrivalTime) / 1000;
+          var ageSeconds = (time - worldInfo.interpDelay - prj.arrivalTime) / 1000;
           var velX = prj.velocityX;
           var velY = prj.velocityY;
           var x = prj.x + ageSeconds * velX;
           var y = prj.y + ageSeconds * velY;
           var start = camera.worldPointToCameraSpace(x, y);
-          var end = camera.worldPointToCameraSpace(x - velX * dt, y - velY * dt);
+          // console.log(`Prj camera: ${start[0]}, ${start[1]}`);
+          //console.log(start);
+          //var end = camera.worldPointToCameraSpace(x - velX * dt, y - velY * dt);
           var radius = prj.radius;
 
-          if (start[0] > camera.width + radius || start[0] < 0 - radius || start[1] > camera.height + radius || start[1] < 0 - radius) continue;
+          if (ageSeconds < 0 || start[0] > camera.width + radius || start[0] < 0 - radius || start[1] > camera.height + radius || start[1] < 0 - radius) continue;
 
           ctx.save();
           ctx.beginPath();
-          ctx.moveTo(start[0], start[1]);
-          ctx.lineTo(end[0], end[1]);
-          ctx.strokeStyle = prj.color.colorString;
-          var width = radius * camera.zoom;
-          ctx.lineWidth = width > 1 ? width : 1;
-          ctx.stroke();
+          //ctx.moveTo(start[0], start[1]);
+          //ctx.lineTo(end[0], end[1]);
+          //ctx.strokeStyle = prj.color.colorString;
+          //var width = radius*camera.zoom;
+          //ctx.lineWidth = (width>1)?width:1;
+          //ctx.stroke();
+          ctx.arc(start[0], start[1], radius * camera.zoom, 0, 2 * Math.PI);
+          ctx.fillStyle = prj.color.colorString;
+          ctx.fill();
           ctx.restore();
         }
       },
@@ -2414,6 +2429,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         utilities.fillText(ctx, "TAB switches between assisted and manual controls", camera.width / 10, 9 * camera.height / 11, "10pt Orbitron", 'white');
         utilities.fillText(ctx, "Your goal is to destroy all enemy ships", camera.width / 10, 10 * camera.height / 11, "10pt Orbitron", 'white');
         //this.fill
+        ctx.restore();
       }
     };
 
@@ -2475,6 +2491,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
     var utilities = require('../server/utilities.js');
+
+    var STATE_BUFFER_LENGTH = 2;
 
     var WorldInfo = function () {
       function WorldInfo() {
@@ -2559,6 +2577,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.prep();
           this.pushCollectionFromDataToWI(dwi, 'objs', now);
           this.pushNonInterpCollectionFromDataToWI(dwi, 'prjs', now);
+          if (this.prjs && this.prjs.length > 0) console.log(this.prjs[0]);
           this.pushCollectionFromDataToWI(dwi, 'hitscans', now);
           this.pushCollectionFromDataToWI(dwi, 'radials', now);
           this.pushNonInterpCollectionFromDataToWI(dwi, 'asteroids', now);
@@ -2597,6 +2616,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           delete this.objInfos[obj.id];
           collection.splice(index, 1);
         }
+      }, {
+        key: "interpDelay",
+        get: function get() {
+          return (STATE_BUFFER_LENGTH - 1) * this.wiInterval;
+        }
       }]);
 
       return WorldInfo;
@@ -2613,7 +2637,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         this.worldInfo = worldInfo;
         this.states = [];
-        this.stateCount = 3;
+        this.stateCount = STATE_BUFFER_LENGTH;
         this.lastStateTime = time;
         this.id = initialState.id;
         if (initialState) this.pushState(initialState, time);
@@ -2643,10 +2667,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         value: function interpolateValue(val, time, lerp) {
           if (!this.worldInfo.wiInterval) return this.getMostRecentValue(val);
           var perc = (time - this.lastStateTime) / this.worldInfo.wiInterval;
-          if (perc <= 1) {
-            return lerp(this.states[0][val], this.states[1][val], perc);
+          if (perc <= this.stateCount - 1) {
+            return lerp(this.states[Math.floor(perc)][val], this.states[Math.ceil(perc)][val], perc - Math.floor(perc));
           } else {
-            return lerp(this.states[1][val], this.states[2][val], utilities.clamp(0, perc - 1, 1));
+            return this.states[this.stateCount - 1][val];
           }
         }
       }, {
@@ -3707,7 +3731,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return this;
         }
         Object.keys(src).forEach(function (key) {
-          if (has.call(_this28, key) && !(src[key] instanceof Object || src[key] instanceof Array)) _this28[key] = src[key];
+          if (has.call(_this28, key) && !(src[key] instanceof Object || src[key] instanceof Array)) {
+            _this28[key] = src[key];
+          }
         });
 
         return this;
@@ -3724,7 +3750,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
         Object.keys(src).forEach(function (key) {
           if (!has.call(_this29, key)) return;
-          if (src[key] instanceof Object) utilities.deepUnionOverwrite.call(_this29[key], src[key]);else _this29[key] = src[key];
+          if (src[key] instanceof Object) {
+            utilities.deepUnionOverwrite.call(_this29[key], src[key]);
+          } else {
+            _this29[key] = src[key];
+          }
         });
 
         return this;

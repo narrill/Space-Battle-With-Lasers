@@ -12,8 +12,9 @@ class RemoteInput {
     this.owner = owner;
     this.commands = {};
     this.mouseDirection = 0;
-    this.lastSend = 0;
-    this.sendInterval = 66.6666;
+    this.sendInterval = 15;
+    this.radius = (objectParams.radius) ? objectParams.radius : 15000;
+    this.lastSend = Math.random() * this.sendInterval;
     this.nonInterp = {};
     this.sentInitial = false;
     const socket = objectParams.specialProperties.socket;
@@ -56,17 +57,20 @@ class RemoteInput {
     // rotational motion - mouse    
     // console.log(-this.remoteInput.mouseDirection); 
     const mouseDirection = this.mouseDirection;
-    const mouseSensitivity = 250;
-    owner.objRotationalThrusters(
-      (((-mouseDirection) / mouseSensitivity) * ts.rotational.maxStrength) / stab.thrustRatio,
-    );
-    if (inputState.isEnabled(this.commands[commands.CCW])) {
-      owner.objRotationalThrusters(ts.rotational.maxStrength / stab.thrustRatio);
-    }
-    if (inputState.isEnabled(this.commands[commands.CW])) {
-      owner.objRotationalThrusters(-ts.rotational.maxStrength / stab.thrustRatio);
-    }
-    if (stab.enabled) { owner.objRotationalStabilizers(); }
+    const mouseSensitivity = .01;
+    const maxTorque = this.owner.thrusterSystem.rotational.maxStrength * this.owner.destructible.radius
+    const maxAngularAcceleration = maxTorque / this.owner.momentOfInertia;
+    const desiredVelocity = mouseDirection * mouseSensitivity * maxAngularAcceleration;
+    // owner.objRotationalThrusters(
+    //   (((-mouseDirection) / mouseSensitivity) * ts.rotational.maxStrength) / stab.thrustRatio,
+    // );
+    // if (inputState.isEnabled(this.commands[commands.CCW])) {
+    //   owner.objRotationalThrusters(ts.rotational.maxStrength / stab.thrustRatio);
+    // }
+    // if (inputState.isEnabled(this.commands[commands.CW])) {
+    //   owner.objRotationalThrusters(-ts.rotational.maxStrength / stab.thrustRatio);
+    // }
+    if (stab.enabled) { owner.objRotationalStabilizers(desiredVelocity); }
 
     // weapons
     if (inputState.isEnabled(this.commands[commands.FIRE])) {
@@ -139,6 +143,7 @@ class RemoteInput {
       for (let c = 0; c < newKeys.length; c++) {
         const aid = newKeys[c];
         if (!previousItemsById[aid]) {
+          console.log('new noninterp');
           const item = newItemsById[aid];
           wiCollection.push(item.networkRepresentation);
         }
@@ -164,7 +169,7 @@ class RemoteInput {
       this.sentInitial = true;
     }
 
-    const fetchInfo = owner.game.spatialHash.boundedFetch([owner.x, owner.y], 15000);
+    const fetchInfo = owner.game.spatialHash.boundedFetch([owner.x, owner.y], this.radius);
 
     const worldInfo = new NetworkWorldInfo({
       objs: populateWICategory(fetchInfo, 'obj'),
