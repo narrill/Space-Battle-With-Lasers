@@ -205,15 +205,6 @@ const drawing = {
     var ctx = camera.ctx;
 
     ctx.save();
-
-    for(let c = 0; c < states.length; ++c) {
-      const statePosInCameraPos = camera.worldPointToCameraSpace(states[c].x, states[c].y);
-      ctx.beginPath();
-      ctx.arc(statePosInCameraPos[0], statePosInCameraPos[1], 5, 0, 2 * Math.PI);
-      ctx.closePath();
-      ctx.fillStyle = 'red';
-      ctx.fill();
-    }
     ctx.translate(shipPosInCameraSpace[0],shipPosInCameraSpace[1]); //translate to camera space position
     ctx.rotate((rotation-camera.rotation) * (Math.PI / 180)); //rotate by difference in rotations
 
@@ -395,9 +386,7 @@ const drawing = {
       const x = prj.x + (ageSeconds * velX);
       const y = prj.y + (ageSeconds * velY);
       var start = camera.worldPointToCameraSpace(x, y);
-      // console.log(`Prj camera: ${start[0]}, ${start[1]}`);
-      //console.log(start);
-      //var end = camera.worldPointToCameraSpace(x - velX * dt, y - velY * dt);
+      var end = camera.worldPointToCameraSpace(x - velX * dt, y - velY * dt);
       const radius = prj.radius;
 
       if(ageSeconds < 0 || start[0] > camera.width + radius || start[0] < 0 - radius || start[1] > camera.height + radius || start[1] < 0 - radius)
@@ -405,15 +394,13 @@ const drawing = {
 
       ctx.save();
       ctx.beginPath();
-      //ctx.moveTo(start[0], start[1]);
-      //ctx.lineTo(end[0], end[1]);
-      //ctx.strokeStyle = prj.color.colorString;
-      //var width = radius*camera.zoom;
-      //ctx.lineWidth = (width>1)?width:1;
-      //ctx.stroke();
-      ctx.arc(start[0], start[1], radius * camera.zoom, 0, 2 * Math.PI);
-      ctx.fillStyle = prj.color.colorString;
-      ctx.fill();
+      ctx.moveTo(start[0], start[1]);
+      ctx.lineTo(end[0], end[1]);
+      ctx.strokeStyle = prj.color.colorString;
+      var width = radius*camera.zoom;
+      ctx.lineWidth = (width>1)?width:1;
+      ctx.lineCap = 'round';
+      ctx.stroke();
       ctx.restore();
     }
   },

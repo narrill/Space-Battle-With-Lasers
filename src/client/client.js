@@ -153,6 +153,10 @@ class Client {
     this.socket.on('ships', (ships) => {
       this.worldInfo.addShips(ships);
     });
+
+    this.socket.on('disconnect', () => {
+      console.log('socket disconnected');
+    });
   }
 
   frame() {

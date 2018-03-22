@@ -4,10 +4,7 @@
 const utilities = require('../server/utilities.js');
 
 const STATE_BUFFER_LENGTH = 3;
-let lastStateTime = 0;
-let jitterAccumulator = 0;
-let totalStates = 0;
-let lastPerc = 0;
+const BACKWARD_STATE_BUFFER_LENGTH = 1;
 
 class WorldInfo {
 	constructor() {
@@ -77,14 +74,6 @@ class WorldInfo {
 	pushWiData(data) {
 		const stateIndex = data.stateIndex;
 		let now = Date.now().valueOf();
-		if(totalStates > 0) {			
-			const sinceLastState = now - lastStateTime;
-			//console.log(sinceLastState);
-			jitterAccumulator += sinceLastState;
-			//console.log(jitterAccumulator / totalStates);
-		}
-		lastStateTime = now;
-		totalStates++;
 
 		if(this.startTime === 0)
 			this.startTime = now;
@@ -139,7 +128,7 @@ class ObjInfo {
 		this.worldInfo = worldInfo;
 		this.states = [];
 		this.stateIndices = [];
-		this.stateCount = STATE_BUFFER_LENGTH;
+		this.stateCount = STATE_BUFFER_LENGTH + BACKWARD_STATE_BUFFER_LENGTH;
 		this.creationTime = time;
 		this.initialStateIndex = initialStateIndex;
 		this.id = initialState.id;
@@ -163,20 +152,14 @@ class ObjInfo {
 	interpolateValue(val, time, lerp) {
 		const oldestStateIndex = this.stateIndices[0];
 		const desiredStateIndex = (time - this.creationTime - this.worldInfo.interpDelay) / this.worldInfo.wiInterval;
-		if(!this.worldInfo.wiInterval || desiredStateIndex < oldestStateIndex) return this.getMostRecentValue(val);
+
+		if(!this.worldInfo.wiInterval) return this.getMostRecentValue(val);
 		
 		const perc = desiredStateIndex - oldestStateIndex;
-		if(perc !== lastPerc) {
-			const forwardDiff = Math.abs(perc - lastPerc);
-			const wrapDiff = Math.abs(perc + 1 - lastPerc);
-			//console.log(Math.min(forwardDiff, wrapDiff));
-			lastPerc = perc;			
-		}
 		if(perc < this.stateCount - 1) {
 			return lerp(this.states[Math.floor(perc)][val], this.states[Math.ceil(perc)][val], perc - Math.floor(perc));
 		}
 		else {
-			console.log('interp max');
 			return this.states[this.stateCount - 1][val];
 		}
 	}

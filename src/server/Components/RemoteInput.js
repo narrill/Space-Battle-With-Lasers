@@ -12,7 +12,7 @@ class RemoteInput {
     this.owner = owner;
     this.commands = {};
     this.mouseDirection = 0;
-    this.sendInterval = 500;
+    this.sendInterval = 50;
     this.stateIndex = 0;
     this.radius = (objectParams.radius) ? objectParams.radius : 15000;
     this.lastSend = owner.game.elapsedGameTime + Math.random() * this.sendInterval;
@@ -61,16 +61,16 @@ class RemoteInput {
     const mouseSensitivity = .01;
     const maxTorque = this.owner.thrusterSystem.rotational.maxStrength * this.owner.destructible.radius
     const maxAngularAcceleration = maxTorque / this.owner.momentOfInertia;
-    const desiredVelocity = mouseDirection * mouseSensitivity * maxAngularAcceleration;
+    let desiredVelocity = mouseDirection * mouseSensitivity * maxAngularAcceleration;
     // owner.objRotationalThrusters(
     //   (((-mouseDirection) / mouseSensitivity) * ts.rotational.maxStrength) / stab.thrustRatio,
     // );
-    // if (inputState.isEnabled(this.commands[commands.CCW])) {
-    //   owner.objRotationalThrusters(ts.rotational.maxStrength / stab.thrustRatio);
-    // }
-    // if (inputState.isEnabled(this.commands[commands.CW])) {
-    //   owner.objRotationalThrusters(-ts.rotational.maxStrength / stab.thrustRatio);
-    // }
+    if (inputState.isEnabled(this.commands[commands.CCW])) {
+      desiredVelocity -= stab.clamps.rotational;
+    }
+    if (inputState.isEnabled(this.commands[commands.CW])) {
+      desiredVelocity += stab.clamps.rotational;
+    }
     if (stab.enabled) { owner.objRotationalStabilizers(desiredVelocity); }
 
     // weapons

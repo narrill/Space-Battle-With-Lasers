@@ -672,6 +672,10 @@ class Client {
     this.socket.on('ships', (ships) => {
       this.worldInfo.addShips(ships);
     });
+
+    this.socket.on('disconnect', () => {
+      console.log('socket disconnected');
+    });
   }
 
   frame() {
@@ -1717,15 +1721,6 @@ const drawing = {
     var ctx = camera.ctx;
 
     ctx.save();
-
-    for(let c = 0; c < states.length; ++c) {
-      const statePosInCameraPos = camera.worldPointToCameraSpace(states[c].x, states[c].y);
-      ctx.beginPath();
-      ctx.arc(statePosInCameraPos[0], statePosInCameraPos[1], 5, 0, 2 * Math.PI);
-      ctx.closePath();
-      ctx.fillStyle = 'red';
-      ctx.fill();
-    }
     ctx.translate(shipPosInCameraSpace[0],shipPosInCameraSpace[1]); //translate to camera space position
     ctx.rotate((rotation-camera.rotation) * (Math.PI / 180)); //rotate by difference in rotations
 
@@ -1907,9 +1902,7 @@ const drawing = {
       const x = prj.x + (ageSeconds * velX);
       const y = prj.y + (ageSeconds * velY);
       var start = camera.worldPointToCameraSpace(x, y);
-      // console.log(`Prj camera: ${start[0]}, ${start[1]}`);
-      //console.log(start);
-      //var end = camera.worldPointToCameraSpace(x - velX * dt, y - velY * dt);
+      var end = camera.worldPointToCameraSpace(x - velX * dt, y - velY * dt);
       const radius = prj.radius;
 
       if(ageSeconds < 0 || start[0] > camera.width + radius || start[0] < 0 - radius || start[1] > camera.height + radius || start[1] < 0 - radius)
@@ -1917,15 +1910,13 @@ const drawing = {
 
       ctx.save();
       ctx.beginPath();
-      //ctx.moveTo(start[0], start[1]);
-      //ctx.lineTo(end[0], end[1]);
-      //ctx.strokeStyle = prj.color.colorString;
-      //var width = radius*camera.zoom;
-      //ctx.lineWidth = (width>1)?width:1;
-      //ctx.stroke();
-      ctx.arc(start[0], start[1], radius * camera.zoom, 0, 2 * Math.PI);
-      ctx.fillStyle = prj.color.colorString;
-      ctx.fill();
+      ctx.moveTo(start[0], start[1]);
+      ctx.lineTo(end[0], end[1]);
+      ctx.strokeStyle = prj.color.colorString;
+      var width = radius*camera.zoom;
+      ctx.lineWidth = (width>1)?width:1;
+      ctx.lineCap = 'round';
+      ctx.stroke();
       ctx.restore();
     }
   },
@@ -2271,10 +2262,7 @@ module.exports = {
 const utilities = require('../server/utilities.js');
 
 const STATE_BUFFER_LENGTH = 3;
-let lastStateTime = 0;
-let jitterAccumulator = 0;
-let totalStates = 0;
-let lastPerc = 0;
+const BACKWARD_STATE_BUFFER_LENGTH = 1;
 
 class WorldInfo {
 	constructor() {
@@ -2344,14 +2332,6 @@ class WorldInfo {
 	pushWiData(data) {
 		const stateIndex = data.stateIndex;
 		let now = Date.now().valueOf();
-		if(totalStates > 0) {			
-			const sinceLastState = now - lastStateTime;
-			//console.log(sinceLastState);
-			jitterAccumulator += sinceLastState;
-			//console.log(jitterAccumulator / totalStates);
-		}
-		lastStateTime = now;
-		totalStates++;
 
 		if(this.startTime === 0)
 			this.startTime = now;
@@ -2406,7 +2386,7 @@ class ObjInfo {
 		this.worldInfo = worldInfo;
 		this.states = [];
 		this.stateIndices = [];
-		this.stateCount = STATE_BUFFER_LENGTH;
+		this.stateCount = STATE_BUFFER_LENGTH + BACKWARD_STATE_BUFFER_LENGTH;
 		this.creationTime = time;
 		this.initialStateIndex = initialStateIndex;
 		this.id = initialState.id;
@@ -2430,20 +2410,14 @@ class ObjInfo {
 	interpolateValue(val, time, lerp) {
 		const oldestStateIndex = this.stateIndices[0];
 		const desiredStateIndex = (time - this.creationTime - this.worldInfo.interpDelay) / this.worldInfo.wiInterval;
-		if(!this.worldInfo.wiInterval || desiredStateIndex < oldestStateIndex) return this.getMostRecentValue(val);
+
+		if(!this.worldInfo.wiInterval) return this.getMostRecentValue(val);
 		
 		const perc = desiredStateIndex - oldestStateIndex;
-		if(perc !== lastPerc) {
-			const forwardDiff = Math.abs(perc - lastPerc);
-			const wrapDiff = Math.abs(perc + 1 - lastPerc);
-			//console.log(Math.min(forwardDiff, wrapDiff));
-			lastPerc = perc;			
-		}
 		if(perc < this.stateCount - 1) {
 			return lerp(this.states[Math.floor(perc)][val], this.states[Math.ceil(perc)][val], perc - Math.floor(perc));
 		}
 		else {
-			console.log('interp max');
 			return this.states[this.stateCount - 1][val];
 		}
 	}

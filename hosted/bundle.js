@@ -762,6 +762,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.socket.on('ships', function (ships) {
           _this8.worldInfo.addShips(ships);
         });
+
+        this.socket.on('disconnect', function () {
+          console.log('socket disconnected');
+        });
       }
 
       _createClass(Client, [{
@@ -1982,15 +1986,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var ctx = camera.ctx;
 
         ctx.save();
-
-        for (var _c2 = 0; _c2 < states.length; ++_c2) {
-          var statePosInCameraPos = camera.worldPointToCameraSpace(states[_c2].x, states[_c2].y);
-          ctx.beginPath();
-          ctx.arc(statePosInCameraPos[0], statePosInCameraPos[1], 5, 0, 2 * Math.PI);
-          ctx.closePath();
-          ctx.fillStyle = 'red';
-          ctx.fill();
-        }
         ctx.translate(shipPosInCameraSpace[0], shipPosInCameraSpace[1]); //translate to camera space position
         ctx.rotate((rotation - camera.rotation) * (Math.PI / 180)); //rotate by difference in rotations
 
@@ -2159,24 +2154,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           var x = prj.x + ageSeconds * velX;
           var y = prj.y + ageSeconds * velY;
           var start = camera.worldPointToCameraSpace(x, y);
-          // console.log(`Prj camera: ${start[0]}, ${start[1]}`);
-          //console.log(start);
-          //var end = camera.worldPointToCameraSpace(x - velX * dt, y - velY * dt);
+          var end = camera.worldPointToCameraSpace(x - velX * dt, y - velY * dt);
           var radius = prj.radius;
 
           if (ageSeconds < 0 || start[0] > camera.width + radius || start[0] < 0 - radius || start[1] > camera.height + radius || start[1] < 0 - radius) continue;
 
           ctx.save();
           ctx.beginPath();
-          //ctx.moveTo(start[0], start[1]);
-          //ctx.lineTo(end[0], end[1]);
-          //ctx.strokeStyle = prj.color.colorString;
-          //var width = radius*camera.zoom;
-          //ctx.lineWidth = (width>1)?width:1;
-          //ctx.stroke();
-          ctx.arc(start[0], start[1], radius * camera.zoom, 0, 2 * Math.PI);
-          ctx.fillStyle = prj.color.colorString;
-          ctx.fill();
+          ctx.moveTo(start[0], start[1]);
+          ctx.lineTo(end[0], end[1]);
+          ctx.strokeStyle = prj.color.colorString;
+          var width = radius * camera.zoom;
+          ctx.lineWidth = width > 1 ? width : 1;
+          ctx.lineCap = 'round';
+          ctx.stroke();
           ctx.restore();
         }
       },
@@ -2509,10 +2500,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var utilities = require('../server/utilities.js');
 
     var STATE_BUFFER_LENGTH = 3;
-    var lastStateTime = 0;
-    var jitterAccumulator = 0;
-    var totalStates = 0;
-    var lastPerc = 0;
+    var BACKWARD_STATE_BUFFER_LENGTH = 1;
 
     var WorldInfo = function () {
       function WorldInfo() {
@@ -2555,9 +2543,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               this[type].push(newObjInfo);
             }
           }
-          for (var _c3 = 0; _c3 < this[type].length; _c3++) {
-            var _obj = this[type][_c3];
-            if (!this.objTracker[_obj.id]) this.removeIndexFromWiCollection(_c3, type);
+          for (var _c2 = 0; _c2 < this[type].length; _c2++) {
+            var _obj = this[type][_c2];
+            if (!this.objTracker[_obj.id]) this.removeIndexFromWiCollection(_c2, type);
           }
         }
       }, {
@@ -2570,10 +2558,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this[type].push(a);
           }
           var destroyed = dwi[type].destroyed;
-          for (var _c4 = 0; _c4 < this[type].length; _c4++) {
-            var _a = this[type][_c4];
+          for (var _c3 = 0; _c3 < this[type].length; _c3++) {
+            var _a = this[type][_c3];
             for (var i = 0; i < destroyed.length; i++) {
-              if (destroyed[i] === _a.id) this[type].splice(_c4--, 1);
+              if (destroyed[i] === _a.id) this[type].splice(_c3--, 1);
             }
           }
         }
@@ -2594,14 +2582,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         value: function pushWiData(data) {
           var stateIndex = data.stateIndex;
           var now = Date.now().valueOf();
-          if (totalStates > 0) {
-            var sinceLastState = now - lastStateTime;
-            //console.log(sinceLastState);
-            jitterAccumulator += sinceLastState;
-            //console.log(jitterAccumulator / totalStates);
-          }
-          lastStateTime = now;
-          totalStates++;
 
           if (this.startTime === 0) this.startTime = now;
           now = stateIndex * this.wiInterval + this.startTime;
@@ -2673,7 +2653,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.worldInfo = worldInfo;
         this.states = [];
         this.stateIndices = [];
-        this.stateCount = STATE_BUFFER_LENGTH;
+        this.stateCount = STATE_BUFFER_LENGTH + BACKWARD_STATE_BUFFER_LENGTH;
         this.creationTime = time;
         this.initialStateIndex = initialStateIndex;
         this.id = initialState.id;
@@ -2705,19 +2685,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         value: function interpolateValue(val, time, lerp) {
           var oldestStateIndex = this.stateIndices[0];
           var desiredStateIndex = (time - this.creationTime - this.worldInfo.interpDelay) / this.worldInfo.wiInterval;
-          if (!this.worldInfo.wiInterval || desiredStateIndex < oldestStateIndex) return this.getMostRecentValue(val);
+
+          if (!this.worldInfo.wiInterval) return this.getMostRecentValue(val);
 
           var perc = desiredStateIndex - oldestStateIndex;
-          if (perc !== lastPerc) {
-            var forwardDiff = Math.abs(perc - lastPerc);
-            var wrapDiff = Math.abs(perc + 1 - lastPerc);
-            //console.log(Math.min(forwardDiff, wrapDiff));
-            lastPerc = perc;
-          }
           if (perc < this.stateCount - 1) {
             return lerp(this.states[Math.floor(perc)][val], this.states[Math.ceil(perc)][val], perc - Math.floor(perc));
           } else {
-            console.log('interp max');
             return this.states[this.stateCount - 1][val];
           }
         }
