@@ -2470,7 +2470,10 @@ class Deserializer {
           opts[property.key] = this.read(property.type, property.scaleFactor);
         }
       }
-      val = new Type(opts);
+      if(Type.deserialize)
+        val = Type.deserialize(opts);
+      else
+        val = new Type(opts);
     }
 
     return val;
