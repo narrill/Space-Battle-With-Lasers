@@ -1,12 +1,14 @@
 // Heavily adapted from a previous project of mine:
 // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
+const Vec2 = require('./Vec2.js');
+
 const has = Object.prototype.hasOwnProperty;
 
 class Capsule {
-  constructor(x1, y1, x2, y2, r) {
-    this.center1 = [x1, y1];
-    this.center2 = [x2, y2];
+  constructor(p1, p2, r) {
+    this.center1 = p1;
+    this.center2 = p2;
     this.radius = r;
   }
 }
@@ -14,10 +16,8 @@ class Capsule {
 class VelocityCapsule extends Capsule {
   constructor(object, dt) {
     super(
-      object.x,
-      object.y,
-      object.x + (object.velocityX * dt),
-      object.y + (object.velocityY * dt),
+      object.position
+      object..position.add(object.velocity.scale(dt)),
       object.destructible.radius,
     );
   }
@@ -76,23 +76,35 @@ ColorHSL.serializableProperties = [
 const utilities = {
   getForwardVector() {
     // console.log(this.rotation);
-    if (!this.forwardVectorX || !this.forwardVectorY) {
-      const normalizedForwardVector = utilities.rotate(0, 0, 0, -1, -this.rotation);
-      this.forwardVectorX = normalizedForwardVector[0];
-      this.forwardVectorY = normalizedForwardVector[1];
+    // if (!this.forwardVectorX || !this.forwardVectorY) {
+    //   const normalizedForwardVector = utilities.rotate(0, 0, 0, -1, -this.rotation);
+    //   this.forwardVectorX = normalizedForwardVector[0];
+    //   this.forwardVectorY = normalizedForwardVector[1];
+    // }
+
+    // return [this.forwardVectorX, this.forwardVectorY];
+
+    if(!this.forwardVector) {
+      this.forwardVector = new Vec2(0, -1).rotateD(-this.rotation);
     }
 
-    return [this.forwardVectorX, this.forwardVectorY];
+    return this.forwardVector;
   },
 
   getRightVector() {
-    if (!this.rightVectorX || !this.rightVectorY) {
-      const normalizedRightVector = utilities.rotate(0, 0, 0, -1, -this.rotation + 90);
-      this.rightVectorX = normalizedRightVector[0];
-      this.rightVectorY = normalizedRightVector[1];
+    // if (!this.rightVectorX || !this.rightVectorY) {
+    //   const normalizedRightVector = utilities.rotate(0, 0, 0, -1, -this.rotation + 90);
+    //   this.rightVectorX = normalizedRightVector[0];
+    //   this.rightVectorY = normalizedRightVector[1];
+    // }
+
+    // return [this.rightVectorX, this.rightVectorY];
+
+    if(!this.rightVector) {
+      this.rightVector = new Vec2(0, -1).rotateD(-this.rotation + 90);
     }
 
-    return [this.rightVectorX, this.rightVectorY];
+    return this.rightVector;
   },
 
   getMedialVelocity() {
