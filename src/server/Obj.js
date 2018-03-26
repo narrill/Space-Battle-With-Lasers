@@ -14,31 +14,33 @@ const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
 class Obj extends Accelerable {
   constructor(oPar = {}, game, owner, playerId) {
     const objectParams = oPar;
-    super();
     const gridPosition = gridFunctions.randomGridPosition(game.grid);
+    super({
+      position: (objectParams.position) ? objectParams.position : gridPosition
+    });
     this.id = id.takeIdTag();
     this.game = game;
     this.owner = owner;
     this.faction = -1;
     // position/rotation
-    this.x = gridPosition.x;
-    this.y = gridPosition.y;
-    this.rotation = 0;
-    this.prevX = (has.call(objectParams, 'x')) ? objectParams.x : gridPosition.x;
-    this.prevY = (has.call(objectParams, 'y')) ? objectParams.y : gridPosition.y;
+    // this.x = gridPosition.x;
+    // this.y = gridPosition.y;
+    // this.rotation = 0;
+    // this.prevX = (has.call(objectParams, 'x')) ? objectParams.x : gridPosition.x;
+    // this.prevY = (has.call(objectParams, 'y')) ? objectParams.y : gridPosition.y;
     // velocities
-    this.velocityX = 0; // in absolute form, used for movement
-    this.velocityY = 0;
-    this.forceX = 0;
-    this.forceY = 0;
-    this.rotationalVelocity = 0;
-    this.rotationalForce = 0;
-    this.forwardVectorX = undefined;
-    this.forwardVectorY = undefined;
-    this.rightVectorX = undefined;
-    this.rightVectorY = undefined;
-    this.medialVelocity = undefined; // component form, used by stabilizers
-    this.lateralVelocity = undefined;
+    // this.velocityX = 0; // in absolute form, used for movement
+    // this.velocityY = 0;
+    // this.forceX = 0;
+    // this.forceY = 0;
+    // this.rotationalVelocity = 0;
+    // this.rotationalForce = 0;
+    // this.forwardVectorX = undefined;
+    // this.forwardVectorY = undefined;
+    // this.rightVectorX = undefined;
+    // this.rightVectorY = undefined;
+    // this.medialVelocity = undefined; // component form, used by stabilizers
+    // this.lateralVelocity = undefined;
     this.mass = objectParams.physicalProperties.mass;
     this.momentOfInertia = objectParams.physicalProperties.momentOfInertia;
     // colors

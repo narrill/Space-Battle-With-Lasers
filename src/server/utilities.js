@@ -74,65 +74,65 @@ ColorHSL.serializableProperties = [
 ];
 
 const utilities = {
-  getForwardVector() {
-    // console.log(this.rotation);
-    // if (!this.forwardVectorX || !this.forwardVectorY) {
-    //   const normalizedForwardVector = utilities.rotate(0, 0, 0, -1, -this.rotation);
-    //   this.forwardVectorX = normalizedForwardVector[0];
-    //   this.forwardVectorY = normalizedForwardVector[1];
-    // }
+  // getForwardVector() {
+  //   // console.log(this.rotation);
+  //   // if (!this.forwardVectorX || !this.forwardVectorY) {
+  //   //   const normalizedForwardVector = utilities.rotate(0, 0, 0, -1, -this.rotation);
+  //   //   this.forwardVectorX = normalizedForwardVector[0];
+  //   //   this.forwardVectorY = normalizedForwardVector[1];
+  //   // }
 
-    // return [this.forwardVectorX, this.forwardVectorY];
+  //   // return [this.forwardVectorX, this.forwardVectorY];
 
-    if(!this.forwardVector) {
-      this.forwardVector = new Vec2(0, -1).rotateD(-this.rotation);
-    }
+  //   if(!this.forwardVector) {
+  //     this.forwardVector = new Vec2(0, -1).rotateD(-this.rotation);
+  //   }
 
-    return this.forwardVector;
-  },
+  //   return this.forwardVector;
+  // },
 
-  getRightVector() {
-    // if (!this.rightVectorX || !this.rightVectorY) {
-    //   const normalizedRightVector = utilities.rotate(0, 0, 0, -1, -this.rotation + 90);
-    //   this.rightVectorX = normalizedRightVector[0];
-    //   this.rightVectorY = normalizedRightVector[1];
-    // }
+  // getRightVector() {
+  //   // if (!this.rightVectorX || !this.rightVectorY) {
+  //   //   const normalizedRightVector = utilities.rotate(0, 0, 0, -1, -this.rotation + 90);
+  //   //   this.rightVectorX = normalizedRightVector[0];
+  //   //   this.rightVectorY = normalizedRightVector[1];
+  //   // }
 
-    // return [this.rightVectorX, this.rightVectorY];
+  //   // return [this.rightVectorX, this.rightVectorY];
 
-    if(!this.rightVector) {
-      this.rightVector = new Vec2(0, -1).rotateD(-this.rotation + 90);
-    }
+  //   if(!this.rightVector) {
+  //     this.rightVector = new Vec2(0, -1).rotateD(-this.rotation + 90);
+  //   }
 
-    return this.rightVector;
-  },
+  //   return this.rightVector;
+  // },
 
-  getMedialVelocity() {
-    if (!this.medialVelocity) {
-      const forwardVector = utilities.getForwardVector.call(this);
-      this.medialVelocity = -utilities.scalarComponentOf1InDirectionOf2(
-        this.velocityX,
-        this.velocityY,
-        forwardVector[0],
-        forwardVector[1],
-      ); // get magnitude of projection of velocity onto the forward vector
-    }
+  // getMedialVelocity() {
+  //   if (!this.medialVelocity) {
+  //     const forwardVector = utilities.getForwardVector.call(this);
+  //     this.medialVelocity = -utilities.scalarComponentOf1InDirectionOf2(
+  //       this.velocityX,
+  //       this.velocityY,
+  //       forwardVector[0],
+  //       forwardVector[1],
+  //     ); // get magnitude of projection of velocity onto the forward vector
+  //   }
 
-    return this.medialVelocity;
-  },
+  //   return this.medialVelocity;
+  // },
 
-  getLateralVelocity() {
-    if (!this.lateralVelocity) {
-      const rightVector = utilities.getRightVector.call(this);
-      this.lateralVelocity = -utilities.scalarComponentOf1InDirectionOf2(
-        this.velocityX,
-        this.velocityY,
-        rightVector[0],
-        rightVector[1],
-      ); // et magnitude of velocity's projection onto the right vector
-    }
-    return this.lateralVelocity;
-  },
+  // getLateralVelocity() {
+  //   if (!this.lateralVelocity) {
+  //     const rightVector = utilities.getRightVector.call(this);
+  //     this.lateralVelocity = -utilities.scalarComponentOf1InDirectionOf2(
+  //       this.velocityX,
+  //       this.velocityY,
+  //       rightVector[0],
+  //       rightVector[1],
+  //     ); // et magnitude of velocity's projection onto the right vector
+  //   }
+  //   return this.lateralVelocity;
+  // },
   fillText: (ctx, string, x, y, css, color, alpha) => {
     ctx.save();
     // https://developer.mozilla.org/en-US/docs/Web/CSS/font
@@ -158,9 +158,9 @@ const utilities = {
     const distance = Math.sqrt((dx * dx) + (dy * dy));
     return distance < c1.radius + c2.radius;
   },
-  distanceSqrBetweenPoints(x1, y1, x2, y2) {
-    return ((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1));
-  },
+  // distanceSqrBetweenPoints(x1, y1, x2, y2) {
+  //   return ((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1));
+  // },
   ColorRGB,
   ColorHSL,
   // Function Name: getRandomColor()
@@ -224,48 +224,48 @@ const utilities = {
 
   clamp: (min, val, max) => Math.max(min, Math.min(max, val)),
 
-  distanceSqr: (p1, p2) => {
-    const vec = [p2[0] - p1[0], p2[1] - p1[1]];
-    return (vec[0] * vec[0]) + (vec[1] * vec[1]);
-  },
+  // distanceSqr: (p1, p2) => {
+  //   const vec = [p2[0] - p1[0], p2[1] - p1[1]];
+  //   return (vec[0] * vec[0]) + (vec[1] * vec[1]);
+  // },
 
-  // http://stackoverflow.com/questions/17410809/how-to-calculate-rotation-in-2d-in-javascript
-  // point to rotate around, point to rotate, angle to rotate by
-  rotate: (cx, cy, x, y, angle) => {
-    const angleRadians = (Math.PI / 180) * angle;
-    return [
-      ((Math.cos(angleRadians) * (x - cx)) + (Math.sin(angleRadians) * (y - cy))) + cx,
-      ((Math.cos(angleRadians) * (y - cy)) - (Math.sin(angleRadians) * (x - cx))) + cy,
-    ];
-  },
+  // // http://stackoverflow.com/questions/17410809/how-to-calculate-rotation-in-2d-in-javascript
+  // // point to rotate around, point to rotate, angle to rotate by
+  // rotate: (cx, cy, x, y, angle) => {
+  //   const angleRadians = (Math.PI / 180) * angle;
+  //   return [
+  //     ((Math.cos(angleRadians) * (x - cx)) + (Math.sin(angleRadians) * (y - cy))) + cx,
+  //     ((Math.cos(angleRadians) * (y - cy)) - (Math.sin(angleRadians) * (x - cx))) + cy,
+  //   ];
+  // },
 
-  cross(p, q) {
-    return ((p[0] * q[1]) - (p[1] * q[0]));
-  },
+  // cross(p, q) {
+  //   return ((p[0] * q[1]) - (p[1] * q[0]));
+  // },
 
-  dotProduct: (x1, y1, x2, y2) => (x1 * x2) + (y1 * y2),
+  // dotProduct: (x1, y1, x2, y2) => (x1 * x2) + (y1 * y2),
 
-  normalizeVector: (x, y) => {
-    const magnitude = Math.sqrt((x * x) + (y * y));
-    return [x / magnitude, y / magnitude];
-  },
+  // normalizeVector: (x, y) => {
+  //   const magnitude = Math.sqrt((x * x) + (y * y));
+  //   return [x / magnitude, y / magnitude];
+  // },
 
-  vectorMagnitudeSqr: (x, y) => (x * x) + (y * y),
+  // vectorMagnitudeSqr: (x, y) => (x * x) + (y * y),
 
-  // broken
-  componentOf1InDirectionOf2: (x1, y1, x2, y2) => {
-    if ((x1 === 0 && y1 === 0) || (x2 === 0 && y2 === 0)) { return [0, 0]; }
-    const dot = (x1 * x2) + (y1 * y2);
-    const scalar = (dot * dot) / ((x2 * x2) + (y2 * y2));
-    return [scalar * x1, scalar * y1];
-  },
+  // // broken
+  // componentOf1InDirectionOf2: (x1, y1, x2, y2) => {
+  //   if ((x1 === 0 && y1 === 0) || (x2 === 0 && y2 === 0)) { return [0, 0]; }
+  //   const dot = (x1 * x2) + (y1 * y2);
+  //   const scalar = (dot * dot) / ((x2 * x2) + (y2 * y2));
+  //   return [scalar * x1, scalar * y1];
+  // },
 
-  // projects vector 1 onto vector 2 and returns the magnitude of the projection
-  scalarComponentOf1InDirectionOf2: (x1, y1, x2, y2) => {
-    if ((x1 === 0 && y1 === 0) || (x2 === 0 && y2 === 0)) { return 0; }
-    // var dot = x1*x2+y1*y2;
-    return ((x1 * x2) + (y1 * y2)) / Math.sqrt((x2 * x2) + (y2 * y2));
-  },
+  // // projects vector 1 onto vector 2 and returns the magnitude of the projection
+  // scalarComponentOf1InDirectionOf2: (x1, y1, x2, y2) => {
+  //   if ((x1 === 0 && y1 === 0) || (x2 === 0 && y2 === 0)) { return 0; }
+  //   // var dot = x1*x2+y1*y2;
+  //   return ((x1 * x2) + (y1 * y2)) / Math.sqrt((x2 * x2) + (y2 * y2));
+  // },
   // http://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
   distanceFromPointToLine: (x, y, x1, y1, x2, y2) => {
     const A = x - x1;
