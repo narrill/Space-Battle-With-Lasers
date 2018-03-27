@@ -1,0 +1,3 @@
+[submodule "src/server/SpaceBattleServer"]
+	path = src/server/SpaceBattleServer
+	url = git@github.com:narrill/SpaceBattleServer.git
