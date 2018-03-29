@@ -4,6 +4,7 @@ const NetworkHitscan = require('./NetworkHitscan.js');
 class Hitscan {
   constructor(
     game,
+    id,
     startX,
     startY,
     endX,
@@ -14,6 +15,7 @@ class Hitscan {
     collisionProperties,
   ) {
     this.game = game;
+    this.id = id;
     this.startX = startX;
     this.startY = startY;
     this.endX = endX;

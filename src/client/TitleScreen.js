@@ -23,18 +23,9 @@ class TitleScreen extends Screen {
   }
 
   keyDown(e) {
-    this.client.keyclick.play();
-    if(this.menu) {
-      this.menu.key(e);
-    }
-    else {
-      if(e.key === 'Enter') {
-        this.menu = new Menu([
-          { text: 'Play', func: () => this.client.switchScreen(this.client.nameScreen) },
-          { text: 'Build', func: () => this.client.switchScreen(this.client.builderScreen) }
-        ]);
-      }
-    }    
+    this.client.keyclick.play();  
+    if(e.key === 'Enter')
+      this.client.switchScreen(this.client.chooseShipScreen); 
   }
 
   onExit() {

@@ -1,9 +1,11 @@
 const utilities = require('../utilities.js');
 const collisions = require('../collisions.js');
+const id = require('../id.js');
 
 class Laser {
   constructor(bp, owner) {
     this.owner = owner;
+    this.id = id.takeIdTag();
     this.lastFireTime = 0;
     this.color = utilities.getRandomBrightColor();
     this.currentPower = 0;
@@ -38,6 +40,7 @@ class Laser {
       const weaponPoint = this.owner.weaponPoint;
       owner.game.createHitscan(
         owner.game,
+        this.id,
         owner.x + weaponPoint[0],
         owner.y + weaponPoint[1],
         owner.x + currentLaserVector[0],
@@ -55,6 +58,10 @@ class Laser {
     if (this.currentPower < 0) {
       this.currentPower = 0;
     }
+  }
+
+  destroy() {
+    id.returnIdTag(this.id);
   }
 }
 

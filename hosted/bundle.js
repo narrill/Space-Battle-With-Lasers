@@ -2,8 +2,6 @@
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -25,513 +23,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     s(r[o]);
   }return s;
 })({ 1: [function (require, module, exports) {
-    var Screen = require('./Screen.js');
-    var ModalEntryScreen = require('./ModalEntryScreen.js');
-    var ModalConfirmationScreen = require('./ModalConfirmationScreen.js');
-    var drawing = require('./drawing.js');
-    var Menu = require('./Menu.js');
-    var requests = require('./requests.js');
-
-    var drawHighlight = function drawHighlight(ctx, x, y, text, height) {
-      ctx.save();
-      var width = ctx.measureText(text).width;
-      ctx.globalAlpha = 0.5;
-      ctx.fillStyle = 'blue';
-      ctx.fillRect(x, y - height, width, height);
-      ctx.restore();
-    };
-
-    var FieldView = function () {
-      function FieldView(component, fieldName) {
-        _classCallCheck(this, FieldView);
-
-        this.component = component;
-        this.name = fieldName;
-      }
-
-      _createClass(FieldView, [{
-        key: "draw",
-        value: function draw(ctx, x, y, textHeight, lineHeight, highlighted) {
-          var text = this.name + ": " + this.value;
-          if (highlighted) drawHighlight(ctx, x, y, text, textHeight);
-          ctx.globalAlpha = 1;
-          ctx.fillText(text, x, y);
-          return y + lineHeight;
-        }
-      }, {
-        key: "select",
-        value: function select() {
-          var _this = this;
-
-          return function (client) {
-            client.enterModal(ModalEntryScreen, function (value) {
-              _this.value = value;
-            });
-          };
-        }
-      }, {
-        key: "value",
-        get: function get() {
-          return this.component[this.name];
-        },
-        set: function set(val) {
-          if ((typeof val === "undefined" ? "undefined" : _typeof(val)) === _typeof(this.value)) this.component[this.name] = val;
-        }
-      }]);
-
-      return FieldView;
-    }();
-
-    var Navigable = function () {
-      function Navigable(ob, toggleableElements) {
-        var _this2 = this;
-
-        _classCallCheck(this, Navigable);
-
-        this.elements = [];
-        Object.keys(ob).forEach(function (key) {
-          if (ob[key] instanceof Object) _this2.elements.push(new ComponentEditor(key, ob[key], toggleableElements));else _this2.elements.push(new FieldView(ob, key));
-        });
-        this.cursor = toggleableElements - 1;
-        this.max = this.elements.length;
-        this.min = this.cursor;
-      }
-
-      _createClass(Navigable, [{
-        key: "_boundCursor",
-        value: function _boundCursor(cursor) {
-          return (cursor - this.min + this.max - this.min) % (this.max - this.min) + this.min;
-        }
-      }, {
-        key: "forward",
-        value: function forward() {
-          if (this.current && this.current.canForward) this.current.forward();else {
-            this.cursor = this._boundCursor(this.cursor + 1);
-            if (this.current && !this.current.canForward && this.current.toFirst) this.current.toFirst();
-          }
-        }
-      }, {
-        key: "backward",
-        value: function backward() {
-          if (this.current.canBackward) this.current.backward();else {
-            this.cursor = this._boundCursor(this.cursor - 1);
-            if (this.current && this.current.enabled) this.current.toLast();
-          }
-        }
-      }, {
-        key: "current",
-        get: function get() {
-          return this.elements[this.cursor];
-        }
-      }, {
-        key: "lines",
-        get: function get() {
-          var lines = this.min * -1;
-          for (var c = 0; c < this.elements.length; ++c) {
-            var l = this.elements[c].lines;
-            lines += l ? l : 1;
-          }
-          return lines;
-        }
-      }]);
-
-      return Navigable;
-    }();
-
-    var ComponentEditor = function (_Navigable) {
-      _inherits(ComponentEditor, _Navigable);
-
-      function ComponentEditor(name, component) {
-        var toggleable = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
-
-        _classCallCheck(this, ComponentEditor);
-
-        var _this3 = _possibleConstructorReturn(this, (ComponentEditor.__proto__ || Object.getPrototypeOf(ComponentEditor)).call(this, component, false));
-
-        _this3.enabled = !toggleable;
-        _this3.toggleable = toggleable;
-        _this3.data = component;
-        _this3.name = name;
-        return _this3;
-      }
-
-      _createClass(ComponentEditor, [{
-        key: "draw",
-        value: function draw(ctx, x, y, textHeight, lineHeight, highlighted, indent) {
-          if (highlighted && this.onName) {
-            drawHighlight(ctx, x, y, this.name, textHeight);
-          }
-          ctx.globalAlpha = this.enabled ? 1 : 0.5;
-          ctx.fillText(this.name, x, y);
-          x += indent;
-          y += lineHeight;
-
-          if (this.enabled || !this.toggleable) {
-            for (var i = 0; i < this.elements.length; ++i) {
-              y = this.elements[i].draw(ctx, x, y, textHeight, lineHeight, highlighted && this.cursor === i, indent);
-            }
-          }
-          return y;
-        }
-      }, {
-        key: "toLast",
-        value: function toLast() {
-          this.cursor = this.elements.length - 1;
-          if (this.current.enabled) this.current.toLast();
-        }
-      }, {
-        key: "toFirst",
-        value: function toFirst() {
-          this.cursor = this.min;
-        }
-      }, {
-        key: "select",
-        value: function select() {
-          if (this.toggleable && this.onName) this.enabled = !this.enabled;else if (!this.onName) return this.current.select();
-        }
-      }, {
-        key: "lines",
-        get: function get() {
-          return this.enabled ? _get(ComponentEditor.prototype.__proto__ || Object.getPrototypeOf(ComponentEditor.prototype), "lines", this) : 1;
-        }
-      }, {
-        key: "canForward",
-        get: function get() {
-          return this.enabled && (this.cursor !== this.elements.length - 1 || this.current.canForward);
-        }
-      }, {
-        key: "canBackward",
-        get: function get() {
-          return this.cursor !== -1;
-        }
-      }, {
-        key: "onName",
-        get: function get() {
-          return this.cursor === -1;
-        }
-      }]);
-
-      return ComponentEditor;
-    }(Navigable);
-
-    var ShipEditor = function (_Navigable2) {
-      _inherits(ShipEditor, _Navigable2);
-
-      function ShipEditor(availableComponents) {
-        _classCallCheck(this, ShipEditor);
-
-        var _this4 = _possibleConstructorReturn(this, (ShipEditor.__proto__ || Object.getPrototypeOf(ShipEditor)).call(this, availableComponents, true));
-
-        _this4.lineOffset = 0;
-        return _this4;
-      }
-
-      _createClass(ShipEditor, [{
-        key: "draw",
-        value: function draw(ctx, x, y, active) {
-          ctx.save();
-          ctx.font = "12pt Orbitron";
-          ctx.textAlign = 'left';
-          ctx.fillStyle = 'white';
-          var height = ctx.measureText("M").width;
-          var indent = height * 4;
-          var lineHeight = height * 1.5;
-          y -= lineHeight * this.lineOffset;
-          for (var c = 0; c < this.elements.length; ++c) {
-            y = this.elements[c].draw(ctx, x, y, height, lineHeight, active && this.cursor === c, indent);
-          }
-          ctx.restore();
-        }
-      }, {
-        key: "_boundLineOffset",
-        value: function _boundLineOffset(offset) {
-          var lines = this.lines;
-          return (offset + lines) % lines;
-        }
-      }, {
-        key: "select",
-        value: function select() {
-          return this.current.select();
-        }
-      }, {
-        key: "key",
-        value: function key(e) {
-          if (e.key === 'ArrowDown') {
-            this.lineOffset = this._boundLineOffset(this.lineOffset + 1);
-            this.forward();
-          } else if (e.key === 'ArrowUp') {
-            this.lineOffset = this._boundLineOffset(this.lineOffset - 1);
-            this.backward();
-          } else if (e.key === 'Enter') return this.select();
-        }
-      }, {
-        key: "shipBP",
-        get: function get() {
-          var bp = {};
-          for (var c = 0; c < this.elements.length; ++c) {
-            if (this.elements[c].enabled) bp[this.elements[c].name] = this.elements[c].data;
-          }
-          return bp;
-        }
-      }]);
-
-      return ShipEditor;
-    }(Navigable);
-
-    var ModelEditor = function () {
-      function ModelEditor() {
-        _classCallCheck(this, ModelEditor);
-
-        this.grid = {
-          gridLines: 500, // number of grid lines
-          gridSpacing: 1, // pixels per grid unit
-          gridStart: [-250, -250], // corner anchor in world coordinates
-          z: 0,
-          colors: [{
-            color: 'green',
-            interval: 50
-          }, {
-            color: 'blue',
-            interval: 2
-          }, {
-            color: 'darkblue',
-            interval: 1
-          }]
-        };
-        this.verts = [[-20, 17], [0, 7], [20, 17], [0, -23]];
-
-        this.cursor = 0;
-        this.vertSelected = false;
-      }
-
-      _createClass(ModelEditor, [{
-        key: "draw",
-        value: function draw(camera, active) {
-          drawing.drawGrid(camera, this.grid);
-          var ctx = camera.ctx;
-          var screenVerts = [];
-          for (var c = 0; c < this.verts.length; ++c) {
-            screenVerts.push(camera.worldPointToCameraSpace(this.verts[c][0], this.verts[c][1]));
-          }
-          ctx.beginPath();
-          ctx.moveTo(screenVerts[0][0], screenVerts[0][1]);
-          for (var _c = 1; _c < screenVerts.length; ++_c) {
-            ctx.lineTo(screenVerts[_c][0], screenVerts[_c][1]);
-          }
-          ctx.closePath();
-          ctx.fillStyle = 'orange';
-          ctx.fill();
-
-          if (active) {
-            var selectedVert = screenVerts[this.cursor];
-            ctx.beginPath();
-            ctx.arc(selectedVert[0], selectedVert[1], 8, 0, 2 * Math.PI);
-            if (this.vertSelected) {
-              ctx.fillStyle = 'red';
-              ctx.fill();
-            } else {
-              ctx.strokeStyle = 'red';
-              ctx.stroke();
-            }
-          }
-        }
-      }, {
-        key: "addVert",
-        value: function addVert() {
-          var currentVert = this.currentVert;
-          var nextVert = this.nextVert;
-          var midVert = [Math.round((currentVert[0] + nextVert[0]) / 2), Math.round((currentVert[1] + nextVert[1]) / 2)];
-
-          this.verts.splice(this.cursor, 0, midVert);
-        }
-      }, {
-        key: "removeVert",
-        value: function removeVert() {
-          if (this.verts.length <= 3) return;
-          this.verts.splice(this.cursor, 1);
-          this.cursor = this._boundCursor(this.cursor);
-        }
-      }, {
-        key: "forward",
-        value: function forward() {
-          this.cursor = this._boundCursor(this.cursor + 1);
-        }
-      }, {
-        key: "backward",
-        value: function backward() {
-          this.cursor = this._boundCursor(this.cursor - 1);
-        }
-      }, {
-        key: "_boundCursor",
-        value: function _boundCursor(cursor) {
-          return (cursor + this.verts.length) % this.verts.length;
-        }
-      }, {
-        key: "key",
-        value: function key(e) {
-          if (e.key === 'Enter') this.vertSelected = !this.vertSelected;else if (e.key === 'a') this.addVert();else if (e.key === 'Backspace') this.removeVert();else if (this.vertSelected) {
-            if (e.key === 'ArrowUp') this.currentVert[1]--;else if (e.key === 'ArrowDown') this.currentVert[1]++;else if (e.key === 'ArrowLeft') this.currentVert[0]--;else if (e.key === 'ArrowRight') this.currentVert[0]++;
-          } else if (!this.vertSelected) {
-            if (e.key === 'ArrowUp') this.forward();else if (e.key === 'ArrowDown') this.backward();else if (e.key === 'ArrowLeft') this.forward();else if (e.key === 'ArrowRight') this.backward();
-          }
-        }
-      }, {
-        key: "model",
-        get: function get() {
-          return {
-            vertices: this.verts,
-            thrusterPoints: {
-              medial: {
-                positive: [[0, 7]],
-                negative: [[0, 2]]
-              },
-              lateral: {
-                positive: [[10, -5]],
-                negative: [[-10, -5]]
-              },
-              rotational: {
-                positive: [[2, -10]],
-                negative: [[-2, -10]]
-              },
-              width: 5
-            },
-            weaponOffset: [0, -30],
-            overlay: {
-              colorCircle: true,
-              destructible: true
-            }
-          };
-        }
-      }, {
-        key: "currentVert",
-        get: function get() {
-          return this.verts[this.cursor];
-        }
-      }, {
-        key: "nextVert",
-        get: function get() {
-          return this.verts[this._boundCursor(this.cursor - 1)];
-        }
-      }]);
-
-      return ModelEditor;
-    }();
-
-    var BuilderScreen = function (_Screen) {
-      _inherits(BuilderScreen, _Screen);
-
-      function BuilderScreen(client) {
-        _classCallCheck(this, BuilderScreen);
-
-        var _this5 = _possibleConstructorReturn(this, (BuilderScreen.__proto__ || Object.getPrototypeOf(BuilderScreen)).call(this));
-
-        _this5.client = client;
-        _this5.modelEditor = new ModelEditor();
-        _this5.editors = [_this5.modelEditor];
-        _this5.cursor = 0;
-        return _this5;
-      }
-
-      _createClass(BuilderScreen, [{
-        key: "update",
-        value: function update() {
-          if (this.client.input.wheel) this.client.camera.zoom *= 1 + this.client.input.wheel / 2000;
-        }
-      }, {
-        key: "draw",
-        value: function draw() {
-          this.modelEditor.draw(this.client.camera, this.activeEditor === this.modelEditor);
-          if (this.shipEditor) {
-            this.shipEditor.draw(this.client.camera.ctx, 50, this.client.camera.height / 2, this.activeEditor === this.shipEditor);
-            this.menu.draw(this.client.camera.ctx, this.client.camera.width - 100, this.client.camera.height / 2, "20pt Orbitron", this.activeEditor === this.menu);
-          }
-        }
-      }, {
-        key: "onEnter",
-        value: function onEnter() {
-          var _this6 = this;
-
-          this.client.camera.x = 0;
-          this.client.camera.y = 0;
-          this.client.camera.rotation = 0;
-          this.client.camera.zoom = 15;
-          requests.getRequest('/components', function (data) {
-            _this6.shipEditor = new ShipEditor(data);
-            _this6.editors.push(_this6.shipEditor);
-            _this6.menu = new Menu([{ text: "Submit", func: function func() {
-                return function (client) {
-                  var bp = _this6.shipEditor.shipBP;
-                  var weapons = 0;
-                  if (bp.laser) weapons++;
-                  if (bp.cannon) weapons++;
-                  if (bp.launcher) weapons++;
-                  if (!bp.powerSystem || !bp.stabilizer || !bp.thrusterSystem || weapons !== 1) {
-                    client.enterModal(ModalConfirmationScreen, function () {}, "Your ship must have a power system, stabilizer, thruster system, and one weapon");
-                    return;
-                  }
-                  client.enterModal(ModalEntryScreen, function (shipName) {
-                    bp.model = _this6.modelEditor.model;
-                    var ship = {
-                      name: shipName,
-                      bp: bp
-                    };
-                    requests.postRequest('/addShip', ship, function (statusCode) {
-                      var message = statusCode === 204 ? "Success" : "Name unavailable";
-                      client.enterModal(ModalConfirmationScreen, function () {
-                        if (statusCode === 204) client.switchScreen(client.titleScreen);
-                      }, message);
-                    });
-                  }, "Enter a name for the ship");
-                };
-              } }, { text: "Back", func: function func() {
-                return function (client) {
-                  return client.switchScreen(client.titleScreen);
-                };
-              } }]);
-            _this6.editors.push(_this6.menu);
-          });
-        }
-      }, {
-        key: "onExit",
-        value: function onExit() {
-          this.editors.pop();
-          this.editors.pop();
-          delete this.shipEditor;
-          delete this.menu;
-        }
-      }, {
-        key: "keyDown",
-        value: function keyDown(e) {
-          if (e.key === 'Tab') this.forward();
-          this._handleSelect(this.activeEditor.key(e));
-        }
-      }, {
-        key: "forward",
-        value: function forward() {
-          this.cursor = this._boundCursor(this.cursor + 1);
-        }
-      }, {
-        key: "_boundCursor",
-        value: function _boundCursor(cursor) {
-          return (cursor + this.editors.length) % this.editors.length;
-        }
-      }, {
-        key: "_handleSelect",
-        value: function _handleSelect(callback) {
-          if (callback) callback(this.client);
-        }
-      }, {
-        key: "activeEditor",
-        get: function get() {
-          return this.editors[this.cursor];
-        }
-      }]);
-
-      return BuilderScreen;
-    }(Screen);
-
-    module.exports = BuilderScreen;
-  }, { "./Menu.js": 10, "./ModalConfirmationScreen.js": 11, "./ModalEntryScreen.js": 12, "./Screen.js": 17, "./drawing.js": 23, "./requests.js": 27 }], 2: [function (require, module, exports) {
     var utilities = require('../server/utilities.js');
     var Viewport = require('./Viewport.js');
 
@@ -579,7 +70,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     module.exports = Camera;
-  }, { "../server/utilities.js": 41, "./Viewport.js": 22 }], 3: [function (require, module, exports) {
+  }, { "../server/utilities.js": 37, "./Viewport.js": 18 }], 2: [function (require, module, exports) {
     var EntryScreen = require('./EntryScreen.js');
     var drawing = require('./drawing.js');
 
@@ -589,10 +80,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function ChooseShipScreen(client) {
         _classCallCheck(this, ChooseShipScreen);
 
-        var _this7 = _possibleConstructorReturn(this, (ChooseShipScreen.__proto__ || Object.getPrototypeOf(ChooseShipScreen)).call(this, client, client.shipWaitScreen, 'ship'));
+        var _this = _possibleConstructorReturn(this, (ChooseShipScreen.__proto__ || Object.getPrototypeOf(ChooseShipScreen)).call(this, client, client.shipWaitScreen, 'ship'));
 
-        _this7.client = client;
-        return _this7;
+        _this.client = client;
+        return _this;
       }
 
       _createClass(ChooseShipScreen, [{
@@ -607,15 +98,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }(EntryScreen);
 
     module.exports = ChooseShipScreen;
-  }, { "./EntryScreen.js": 6, "./drawing.js": 23 }], 4: [function (require, module, exports) {
+  }, { "./EntryScreen.js": 5, "./drawing.js": 19 }], 3: [function (require, module, exports) {
     var TitleScreen = require('./TitleScreen.js');
     var GameScreen = require('./GameScreen.js');
     var ChooseShipScreen = require('./ChooseShipScreen.js');
     var ShipWaitScreen = require('./ShipWaitScreen.js');
-    var NameScreen = require('./NameScreen.js');
-    var NameWaitScreen = require('./NameWaitScreen.js');
+    //const NameScreen = require('./NameScreen.js');
+    //const NameWaitScreen = require('./NameWaitScreen.js');
     var DisconnectScreen = require('./DisconnectScreen.js');
-    var BuilderScreen = require('./BuilderScreen.js');
+    //const BuilderScreen = require('./BuilderScreen.js');
     var Camera = require('./Camera.js');
     var Oscillator = require('./Oscillator.js');
     var Stinger = require('./Stinger.js');
@@ -647,7 +138,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var Client = function () {
       function Client() {
-        var _this8 = this;
+        var _this2 = this;
 
         _classCallCheck(this, Client);
 
@@ -658,34 +149,34 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
         window.addEventListener('resize', function () {
-          _this8.canvas.width = window.innerWidth;
-          _this8.canvas.height = window.innerHeight;
+          _this2.canvas.width = window.innerWidth;
+          _this2.canvas.height = window.innerHeight;
         });
         document.body.appendChild(this.canvas);
 
         this._requestLock = function () {
-          _this8.canvas.requestPointerLock();
+          _this2.canvas.requestPointerLock();
         };
 
         this._changeCallback = function () {
-          if (document.pointerLockElement === _this8.canvas || document.mozPointerLockElement === _this8.canvas || document.webkitPointerLockElement === _this8.canvas) {
+          if (document.pointerLockElement === _this2.canvas || document.mozPointerLockElement === _this2.canvas || document.webkitPointerLockElement === _this2.canvas) {
             // Pointer was just locked
             // Enable the mousemove listener
-            window.removeEventListener("mouseup", _this8._requestLock, false);
-            _this8.input.engage();
-            _this8.canvas.addEventListener("drag", function () {}, false);
-            _this8.canvas.onclick = undefined;
-            _this8.locked = true;
+            window.removeEventListener("mouseup", _this2._requestLock, false);
+            _this2.input.engage();
+            _this2.canvas.addEventListener("drag", function () {}, false);
+            _this2.canvas.onclick = undefined;
+            _this2.locked = true;
           } else {
             // Pointer was just unlocked
             // Disable the mousemove listener
-            _this8.input.disengage();
-            document.addEventListener("mouseup", _this8._requestLock, false);
-            _this8.canvas.removeEventListener("drag", function () {}, false);
-            _this8.canvas.onclick = function () {
-              _this8.canvas.requestPointerLock();
+            _this2.input.disengage();
+            document.addEventListener("mouseup", _this2._requestLock, false);
+            _this2.canvas.removeEventListener("drag", function () {}, false);
+            _this2.canvas.onclick = function () {
+              _this2.canvas.requestPointerLock();
             };
-            _this8.locked = false;
+            _this2.locked = false;
           }
         };
 
@@ -720,10 +211,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.gameScreen = new GameScreen(this);
         this.shipWaitScreen = new ShipWaitScreen(this);
         this.chooseShipScreen = new ChooseShipScreen(this);
-        this.nameWaitScreen = new NameWaitScreen(this);
-        this.nameScreen = new NameScreen(this);
+        //this.nameWaitScreen = new NameWaitScreen(this);
+        //this.nameScreen = new NameScreen(this);
         this.disconnectScreen = new DisconnectScreen(this);
-        this.builderScreen = new BuilderScreen(this);
+        //this.builderScreen = new BuilderScreen(this);
 
         this.currentScreen = {};
         this.switchScreen(this.titleScreen);
@@ -738,29 +229,29 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.socket = io.connect();
 
         this.socket.on('grid', function (grid) {
-          _this8.grid = grid;
-          _this8.grid.z = .85;
+          _this2.grid = grid;
+          _this2.grid.z = .85;
         });
 
         this.socket.on('shipList', function (data) {
-          _this8.shipList = data;
+          _this2.shipList = data;
         });
 
         this.socket.on('worldInfoInit', function (data) {
-          _this8.worldInfo.pushWiInitData(data);
+          _this2.worldInfo.pushWiInitData(data);
         });
 
         this.socket.on('worldInfo', function (data) {
           var deserializer = new Deserializer(data);
-          _this8.worldInfo.pushWiData(deserializer.read(NetworkWorldInfo));
+          _this2.worldInfo.pushWiData(deserializer.read(NetworkWorldInfo));
         });
 
         this.socket.on('ship', function (shipInfo) {
-          _this8.worldInfo.addShip(shipInfo);
+          _this2.worldInfo.addShip(shipInfo);
         });
 
         this.socket.on('ships', function (ships) {
-          _this8.worldInfo.addShips(ships);
+          _this2.worldInfo.addShips(ships);
         });
 
         this.socket.on('disconnect', function () {
@@ -856,20 +347,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     module.exports = Client;
-  }, { "../server/Deserializer.js": 29, "../server/NetworkWorldInfo.js": 36, "../server/utilities.js": 41, "./BuilderScreen.js": 1, "./Camera.js": 2, "./ChooseShipScreen.js": 3, "./DisconnectScreen.js": 5, "./GameScreen.js": 7, "./Input.js": 8, "./NameScreen.js": 14, "./NameWaitScreen.js": 15, "./Oscillator.js": 16, "./ShipWaitScreen.js": 18, "./Stinger.js": 19, "./TitleScreen.js": 20, "./drawing.js": 23, "./worldInfo.js": 28 }], 5: [function (require, module, exports) {
+  }, { "../server/Deserializer.js": 25, "../server/NetworkWorldInfo.js": 32, "../server/utilities.js": 37, "./Camera.js": 1, "./ChooseShipScreen.js": 2, "./DisconnectScreen.js": 4, "./GameScreen.js": 6, "./Input.js": 7, "./Oscillator.js": 12, "./ShipWaitScreen.js": 14, "./Stinger.js": 15, "./TitleScreen.js": 16, "./drawing.js": 19, "./worldInfo.js": 24 }], 4: [function (require, module, exports) {
     var Screen = require('./Screen.js');
     var drawing = require('./drawing.js');
 
-    var DisconnectScreen = function (_Screen2) {
-      _inherits(DisconnectScreen, _Screen2);
+    var DisconnectScreen = function (_Screen) {
+      _inherits(DisconnectScreen, _Screen);
 
       function DisconnectScreen(client) {
         _classCallCheck(this, DisconnectScreen);
 
-        var _this9 = _possibleConstructorReturn(this, (DisconnectScreen.__proto__ || Object.getPrototypeOf(DisconnectScreen)).call(this));
+        var _this3 = _possibleConstructorReturn(this, (DisconnectScreen.__proto__ || Object.getPrototypeOf(DisconnectScreen)).call(this));
 
-        _this9.client = client;
-        return _this9;
+        _this3.client = client;
+        return _this3;
       }
 
       _createClass(DisconnectScreen, [{
@@ -891,26 +382,27 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }(Screen);
 
     module.exports = DisconnectScreen;
-  }, { "./Screen.js": 17, "./drawing.js": 23 }], 6: [function (require, module, exports) {
+  }, { "./Screen.js": 13, "./drawing.js": 19 }], 5: [function (require, module, exports) {
     var Screen = require('./Screen.js');
 
-    var EntryScreen = function (_Screen3) {
-      _inherits(EntryScreen, _Screen3);
+    var EntryScreen = function (_Screen2) {
+      _inherits(EntryScreen, _Screen2);
 
       function EntryScreen(client, waitScreen, message) {
         _classCallCheck(this, EntryScreen);
 
-        var _this10 = _possibleConstructorReturn(this, (EntryScreen.__proto__ || Object.getPrototypeOf(EntryScreen)).call(this));
+        var _this4 = _possibleConstructorReturn(this, (EntryScreen.__proto__ || Object.getPrototypeOf(EntryScreen)).call(this));
 
-        _this10.client = client;
-        _this10.waitScreen = waitScreen;
-        _this10.message = message;
-        return _this10;
+        _this4.client = client;
+        _this4.waitScreen = waitScreen;
+        _this4.message = message;
+        return _this4;
       }
 
       _createClass(EntryScreen, [{
         key: "keyDown",
         value: function keyDown(e) {
+          this.client.keyclick.play();
           if (e.key === 'Backspace') {
             if (this.entry.length > 0) this.entry = this.entry.slice(0, -1);
           } else if (e.key === 'Enter') {
@@ -929,7 +421,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }(Screen);
 
     module.exports = EntryScreen;
-  }, { "./Screen.js": 17 }], 7: [function (require, module, exports) {
+  }, { "./Screen.js": 13 }], 6: [function (require, module, exports) {
     var TrackShuffler = require('./TrackShuffler.js');
     var inputState = require('../server/inputState.js');
     var drawing = require('./drawing.js');
@@ -939,20 +431,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var requests = require('./requests.js');
     var ModalEntryScreen = require('./ModalEntryScreen.js');
 
-    var GameScreen = function (_Screen4) {
-      _inherits(GameScreen, _Screen4);
+    var GameScreen = function (_Screen3) {
+      _inherits(GameScreen, _Screen3);
 
       function GameScreen(client) {
         _classCallCheck(this, GameScreen);
 
-        var _this11 = _possibleConstructorReturn(this, (GameScreen.__proto__ || Object.getPrototypeOf(GameScreen)).call(this));
+        var _this5 = _possibleConstructorReturn(this, (GameScreen.__proto__ || Object.getPrototypeOf(GameScreen)).call(this));
 
-        _this11.client = client;
-        _this11.whoTime = 0;
-        _this11.who = null;
-        _this11.shipsTime = 0;
-        _this11.ships = null;
-        return _this11;
+        _this5.client = client;
+        _this5.whoTime = 0;
+        _this5.who = null;
+        _this5.shipsTime = 0;
+        _this5.ships = null;
+        _this5.startTime = 0;
+        return _this5;
       }
 
       _createClass(GameScreen, [{
@@ -1042,12 +535,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
           if (now - this.whoTime < 6000) drawing.drawMultiLineText(camera, this.who, camera.width / 10, camera.height / 11, "12pt Orbitron");else if (now - this.shipsTime < 6000) drawing.drawMultiLineText(camera, this.ships, camera.width / 10, camera.height / 11, "12pt Orbitron");
 
-          if (now - this.client.startTime < 15000) drawing.drawTutorialGraphics(camera);
+          if (now - this.startTime < 15000) drawing.drawTutorialGraphics(camera);
         }
       }, {
         key: "keyDown",
         value: function keyDown(e) {
-          var _this12 = this;
+          var _this6 = this;
 
           var command = keymap[e.code];
           if (command || command === 0) {
@@ -1059,8 +552,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                   var lines = "";
                   for (var c = 0; c < names.length; ++c) {
                     lines += names[c] + "\n";
-                  }_this12.who = lines;
-                  _this12.whoTime = Date.now();
+                  }_this6.who = lines;
+                  _this6.whoTime = Date.now();
                 });
               } else if (val === 'ships') {
                 requests.getRequest('/activeShips', function (ships) {
@@ -1068,8 +561,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                   Object.keys(ships).forEach(function (shipName) {
                     lines += shipName + ": " + ships[shipName] + "\n";
                   });
-                  _this12.ships = lines;
-                  _this12.shipsTime = Date.now();
+                  _this6.ships = lines;
+                  _this6.shipsTime = Date.now();
                 });
               }
             }, "Enter a command");
@@ -1091,21 +584,23 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: "onEnter",
         value: function onEnter() {
-          var _this13 = this;
+          var _this7 = this;
 
           this.musicShuffler.play();
           var client = this.client;
           client.enterGameStinger.play();
+          this.startTime = Date.now();
 
           var socket = client.socket;
           socket.on('destroyed', function () {
-            _this13.client.deathStinger.play();
-            _this13.client.switchScreen(_this13.client.disconnectScreen);
+            _this7.client.deathStinger.play();
+            _this7.client.switchScreen(_this7.client.disconnectScreen);
           });
         }
       }, {
         key: "onExit",
         value: function onExit() {
+          this.musicShuffler.pause();
           this.client.socket.off('destroyed');
         }
       }]);
@@ -1114,13 +609,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }(Screen);
 
     module.exports = GameScreen;
-  }, { "../server/inputState.js": 38, "../server/utilities.js": 41, "./ModalEntryScreen.js": 12, "./Screen.js": 17, "./TrackShuffler.js": 21, "./drawing.js": 23, "./keymap.js": 24, "./requests.js": 27 }], 8: [function (require, module, exports) {
+  }, { "../server/inputState.js": 34, "../server/utilities.js": 37, "./ModalEntryScreen.js": 10, "./Screen.js": 13, "./TrackShuffler.js": 17, "./drawing.js": 19, "./keymap.js": 20, "./requests.js": 23 }], 7: [function (require, module, exports) {
     var LooseTimer = require('./LooseTimer.js');
     var inputState = require('../server/inputState.js');
 
     var Input = function () {
       function Input() {
-        var _this14 = this;
+        var _this8 = this;
 
         _classCallCheck(this, Input);
 
@@ -1130,36 +625,36 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.lastMouseX = 0;
 
         this.mouseTimer = new LooseTimer(50, function () {
-          if (_this14.mouseX !== _this14.lastMouseX) {
-            _this14.lastMouseX = _this14.mouseX;
-            if (_this14.mouseListener) _this14.mouseListener(_this14.mouseX);
-            _this14.mouseX = 0;
+          if (_this8.mouseX !== _this8.lastMouseX) {
+            _this8.lastMouseX = _this8.mouseX;
+            if (_this8.mouseListener) _this8.mouseListener(_this8.mouseX);
+            _this8.mouseX = 0;
           }
         });
 
         this._mousedown = function (e) {
-          _this14.keystate[e.button] = 2;
-          if (_this14.pressListener) _this14.pressListener({ key: 'LMB', code: e.button });
+          _this8.keystate[e.button] = 2;
+          if (_this8.pressListener) _this8.pressListener({ key: 'LMB', code: e.button });
         };
 
         this._mouseup = function (e) {
-          _this14.keystate[e.button] = 0;
-          if (_this14.releaseListener) _this14.releaseListener({ key: 'LMB', code: e.button });
+          _this8.keystate[e.button] = 0;
+          if (_this8.releaseListener) _this8.releaseListener({ key: 'LMB', code: e.button });
         };
 
         this._wheel = function (e) {
-          _this14.wheel -= e.deltaY;
+          _this8.wheel -= e.deltaY;
         };
 
         this._mousemove = function (e) {
-          _this14.mouseX += e.movementX;
+          _this8.mouseX += e.movementX;
         };
 
         this._keydown = function (e) {
           if (!e.repeat) {
-            _this14.keystate[e.code] = inputState.STATES.STARTING;
+            _this8.keystate[e.code] = inputState.STATES.STARTING;
 
-            if (_this14.pressListener) _this14.pressListener(e);
+            if (_this8.pressListener) _this8.pressListener(e);
           }
 
           e.preventDefault();
@@ -1167,8 +662,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         };
 
         this._keyup = function (e) {
-          _this14.keystate[e.code] = inputState.STATES.DISABLED;
-          if (_this14.releaseListener) _this14.releaseListener(e);
+          _this8.keystate[e.code] = inputState.STATES.DISABLED;
+          if (_this8.releaseListener) _this8.releaseListener(e);
           e.preventDefault();
           e.stopPropagation();
         };
@@ -1227,7 +722,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     module.exports = Input;
-  }, { "../server/inputState.js": 38, "./LooseTimer.js": 9 }], 9: [function (require, module, exports) {
+  }, { "../server/inputState.js": 34, "./LooseTimer.js": 8 }], 8: [function (require, module, exports) {
     var LooseTimer = function () {
       function LooseTimer(intervalMS, func) {
         _classCallCheck(this, LooseTimer);
@@ -1254,7 +749,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     module.exports = LooseTimer;
-  }, {}], 10: [function (require, module, exports) {
+  }, {}], 9: [function (require, module, exports) {
     var Menu = function () {
       function Menu(elements) {
         _classCallCheck(this, Menu);
@@ -1313,63 +808,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     module.exports = Menu;
-  }, {}], 11: [function (require, module, exports) {
-    var ModalScreen = require('./ModalScreen.js');
-    var utilities = require('../server/utilities.js');
-
-    var ModalConfirmationScreen = function (_ModalScreen) {
-      _inherits(ModalConfirmationScreen, _ModalScreen);
-
-      function ModalConfirmationScreen(client, previousScreen, callback, message) {
-        _classCallCheck(this, ModalConfirmationScreen);
-
-        var _this15 = _possibleConstructorReturn(this, (ModalConfirmationScreen.__proto__ || Object.getPrototypeOf(ModalConfirmationScreen)).call(this, client, previousScreen, callback));
-
-        _this15.message = message;
-        return _this15;
-      }
-
-      _createClass(ModalConfirmationScreen, [{
-        key: "draw",
-        value: function draw(now, dt) {
-          _get(ModalConfirmationScreen.prototype.__proto__ || Object.getPrototypeOf(ModalConfirmationScreen.prototype), "draw", this).call(this, now, dt);
-
-          var camera = this.client.camera;
-          var ctx = camera.ctx;
-          ctx.save();
-          ctx.fillStyle = "black", ctx.globalAlpha = .03;
-          ctx.fillRect(0, 0, camera.width, camera.height);
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.globalAlpha = 1;
-          utilities.fillText(ctx, this.message, camera.width / 2, camera.height / 2 - 30, "24pt Aroma", 'white');
-          ctx.restore();
-        }
-      }, {
-        key: "keyDown",
-        value: function keyDown(e) {
-          this.exitModal();
-        }
-      }]);
-
-      return ModalConfirmationScreen;
-    }(ModalScreen);
-
-    module.exports = ModalConfirmationScreen;
-  }, { "../server/utilities.js": 41, "./ModalScreen.js": 13 }], 12: [function (require, module, exports) {
+  }, {}], 10: [function (require, module, exports) {
     var ModalScreen = require('./ModalScreen.js');
     var drawing = require('./drawing.js');
 
-    var ModalEntryScreen = function (_ModalScreen2) {
-      _inherits(ModalEntryScreen, _ModalScreen2);
+    var ModalEntryScreen = function (_ModalScreen) {
+      _inherits(ModalEntryScreen, _ModalScreen);
 
       function ModalEntryScreen(client, previousScreen, callback, message) {
         _classCallCheck(this, ModalEntryScreen);
 
-        var _this16 = _possibleConstructorReturn(this, (ModalEntryScreen.__proto__ || Object.getPrototypeOf(ModalEntryScreen)).call(this, client, previousScreen, callback));
+        var _this9 = _possibleConstructorReturn(this, (ModalEntryScreen.__proto__ || Object.getPrototypeOf(ModalEntryScreen)).call(this, client, previousScreen, callback));
 
-        _this16.message = message;
-        return _this16;
+        _this9.message = message;
+        return _this9;
       }
 
       _createClass(ModalEntryScreen, [{
@@ -1399,22 +851,22 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }(ModalScreen);
 
     module.exports = ModalEntryScreen;
-  }, { "./ModalScreen.js": 13, "./drawing.js": 23 }], 13: [function (require, module, exports) {
+  }, { "./ModalScreen.js": 11, "./drawing.js": 19 }], 11: [function (require, module, exports) {
     var Screen = require('./Screen.js');
     var drawing = require('./drawing.js');
 
-    var ModalScreen = function (_Screen5) {
-      _inherits(ModalScreen, _Screen5);
+    var ModalScreen = function (_Screen4) {
+      _inherits(ModalScreen, _Screen4);
 
       function ModalScreen(client, previousScreen, callback) {
         _classCallCheck(this, ModalScreen);
 
-        var _this17 = _possibleConstructorReturn(this, (ModalScreen.__proto__ || Object.getPrototypeOf(ModalScreen)).call(this));
+        var _this10 = _possibleConstructorReturn(this, (ModalScreen.__proto__ || Object.getPrototypeOf(ModalScreen)).call(this));
 
-        _this17.client = client;
-        _this17.previousScreen = previousScreen;
-        _this17.callback = callback;
-        return _this17;
+        _this10.client = client;
+        _this10.previousScreen = previousScreen;
+        _this10.callback = callback;
+        return _this10;
       }
 
       _createClass(ModalScreen, [{
@@ -1445,71 +897,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }(Screen);
 
     module.exports = ModalScreen;
-  }, { "./Screen.js": 17, "./drawing.js": 23 }], 14: [function (require, module, exports) {
-    var EntryScreen = require('./EntryScreen.js');
-    var drawing = require('./drawing.js');
-
-    var NameScreen = function (_EntryScreen2) {
-      _inherits(NameScreen, _EntryScreen2);
-
-      function NameScreen(client) {
-        _classCallCheck(this, NameScreen);
-
-        var _this18 = _possibleConstructorReturn(this, (NameScreen.__proto__ || Object.getPrototypeOf(NameScreen)).call(this, client, client.nameWaitScreen, 'name'));
-
-        _this18.client = client;
-        return _this18;
-      }
-
-      _createClass(NameScreen, [{
-        key: "draw",
-        value: function draw(now, dt) {
-          drawing.drawEntryScreen(this.client.camera, "Enter a name", this.entry);
-        }
-      }]);
-
-      return NameScreen;
-    }(EntryScreen);
-
-    module.exports = NameScreen;
-  }, { "./EntryScreen.js": 6, "./drawing.js": 23 }], 15: [function (require, module, exports) {
-    var Screen = require('./Screen.js');
-
-    var NameWaitScreen = function (_Screen6) {
-      _inherits(NameWaitScreen, _Screen6);
-
-      function NameWaitScreen(client) {
-        _classCallCheck(this, NameWaitScreen);
-
-        var _this19 = _possibleConstructorReturn(this, (NameWaitScreen.__proto__ || Object.getPrototypeOf(NameWaitScreen)).call(this));
-
-        _this19.client = client;
-        return _this19;
-      }
-
-      _createClass(NameWaitScreen, [{
-        key: "onEnter",
-        value: function onEnter() {
-          var client = this.client;
-          var socket = client.socket;
-          socket.on('badName', client.switchScreen.bind(client, client.nameScreen));
-          socket.on('goodName', client.switchScreen.bind(client, client.chooseShipScreen));
-        }
-      }, {
-        key: "onExit",
-        value: function onExit() {
-          var client = this.client;
-          var socket = client.socket;
-          socket.off('badName');
-          socket.off('goodName');
-        }
-      }]);
-
-      return NameWaitScreen;
-    }(Screen);
-
-    module.exports = NameWaitScreen;
-  }, { "./Screen.js": 17 }], 16: [function (require, module, exports) {
+  }, { "./Screen.js": 13, "./drawing.js": 19 }], 12: [function (require, module, exports) {
     var Oscillator = function () {
       function Oscillator(periodSeconds) {
         _classCallCheck(this, Oscillator);
@@ -1539,7 +927,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     module.exports = Oscillator;
-  }, {}], 17: [function (require, module, exports) {
+  }, {}], 13: [function (require, module, exports) {
     require('./optionalBind.js');
 
     var Screen = function Screen() {
@@ -1551,21 +939,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     module.exports = Screen;
-  }, { "./optionalBind.js": 26 }], 18: [function (require, module, exports) {
+  }, { "./optionalBind.js": 22 }], 14: [function (require, module, exports) {
     var Screen = require('./Screen.js');
 
-    var ShipWaitScreen = function (_Screen7) {
-      _inherits(ShipWaitScreen, _Screen7);
+    var ShipWaitScreen = function (_Screen5) {
+      _inherits(ShipWaitScreen, _Screen5);
 
       function ShipWaitScreen(client) {
         _classCallCheck(this, ShipWaitScreen);
 
-        var _this20 = _possibleConstructorReturn(this, (ShipWaitScreen.__proto__ || Object.getPrototypeOf(ShipWaitScreen)).call(this));
+        var _this11 = _possibleConstructorReturn(this, (ShipWaitScreen.__proto__ || Object.getPrototypeOf(ShipWaitScreen)).call(this));
 
-        _this20.optionalBind('checkGameStart');
-        _this20.client = client;
-        _this20.firstWI = false;
-        return _this20;
+        _this11.optionalBind('checkGameStart');
+        _this11.client = client;
+        _this11.firstWI = false;
+        return _this11;
       }
 
       _createClass(ShipWaitScreen, [{
@@ -1599,7 +987,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }(Screen);
 
     module.exports = ShipWaitScreen;
-  }, { "./Screen.js": 17 }], 19: [function (require, module, exports) {
+  }, { "./Screen.js": 13 }], 15: [function (require, module, exports) {
     var Stinger = function () {
       function Stinger(id) {
         _classCallCheck(this, Stinger);
@@ -1619,26 +1007,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     module.exports = Stinger;
-  }, {}], 20: [function (require, module, exports) {
+  }, {}], 16: [function (require, module, exports) {
     var Oscillator = require('./Oscillator.js');
     var utilities = require('../server/utilities.js');
     var drawing = require('./drawing.js');
     var Screen = require('./Screen.js');
     var Menu = require('./Menu.js');
 
-    var TitleScreen = function (_Screen8) {
-      _inherits(TitleScreen, _Screen8);
+    var TitleScreen = function (_Screen6) {
+      _inherits(TitleScreen, _Screen6);
 
       function TitleScreen(client) {
         _classCallCheck(this, TitleScreen);
 
-        var _this21 = _possibleConstructorReturn(this, (TitleScreen.__proto__ || Object.getPrototypeOf(TitleScreen)).call(this));
+        var _this12 = _possibleConstructorReturn(this, (TitleScreen.__proto__ || Object.getPrototypeOf(TitleScreen)).call(this));
 
-        _this21.client = client;
+        _this12.client = client;
 
-        _this21.titleOsc = new Oscillator(6);
-        _this21.titleCameraOsc = new Oscillator(60);
-        return _this21;
+        _this12.titleOsc = new Oscillator(6);
+        _this12.titleCameraOsc = new Oscillator(60);
+        return _this12;
       }
 
       _createClass(TitleScreen, [{
@@ -1654,20 +1042,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: "keyDown",
         value: function keyDown(e) {
-          var _this22 = this;
-
           this.client.keyclick.play();
-          if (this.menu) {
-            this.menu.key(e);
-          } else {
-            if (e.key === 'Enter') {
-              this.menu = new Menu([{ text: 'Play', func: function func() {
-                  return _this22.client.switchScreen(_this22.client.nameScreen);
-                } }, { text: 'Build', func: function func() {
-                  return _this22.client.switchScreen(_this22.client.builderScreen);
-                } }]);
-            }
-          }
+          if (e.key === 'Enter') this.client.switchScreen(this.client.chooseShipScreen);
         }
       }, {
         key: "onExit",
@@ -1680,7 +1056,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }(Screen);
 
     module.exports = TitleScreen;
-  }, { "../server/utilities.js": 41, "./Menu.js": 10, "./Oscillator.js": 16, "./Screen.js": 17, "./drawing.js": 23 }], 21: [function (require, module, exports) {
+  }, { "../server/utilities.js": 37, "./Menu.js": 9, "./Oscillator.js": 12, "./Screen.js": 13, "./drawing.js": 19 }], 17: [function (require, module, exports) {
     var utilities = require('../server/utilities.js');
 
     var TrackShuffler = function () {
@@ -1776,7 +1152,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     module.exports = TrackShuffler;
-  }, { "../server/utilities.js": 41 }], 22: [function (require, module, exports) {
+  }, { "../server/utilities.js": 37 }], 18: [function (require, module, exports) {
     var Viewport = function Viewport() {
       var objectParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
@@ -1790,7 +1166,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     module.exports = Viewport;
-  }, {}], 23: [function (require, module, exports) {
+  }, {}], 19: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/drawing.js
 
@@ -2441,7 +1817,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     module.exports = drawing;
-  }, { "../server/utilities.js": 41, "./worldInfo.js": 28 }], 24: [function (require, module, exports) {
+  }, { "../server/utilities.js": 37, "./worldInfo.js": 24 }], 20: [function (require, module, exports) {
     var commands = require('../server/commands.js');
     var keys = require('../server/keys.js');
 
@@ -2462,17 +1838,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     module.exports = keymap;
-  }, { "../server/commands.js": 37, "../server/keys.js": 39 }], 25: [function (require, module, exports) {
+  }, { "../server/commands.js": 33, "../server/keys.js": 35 }], 21: [function (require, module, exports) {
     var Client = require('./Client.js');
 
     window.onload = function () {
       new Client().frame();
     };
-  }, { "./Client.js": 4 }], 26: [function (require, module, exports) {
+  }, { "./Client.js": 3 }], 22: [function (require, module, exports) {
     Object.prototype.optionalBind = function (prop) {
       if (this[prop]) this[prop] = this[prop].bind(this);
     };
-  }, {}], 27: [function (require, module, exports) {
+  }, {}], 23: [function (require, module, exports) {
     module.exports = {
       getRequest: function getRequest(url, callback) {
         var xhr = new XMLHttpRequest();
@@ -2493,7 +1869,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         xhr.send(JSON.stringify(data));
       }
     };
-  }, {}], 28: [function (require, module, exports) {
+  }, {}], 24: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/client.js
 
@@ -2543,9 +1919,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               this[type].push(newObjInfo);
             }
           }
-          for (var _c2 = 0; _c2 < this[type].length; _c2++) {
-            var _obj = this[type][_c2];
-            if (!this.objTracker[_obj.id]) this.removeIndexFromWiCollection(_c2, type);
+          for (var _c = 0; _c < this[type].length; _c++) {
+            var _obj = this[type][_c];
+            if (!this.objTracker[_obj.id]) this.removeIndexFromWiCollection(_c, type);
           }
         }
       }, {
@@ -2558,10 +1934,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this[type].push(a);
           }
           var destroyed = dwi[type].destroyed;
-          for (var _c3 = 0; _c3 < this[type].length; _c3++) {
-            var _a = this[type][_c3];
+          for (var _c2 = 0; _c2 < this[type].length; _c2++) {
+            var _a = this[type][_c2];
             for (var i = 0; i < destroyed.length; i++) {
-              if (destroyed[i] === _a.id) this[type].splice(_c3--, 1);
+              if (destroyed[i] === _a.id) this[type].splice(_c2--, 1);
             }
           }
         }
@@ -2601,10 +1977,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: "addShips",
         value: function addShips(ships) {
-          var _this23 = this;
+          var _this13 = this;
 
           Object.keys(ships).forEach(function (id) {
-            _this23.modelInfo[id] = ships[id];
+            _this13.modelInfo[id] = ships[id];
           });
         }
       }, {
@@ -2721,7 +2097,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     module.exports = worldInfo;
-  }, { "../server/utilities.js": 41 }], 29: [function (require, module, exports) {
+  }, { "../server/utilities.js": 37 }], 25: [function (require, module, exports) {
     var _require = require('./serializationConstants.js'),
         primitiveByteSizes = _require.primitiveByteSizes,
         ARRAY_INDEX_TYPE = _require.ARRAY_INDEX_TYPE;
@@ -2789,7 +2165,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     module.exports = Deserializer;
-  }, { "./serializationConstants.js": 40 }], 30: [function (require, module, exports) {
+  }, { "./serializationConstants.js": 36 }], 26: [function (require, module, exports) {
     var NetworkAsteroid = function NetworkAsteroid(asteroid) {
       _classCallCheck(this, NetworkAsteroid);
 
@@ -2803,7 +2179,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     NetworkAsteroid.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'colorIndex', type: 'Uint8' }, { key: 'radius', type: 'Uint16' }];
 
     module.exports = NetworkAsteroid;
-  }, {}], 31: [function (require, module, exports) {
+  }, {}], 27: [function (require, module, exports) {
     var ColorHSL = require('./utilities.js').ColorHSL;
 
     var NetworkHitscan = function NetworkHitscan(hitscan) {
@@ -2822,7 +2198,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     NetworkHitscan.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'startX', type: 'Float32' }, { key: 'startY', type: 'Float32' }, { key: 'endX', type: 'Float32' }, { key: 'endY', type: 'Float32' }, { key: 'color', type: ColorHSL }, { key: 'power', type: 'Uint16' }, { key: 'efficiency', type: 'Uint16' }];
 
     module.exports = NetworkHitscan;
-  }, { "./utilities.js": 41 }], 32: [function (require, module, exports) {
+  }, { "./utilities.js": 37 }], 28: [function (require, module, exports) {
     var ColorHSL = require('./utilities.js').ColorHSL;
 
     var NetworkObj = function NetworkObj(obj) {
@@ -2846,7 +2222,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     NetworkObj.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'rotation', type: 'Int16', scaleFactor: 50 }, { key: 'radius', type: 'Uint16' }, { key: 'shp', type: 'Uint16', scaleFactor: 100 }, { key: 'shc', type: 'Uint16', scaleFactor: 100 }, { key: 'hp', type: 'Uint16', scaleFactor: 100 }, { key: 'color', type: ColorHSL }, { key: 'medial', type: 'Int16', scaleFactor: 10 }, { key: 'lateral', type: 'Int16', scaleFactor: 10 }, { key: 'rotational', type: 'Int16', scaleFactor: 10 }, { key: 'thrusterColor', type: ColorHSL }];
 
     module.exports = NetworkObj;
-  }, { "./utilities.js": 41 }], 33: [function (require, module, exports) {
+  }, { "./utilities.js": 37 }], 29: [function (require, module, exports) {
     var NetworkPlayerObj = function NetworkPlayerObj(obj) {
       _classCallCheck(this, NetworkPlayerObj);
 
@@ -2869,7 +2245,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     NetworkPlayerObj.serializableProperties = [{ key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'velocityX', type: 'Float32' }, { key: 'velocityY', type: 'Float32' }, { key: 'rotation', type: 'Float32' }, { key: 'rotationalVelocity', type: 'Float32' }, { key: 'clampMedial', type: 'Uint16', scaleFactor: 10 }, { key: 'clampLateral', type: 'Uint16', scaleFactor: 10 }, { key: 'clampRotational', type: 'Uint16', scaleFactor: 10 }, { key: 'clampEnabled', type: 'Uint8' }, { key: 'stabilized', type: 'Uint8' }, { key: 'thrusterPower', type: 'Uint8', scaleFactor: 255 }, { key: 'weaponPower', type: 'Uint8', scaleFactor: 255 }, { key: 'shieldPower', type: 'Uint8', scaleFactor: 255 }];
 
     module.exports = NetworkPlayerObj;
-  }, {}], 34: [function (require, module, exports) {
+  }, {}], 30: [function (require, module, exports) {
     var ColorRGB = require('./utilities.js').ColorRGB;
 
     var NetworkPrj = function NetworkPrj(prj) {
@@ -2887,7 +2263,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     NetworkPrj.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'velocityX', type: 'Float32' }, { key: 'velocityY', type: 'Float32' }, { key: 'color', type: ColorRGB }, { key: 'radius', type: 'Uint8' }];
 
     module.exports = NetworkPrj;
-  }, { "./utilities.js": 41 }], 35: [function (require, module, exports) {
+  }, { "./utilities.js": 37 }], 31: [function (require, module, exports) {
     var ColorRGB = require('./utilities.js').ColorRGB;
 
     var NetworkRadial = function NetworkRadial(radial) {
@@ -2904,7 +2280,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     NetworkRadial.serializableProperties = [{ key: 'id', type: 'Uint16' }, { key: 'x', type: 'Float32' }, { key: 'y', type: 'Float32' }, { key: 'velocity', type: 'Float32' }, { key: 'radius', type: 'Uint16' }, { key: 'color', type: ColorRGB }];
 
     module.exports = NetworkRadial;
-  }, { "./utilities.js": 41 }], 36: [function (require, module, exports) {
+  }, { "./utilities.js": 37 }], 32: [function (require, module, exports) {
     var NetworkObj = require('./NetworkObj.js');
     var NetworkPlayerObj = require('./NetworkPlayerObj.js');
     var NetworkAsteroid = require('./NetworkAsteroid.js');
@@ -2959,7 +2335,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     NetworkWorldInfo.serializableProperties = [{ key: 'stateIndex', type: 'Uint32' }, { key: 'objs', type: NetworkObj, isArray: true }, { key: 'asteroids', type: NetworkAsteroidInfo }, { key: 'prjs', type: NetworkPrjInfo }, { key: 'hitscans', type: NetworkHitscan, isArray: true }, { key: 'radials', type: NetworkRadial, isArray: true }, { key: 'playerInfo', type: NetworkPlayerObj }];
 
     module.exports = NetworkWorldInfo;
-  }, { "./NetworkAsteroid.js": 30, "./NetworkHitscan.js": 31, "./NetworkObj.js": 32, "./NetworkPlayerObj.js": 33, "./NetworkPrj.js": 34, "./NetworkRadial.js": 35 }], 37: [function (require, module, exports) {
+  }, { "./NetworkAsteroid.js": 26, "./NetworkHitscan.js": 27, "./NetworkObj.js": 28, "./NetworkPlayerObj.js": 29, "./NetworkPrj.js": 30, "./NetworkRadial.js": 31 }], 33: [function (require, module, exports) {
     var commandList = ['FORWARD', 'BACKWARD', 'LEFT', 'RIGHT', 'CW', 'CCW', 'FIRE', 'BOOST_THRUSTER', 'BOOST_SHIELD', 'BOOST_WEAPON', 'TOGGLE_STABILIZER', 'TOGGLE_LIMITER'];
 
     var commands = {};
@@ -2969,7 +2345,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }
 
     module.exports = commands;
-  }, {}], 38: [function (require, module, exports) {
+  }, {}], 34: [function (require, module, exports) {
     var STATES = {
       STARTING: 2,
       ENABLED: 1,
@@ -3009,7 +2385,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       isDisabled: isDisabled,
       advanceStateDictionary: advanceStateDictionary
     };
-  }, {}], 39: [function (require, module, exports) {
+  }, {}], 35: [function (require, module, exports) {
     module.exports = Object.freeze({
       LEFT: 37,
       UP: 38,
@@ -3038,7 +2414,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       MMB: 1,
       RMB: 2
     });
-  }, {}], 40: [function (require, module, exports) {
+  }, {}], 36: [function (require, module, exports) {
     var primitiveByteSizes = {
       Float32: 4,
       Uint8: 1,
@@ -3050,7 +2426,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var ARRAY_INDEX_TYPE = 'Uint32';
 
     module.exports = { primitiveByteSizes: primitiveByteSizes, ARRAY_INDEX_TYPE: ARRAY_INDEX_TYPE };
-  }, {}], 41: [function (require, module, exports) {
+  }, {}], 37: [function (require, module, exports) {
     // Heavily adapted from a previous project of mine:
     // https://github.com/narrill/Space-Battle/blob/dev/js/utilities.js
 
@@ -3661,7 +3037,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       // recursively merge src onto this, shallowly merging properties named "specialProperties"
       deepObjectMerge: function deepObjectMerge(src) {
-        var _this25 = this;
+        var _this15 = this;
 
         if (!src) {
           return this;
@@ -3671,25 +3047,25 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           // if the current attribute is an object in the source
           if (src[key] instanceof Object && !(src[key] instanceof Array)) {
             // if the current attribute isn't in the this, or isn't an object in the this
-            if (!has.call(_this25, key) || !(_this25[key] instanceof Object && !(_this25[key] instanceof Array))) {
+            if (!has.call(_this15, key) || !(_this15[key] instanceof Object && !(_this15[key] instanceof Array))) {
               // make it an empty object
-              _this25[key] = {};
+              _this15[key] = {};
             }
             // then deep merge the two
             if (key === 'specialProperties') {
-              if (!_this25[key]) {
-                _this25[key] = {};
+              if (!_this15[key]) {
+                _this15[key] = {};
               }
-              utilities.shallowObjectMerge.call(_this25[key], src[key]);
+              utilities.shallowObjectMerge.call(_this15[key], src[key]);
             } else {
-              utilities.deepObjectMerge.call(_this25[key], src[key]);
+              utilities.deepObjectMerge.call(_this15[key], src[key]);
             }
           } else {
             // if current attribute is an array in the source, give this a copy of it
             // this[key] = (Array.isArray(src[key])) ? src[key].slice() : src[key];
 
             // we'll worry about referencing bugs later
-            _this25[key] = src[key];
+            _this15[key] = src[key];
           }
         });
 
@@ -3707,7 +3083,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       // merge src onto this, ignoring properties that are objects or arrays
       veryShallowObjectMerge: function veryShallowObjectMerge(src) {
-        var _this26 = this;
+        var _this16 = this;
 
         if (!src) {
           return this;
@@ -3715,15 +3091,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         // loop through source's attributes
         Object.keys(src).forEach(function (key) {
           if (key === 'specialProperties') {
-            if (!has.call(_this26, key)) {
-              _this26[key] = {};
+            if (!has.call(_this16, key)) {
+              _this16[key] = {};
             }
-            utilities.shallowObjectMerge.call(_this26[key], src[key]);
+            utilities.shallowObjectMerge.call(_this16[key], src[key]);
             return;
           }
           // if the current attribute is an object in the source
           if (!(src[key] instanceof Object) || src[key] instanceof Array) {
-            _this26[key] = src[key];
+            _this16[key] = src[key];
           }
         });
 
@@ -3733,13 +3109,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       // merge src onto this. objects and arrays are copied by reference
       shallowObjectMerge: function shallowObjectMerge(src) {
-        var _this27 = this;
+        var _this17 = this;
 
         if (!src) {
           return this;
         }
         Object.keys(src).forEach(function (key) {
-          _this27[key] = src[key];
+          _this17[key] = src[key];
         });
 
         return this;
@@ -3749,14 +3125,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       // copy src onto this, ignoring properties that aren't present in this
       // and properties that are objects or arrays
       veryShallowUnionOverwrite: function veryShallowUnionOverwrite(src) {
-        var _this28 = this;
+        var _this18 = this;
 
         if (!src) {
           return this;
         }
         Object.keys(src).forEach(function (key) {
-          if (has.call(_this28, key) && !(src[key] instanceof Object || src[key] instanceof Array)) {
-            _this28[key] = src[key];
+          if (has.call(_this18, key) && !(src[key] instanceof Object || src[key] instanceof Array)) {
+            _this18[key] = src[key];
           }
         });
 
@@ -3767,17 +3143,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       // copy src onto this recursively, ignoring properties that aren't present in this
       // To-do
       deepUnionOverwrite: function deepUnionOverwrite(src) {
-        var _this29 = this;
+        var _this19 = this;
 
         if (!src) {
           return this;
         }
         Object.keys(src).forEach(function (key) {
-          if (!has.call(_this29, key)) return;
+          if (!has.call(_this19, key)) return;
           if (src[key] instanceof Object) {
-            utilities.deepUnionOverwrite.call(_this29[key], src[key]);
+            utilities.deepUnionOverwrite.call(_this19[key], src[key]);
           } else {
-            _this29[key] = src[key];
+            _this19[key] = src[key];
           }
         });
 
@@ -3786,4 +3162,4 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     module.exports = utilities;
-  }, {}] }, {}, [25]);
+  }, {}] }, {}, [21]);

@@ -34,21 +34,21 @@ const ships = {
         },
       },
     },
-    laser: { range: 200 },
+    laser: { range: 2000 },
     stabilizer: {},
     powerSystem: {},
     thrusterSystem: {
       medial: {
-        maxStrength: 100000,
-        powerRampLimit: 100000,
+        maxStrength: 70000,
+        powerRampLimit: 60000,
       },
       lateral: {
-        maxStrength: 100000,
-        powerRampLimit: 100000,
+        maxStrength: 70000,
+        powerRampLimit: 60000,
       },
       rotational: {
-        maxStrength: 30000,
-        powerRampLimit: 30000,
+        maxStrength: 70000,
+        powerRampLimit: 60000,
       },
     },
     shield: {
@@ -94,16 +94,16 @@ const ships = {
     powerSystem: {},
     thrusterSystem: {
       medial: {
-        maxStrength: 30000,
-        powerRampLimit: 10000,
+        maxStrength: 60000,
+        powerRampLimit: 45000,
       },
       lateral: {
-        maxStrength: 30000,
-        powerRampLimit: 10000,
+        maxStrength: 60000,
+        powerRampLimit: 45000,
       },
       rotational: {
-        maxStrength: 30000,
-        powerRampLimit: 10000,
+        maxStrength: 60000,
+        powerRampLimit: 45000,
       },
     },
     shield: {},
@@ -156,15 +156,15 @@ const ships = {
     thrusterSystem: {
       medial: {
         maxStrength: 100000,
-        powerRampLimit: 15000,
+        powerRampLimit: 45000,
       },
       lateral: {
         maxStrength: 100000,
-        powerRampLimit: 15000,
+        powerRampLimit: 45000,
       },
       rotational: {
         maxStrength: 100000,
-        powerRampLimit: 15000,
+        powerRampLimit: 45000,
       },
     },
     shield: {
@@ -215,15 +215,15 @@ const ships = {
     thrusterSystem: {
       medial: {
         maxStrength: 100000,
-        powerRampLimit: 15000,
+        powerRampLimit: 45000,
       },
       lateral: {
         maxStrength: 100000,
-        powerRampLimit: 15000,
+        powerRampLimit: 45000,
       },
       rotational: {
         maxStrength: 100000,
-        powerRampLimit: 15000,
+        powerRampLimit: 45000,
       },
     },
     shield: {

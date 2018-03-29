@@ -16,7 +16,7 @@ class Ammo {
         maxHp: 25,
         radius: 10,
       }, params.destructible)),
-      decayTimeSeconds: 2,
+      decayTimeSeconds: .25,
       color: utilities.deepObjectMerge.call({
         r: 255, g: 255, b: 0,
       }, params.color),

@@ -9,6 +9,7 @@ class EntryScreen extends Screen {
   }
 
   keyDown(e) {
+    this.client.keyclick.play();
     if(e.key === 'Backspace'){
       if(this.entry.length > 0)
         this.entry = this.entry.slice(0, -1);

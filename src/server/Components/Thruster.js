@@ -11,7 +11,7 @@ class Thruster {
   static getBP(params = {}) {
     return utilities.veryShallowUnionOverwrite.call({
       maxStrength: 1000,
-      efficiency: 1000,
+      efficiency: 100000,
       powerRampPercentage: 20,
       powerRampLimit: 6000,
     }, params);

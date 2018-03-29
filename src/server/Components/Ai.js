@@ -4,6 +4,10 @@ const aiFunctions = require('../aiFunctions.js');
 class Ai {
   constructor(bp, owner) {
     this.owner = owner;
+    this.lastTargetCheck = 0;
+    this.specialProperties = {
+      target: undefined
+    }
     utilities.veryShallowObjectMerge.call(this, bp);
   }
 

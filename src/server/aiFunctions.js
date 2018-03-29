@@ -58,22 +58,26 @@ const getStopInfo = (obj) => {
 
 const aiFunctions = {
   basic(dt) {
-    let target;
-    let lowestDistance = Number.MAX_VALUE;
-    for (let c = 0; c < this.game.objs.length; c++) {
-      const ship = this.game.objs[c];
-      if (!(this.faction === ship.faction && this.faction !== -1)
-        && this !== ship
-        && !ship.owner) {
-        const leftRoot = this.x - ship.x;
-        const rightRoot = this.y - ship.y;
-        const distanceSqr = (leftRoot * leftRoot) + (rightRoot * rightRoot);
-        if (distanceSqr < lowestDistance) {
-          target = ship;
-          lowestDistance = distanceSqr;
+    let specialProperties = this.ai.specialProperties;
+    if(Date.now() - this.ai.lastTargetCheck > 5000 || specialProperties.target.destructible.hp <= 0) {
+      let lowestDistance = Number.MAX_VALUE;
+      for (let c = 0; c < this.game.objs.length; c++) {
+        const ship = this.game.objs[c];
+        if (!(this.faction === ship.faction && this.faction !== -1)
+          && this !== ship
+          && !ship.owner) {
+          const leftRoot = this.x - ship.x;
+          const rightRoot = this.y - ship.y;
+          const distanceSqr = (leftRoot * leftRoot) + (rightRoot * rightRoot);
+          if (distanceSqr < lowestDistance) {
+            specialProperties.target = ship;
+            lowestDistance = distanceSqr;
+          }
         }
       }
     }
+
+    let target = specialProperties.target;
 
     if (!target) {
       return;
@@ -152,9 +156,9 @@ const aiFunctions = {
       this.objLateralThrusters.call(this, -latMaxStrength / stabRatio);
     }
 
-    this.objMedialStabilizers();
-    this.objLateralStabilizers();
-    this.objRotationalStabilizers();
+     this.objMedialStabilizers();
+     this.objLateralStabilizers();
+    // this.objRotationalStabilizers();
   },
 
   basicGuidedMissile(dt) {

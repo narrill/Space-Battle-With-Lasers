@@ -15,6 +15,7 @@ class GameScreen extends Screen {
     this.who = null;
     this.shipsTime = 0;
     this.ships = null;
+    this.startTime = 0;
   }
 
   init() {
@@ -119,7 +120,7 @@ class GameScreen extends Screen {
     else if(now - this.shipsTime < 6000)
       drawing.drawMultiLineText(camera, this.ships, camera.width/10, camera.height/11, "12pt Orbitron");
 
-    if(now - this.client.startTime < 15000)
+    if(now - this.startTime < 15000)
       drawing.drawTutorialGraphics(camera);
   }
 
@@ -168,6 +169,7 @@ class GameScreen extends Screen {
     this.musicShuffler.play();
     const client = this.client;
     client.enterGameStinger.play();
+    this.startTime = Date.now();
 
     const socket = client.socket;
     socket.on('destroyed', () => {
@@ -177,6 +179,7 @@ class GameScreen extends Screen {
   }
 
   onExit() {
+    this.musicShuffler.pause();
     this.client.socket.off('destroyed');
   }
 }

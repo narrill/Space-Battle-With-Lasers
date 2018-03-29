@@ -19,7 +19,7 @@ class Game {
     this.timeStep = 0.0167;
     this.lastTime = 0; // used by calculateDeltaTime()
     this.objs = [];
-    this.maxNPCs = 0;
+    this.maxNPCs = 200;
     this.factions = 4;
     this.factionColors = [];
     this.hitscans = [];
@@ -29,9 +29,9 @@ class Game {
     this.functionQueue = [];
     this.socketSubscriptions = {};
     this.grid = {
-      gridLines: 500, // number of grid lines
+      gridLines: 1000, // number of grid lines
       gridSpacing: 100, // pixels per grid unit
-      gridStart: [-25000, -25000], // corner anchor in world coordinates
+      gridStart: [-50000, -50000], // corner anchor in world coordinates
       colors: [
         {
           color: '#1111FF',
@@ -58,7 +58,7 @@ class Game {
     };
     this.spatialHash = new SpatialHash();
     this.asteroids = {
-      total: 60,
+      total: 120,
       colors: [
         '#6B2A06',
         'sienna',
@@ -118,13 +118,13 @@ class Game {
         {},
         ships[shipName],
       );
-      // newShip.ai = {
-      //   aiFunction: 'basic',
-      //   followMin: 1500,
-      //   followMax: 2000,
-      //   accuracy: 0.5,
-      //   fireSpread: 25,
-      // };
+      newShip.ai = {
+        aiFunction: 'basic',
+        followMin: 1500,
+        followMax: 2000,
+        accuracy: 0.5,
+        fireSpread: 25,
+      };
       newShip.faction = -1;
       this.objs.push(new Obj(newShip, this));
     }
@@ -160,10 +160,11 @@ class Game {
     // obj collisions
     for (let i = 0; i < this.objs.length; i++) {
       const currentObj = this.objs[i];
+      const fetchInfo = this.spatialHash.boundedFetch([currentObj.x, currentObj.y], currentObj.destructible.radius * 3, {obj:[]});
       const currentObjCapsule = new utilities.VelocityCapsule(currentObj, dt);
 
-      for (let c = i + 1; c < this.objs.length; c++) {
-        const gameObj = this.objs[c];
+      for (let c = i + 1; c < fetchInfo.obj.length; c++) {
+        const gameObj = fetchInfo.obj[c];
 
         if (!(currentObj.specialProperties && gameObj === currentObj.specialProperties.owner)
           && !(gameObj.specialProperties && currentObj === gameObj.specialProperties.owner)) {
@@ -332,8 +333,9 @@ class Game {
     // asteroid collisions
     for (let c = 0; c < this.objs.length; c++) {
       const ship = this.objs[c];
-      for (let n = 0; n < this.asteroids.objs.length; n++) {
-        const asteroid = this.asteroids.objs[n];
+      const fetchInfo = this.spatialHash.fetch([ship.x, ship.y], ship.destructible.radius * 20, {asteroid:[]});
+      for (let n = 0; n < fetchInfo.asteroid.length; n++) {
+        const asteroid = fetchInfo.asteroid[n];
         const distance = ((ship.x - asteroid.x) * (ship.x - asteroid.x))
           + ((ship.y - asteroid.y) * (ship.y - asteroid.y));
         const overlap = ((ship.destructible.radius + asteroid.radius)

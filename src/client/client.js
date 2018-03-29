@@ -2,10 +2,10 @@ const TitleScreen = require('./TitleScreen.js');
 const GameScreen = require('./GameScreen.js');
 const ChooseShipScreen = require('./ChooseShipScreen.js');
 const ShipWaitScreen = require('./ShipWaitScreen.js');
-const NameScreen = require('./NameScreen.js');
-const NameWaitScreen = require('./NameWaitScreen.js');
+//const NameScreen = require('./NameScreen.js');
+//const NameWaitScreen = require('./NameWaitScreen.js');
 const DisconnectScreen = require('./DisconnectScreen.js');
-const BuilderScreen = require('./BuilderScreen.js');
+//const BuilderScreen = require('./BuilderScreen.js');
 const Camera = require('./Camera.js');
 const Oscillator = require('./Oscillator.js');
 const Stinger = require('./Stinger.js');
@@ -108,10 +108,10 @@ class Client {
     this.gameScreen = new GameScreen(this);
     this.shipWaitScreen = new ShipWaitScreen(this);
     this.chooseShipScreen = new ChooseShipScreen(this);
-    this.nameWaitScreen = new NameWaitScreen(this);
-    this.nameScreen = new NameScreen(this);
+    //this.nameWaitScreen = new NameWaitScreen(this);
+    //this.nameScreen = new NameScreen(this);
     this.disconnectScreen = new DisconnectScreen(this);
-    this.builderScreen = new BuilderScreen(this);
+    //this.builderScreen = new BuilderScreen(this);
 
     this.currentScreen = {};
     this.switchScreen(this.titleScreen);
