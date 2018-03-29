@@ -2065,7 +2065,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           if (!this.worldInfo.wiInterval) return this.getMostRecentValue(val);
 
           var perc = desiredStateIndex - oldestStateIndex;
-          if (perc < this.stateCount - 1) {
+          if (perc < 0) return this.states[0][val];else if (perc < this.stateCount - 1) {
             return lerp(this.states[Math.floor(perc)][val], this.states[Math.ceil(perc)][val], perc - Math.floor(perc));
           } else {
             return this.states[this.stateCount - 1][val];
