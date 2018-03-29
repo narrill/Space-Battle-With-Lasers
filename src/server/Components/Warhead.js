@@ -10,8 +10,8 @@ class Warhead {
   static getBP(params = {}) {
     return {
       radial: utilities.deepUnionOverwrite.call({
-        velocity: 6000,
-        decay: 0.2,
+        velocity: 3000,
+        decay: 0.4,
         color: { r: 255, g: 0, b: 0 },
         collisionProperties: {
           density: 2,
