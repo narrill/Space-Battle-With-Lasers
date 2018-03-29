@@ -1717,8 +1717,8 @@ module.exports = {
 
 const utilities = require('../server/utilities.js');
 
-const STATE_BUFFER_LENGTH = 3;
-const BACKWARD_STATE_BUFFER_LENGTH = 1;
+const STATE_BUFFER_LENGTH = 4;
+const BACKWARD_STATE_BUFFER_LENGTH = 3;
 
 class WorldInfo {
 	constructor() {

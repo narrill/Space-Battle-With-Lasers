@@ -1875,8 +1875,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var utilities = require('../server/utilities.js');
 
-    var STATE_BUFFER_LENGTH = 3;
-    var BACKWARD_STATE_BUFFER_LENGTH = 1;
+    var STATE_BUFFER_LENGTH = 4;
+    var BACKWARD_STATE_BUFFER_LENGTH = 3;
 
     var WorldInfo = function () {
       function WorldInfo() {
