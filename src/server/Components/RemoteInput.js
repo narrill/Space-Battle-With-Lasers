@@ -14,7 +14,7 @@ class RemoteInput {
     this.mouseDirection = 0;
     this.sendInterval = 50;
     this.stateIndex = 0;
-    this.radius = (objectParams.radius) ? objectParams.radius : 15000;
+    this.radius = (objectParams.radius) ? objectParams.radius : 10000;
     this.lastSend = owner.game.elapsedGameTime + Math.random() * this.sendInterval;
     this.nonInterp = {};
     this.sentInitial = false;

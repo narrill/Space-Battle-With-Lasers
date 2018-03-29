@@ -81,9 +81,9 @@ class Client {
 
     this.camera = new Camera(this.canvas);
     this.minimapCamera = new Camera(this.canvas, {
-      zoom: .01,
-      maxZoom: .01,
-      minZoom: .01,
+      zoom: .02,
+      maxZoom: .02,
+      minZoom: .02,
       viewport: {
         startX: .83,
         startY: .7,

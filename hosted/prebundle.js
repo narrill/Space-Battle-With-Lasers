@@ -8,7 +8,7 @@ class Camera {
     this.y = (objectParams.y) ? objectParams.y : 0;
     this.rotation = (objectParams.rotation) ? objectParams.rotation : 0;
     this.zoom =  (objectParams.zoom) ? objectParams.zoom : 1;
-    this.minZoom = (objectParams.minZoom)?objectParams.minZoom:.1;
+    this.minZoom = (objectParams.minZoom)?objectParams.minZoom:.2;
     this.maxZoom = (objectParams.maxZoom)?objectParams.maxZoom:Number.MAX_VALUE;
     this.viewport = new Viewport(objectParams.viewport);
     
@@ -134,9 +134,9 @@ class Client {
 
     this.camera = new Camera(this.canvas);
     this.minimapCamera = new Camera(this.canvas, {
-      zoom: .01,
-      maxZoom: .01,
-      minZoom: .01,
+      zoom: .02,
+      maxZoom: .02,
+      minZoom: .02,
       viewport: {
         startX: .83,
         startY: .7,
