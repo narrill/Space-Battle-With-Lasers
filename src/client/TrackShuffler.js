@@ -5,7 +5,7 @@ class TrackShuffler {
 		const tracks = [];
 		for(const name of trackNames){
 			const audio = new Audio();
-			audio.setAttribute('src', `${name}.mp3`);
+			audio.setAttribute('src', `assets/${name}.mp3`);
 			tracks.push(audio);
 			document.body.appendChild(audio);
 		}

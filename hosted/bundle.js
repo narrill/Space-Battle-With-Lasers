@@ -1075,7 +1075,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var name = _step.value;
 
             var audio = new Audio();
-            audio.setAttribute('src', name + ".mp3");
+            audio.setAttribute('src', "assets/" + name + ".mp3");
             tracks.push(audio);
             document.body.appendChild(audio);
           }
