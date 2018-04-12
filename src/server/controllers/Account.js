@@ -14,6 +14,7 @@ const logout = (req, res) => {
   res.redirect('/');
 };
 
+// to-do: rewrite for new Account model
 const login = (request, response) => {
   const req = request;
   const res = response;
@@ -25,16 +26,24 @@ const login = (request, response) => {
     return res.status(400).json({ error: 'RAWR! All fields are required' });
   }
 
-  return Account.AccountModel.authenticate(username, password, (err, account) => {
-    if (err || !account) {
-      return res.status(400).json({ error: 'RAWR! WRONG USER NAME OR PASSWORD!' });
-    }
-
-    req.session.account = Account.AccountModel.toAPI(account);
-    return res.json({ redirect: '/play' });
+  return Account.load(username, password).then((acc) => {
+    req.session.account = acc;
+    res.json({ redirect: '/play' });
+  }).catch(() => {
+    return res.status(400).json({ error: 'RAWR! WRONG USER NAME OR PASSWORD!' });
   });
+
+  // return Account.AccountModel.authenticate(username, password, (err, account) => {
+  //   if (err || !account) {
+  //     return res.status(400).json({ error: 'RAWR! WRONG USER NAME OR PASSWORD!' });
+  //   }
+
+  //   req.session.account = Account.AccountModel.toAPI(account);
+  //   return res.json({ redirect: '/play' });
+  // });
 };
 
+// to-do: rewrite for new Account model
 const signup = (request, response) => {
   const req = request;
   const res = response;
@@ -51,26 +60,37 @@ const signup = (request, response) => {
     return res.status(400).json({ error: 'RAWR! Passwords do not match' });
   }
 
-  return Account.AccountModel.generateHash(req.body.pass, (salt, hash) => {
-    const accountData = {
-      username: req.body.username,
-      salt,
-      password: hash,
-    };
-    const newAccount = new Account.AccountModel(accountData);
-    const savePromise = newAccount.save();
-    savePromise.then(() => {
-      req.session.account = Account.AccountModel.toAPI(newAccount);
-      res.json({ redirect: '/play' });
-    });
-    savePromise.catch((err) => {
-      console.log(err);
-      if (err.code === 11000) {
-        return res.status(400).json({ error: 'Username already in use' });
-      }
-      return res.status(400).json({ error: 'An error occurred' });
-    });
+  return Account.create(req.body.username, req.body.pass).then((acc) => {
+    req.session.account = acc;
+    res.json({ redirect: '/play' });
+  }).catch((err) => {
+    console.log(err);
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'Username already in use' });
+    }
+    return res.status(400).json({ error: 'An error occurred' });
   });
+
+  // return Account.AccountModel.generateHash(req.body.pass, (salt, hash) => {
+  //   const accountData = {
+  //     username: req.body.username,
+  //     salt,
+  //     password: hash,
+  //   };
+  //   const newAccount = new Account.AccountModel(accountData);
+  //   const savePromise = newAccount.save();
+  //   savePromise.then(() => {
+  //     req.session.account = Account.AccountModel.toAPI(newAccount);
+  //     res.json({ redirect: '/play' });
+  //   });
+  //   savePromise.catch((err) => {
+  //     console.log(err);
+  //     if (err.code === 11000) {
+  //       return res.status(400).json({ error: 'Username already in use' });
+  //     }
+  //     return res.status(400).json({ error: 'An error occurred' });
+  //   });
+  // });
 };
 
 module.exports.loginPage = loginPage;

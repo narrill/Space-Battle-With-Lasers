@@ -94,21 +94,6 @@ class Obj extends Accelerable {
 
     // Faction coloring (though factions don't do anything right now)
     if (this.faction !== -1) { this.color = game.factionColors[this.faction]; }
-
-    // Pass model data to clients - this is a bit of a hack
-    Object.values(game.socketSubscriptions).forEach((socket) => {
-      if (playerId && socket.id === playerId && this.model.overlay.ranges) {
-        const modelCopy = utilities.deepObjectMerge.call({}, this.model);
-        const key2s = Object.keys(modelCopy.overlay.ranges);
-        for (let n = 0; n < key2s.length; n++) {
-          const key2 = key2s[n];
-          let r = this[key2];
-          if (r) r = r.range;
-          if (r) modelCopy.overlay.ranges[key2] = r;
-        }
-        socket.emit('ship', { id: this.id, model: modelCopy });
-      } else { socket.emit('ship', { id: this.id, model: this.model }); }
-    });
   }
 
   update(dt) {
@@ -232,6 +217,17 @@ class Obj extends Accelerable {
       }
     });
     return bp;
+  }
+
+  static getBPCost(bp) {
+    let cost = 0;
+    Object.keys(bp).forEach((component) => {
+      const Component = componentClasses[capitalize(component)];
+      if(Component && Component.getBPCost)
+        cost += Component.getBPCost(bp[component]);
+    });
+
+    return cost;
   }
 
   // add given strength to main thruster

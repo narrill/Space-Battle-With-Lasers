@@ -381,6 +381,46 @@ class Game {
     this.reportQueue.clear();
   }
 
+  createPlayerObj(socket, bp) {
+    const bpCopy = utilities.deepObjectMerge.call({}, chosenShipBP);
+    this.socketSubscriptions[socket.id] = socket;
+    bpCopy.remoteInput = { specialProperties: { socket } };
+    const ship = new Obj(bpCopy, this, null, socket.id);
+
+    // Pass model data to clients - this is a bit of a hack
+    Object.values(game.socketSubscriptions).forEach((s) => {
+      if (s.id === socket.id && ship.model.overlay.ranges) {
+        const modelCopy = utilities.deepObjectMerge.call({}, ship.model);
+        const key2s = Object.keys(modelCopy.overlay.ranges);
+        for (let n = 0; n < key2s.length; n++) {
+          const key2 = key2s[n];
+          let r = ship[key2];
+          if (r) r = r.range;
+          if (r) modelCopy.overlay.ranges[key2] = r;
+        }
+        s.emit('ship', { id: ship.id, model: modelCopy });
+      } else { s.emit('ship', { id: ship.id, model: ship.model }); }
+    });
+
+    // Add the new ship to the game
+    this.objs.push(ship);
+
+    // Pass models for existing ships to the client
+    const shipModels = {};
+    Object.values(this.objs).forEach((sh) => {
+      shipModels[sh.id] = sh.model;
+    });
+    socket.emit('ships', shipModels);
+
+    return (data) => {
+      ship.remoteInput.messageHandler(data);
+    }
+  }
+
+  // createAiObj(bp) {
+
+  // }
+
   createObj(...args) {
     this.objs.push(new Obj(...args));
   }
