@@ -29,7 +29,8 @@ const login = (request, response) => {
   return Account.load(username, password).then((acc) => {
     req.session.account = acc;
     res.json({ redirect: '/play' });
-  }).catch(() => {
+  }).catch((err) => {
+    console.log(err);
     return res.status(400).json({ error: 'RAWR! WRONG USER NAME OR PASSWORD!' });
   });
 

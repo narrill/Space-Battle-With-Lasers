@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const util = require('util');
 const db = require('../db.js');
 const accountStore = require('../accountStore.js');
 
@@ -18,18 +19,19 @@ class Account {
   // account couldn't be found or validated
   static load(username, password) {    
     // Try to get from account store
-    const acc = accountStore.getByUsername(username);
-    if(acc)
+    let acc = accountStore.getAccountByUsername(username);
+    if(acc) {
       return acc._validatePassword(password).then(() => {
         return Promise.resolve(acc);
       });
+    }
 
     return db.findAccountByUsername(username).then((doc) => {
-      const account = new Account(doc);
-      return account._validatePassword(password);
+      acc = new Account(doc);
+      return acc._validatePassword(password);
     }).then(() => {
-      accountStore.addAccount(account);
-      return Promise.resolve(account);
+      accountStore.addAccount(acc);
+      return Promise.resolve(acc);
     });
   }
 
@@ -37,42 +39,73 @@ class Account {
   // to the database and account store, returning a
   // promise that resolves to the resulting account.
   static create(username, password) {
-    return Account._generateHash(password).then((salt, hash) => {
+    return Account._generateHash(password).then(({ salt, pass }) => {
       const accData = {
         username,
         salt,
-        hash,
+        pass,
         currency: 0
       };
       return db.createAccount(accData);
     }).then((doc) => {
       const acc = new Account(doc);
       accountStore.addAccount(acc);
-      return Promise.resolve(new AccountView(acc));
+      return Promise.resolve(acc);
     });
   }
 
-  static _generateHash(password, callback) {
-    const salt = crypto.randomBytes(saltLength);
+  static _generateHash(password) {
+    const salt = crypto.randomBytes(saltLength).toString('hex');
 
-    return new Promise((resolve, reject) => {
-      crypto.pbkdf2(password, salt, iterations, keyLength, 'RSA-SHA512', (err, hash) =>
-        resolve(salt, hash.toString('hex'))
-      );
+    return util.promisify(crypto.pbkdf2)(
+      password, 
+      salt, 
+      iterations, 
+      keyLength, 
+      'RSA-SHA512'
+    ).then((hash) => {
+      return Promise.resolve({ salt, pass: hash.toString('hex')});
     });
+
+    // return new Promise((resolve, reject) => {
+    //   crypto.pbkdf2(password, salt, iterations, keyLength, 'RSA-SHA512', (err, hash) => {
+    //     resolve({salt, pass: hash.toString('hex')});
+    //   });
+    // });
   }
 
   _validatePassword(password) {
     const {salt, pass} = this.doc;
 
-    return new Promise((resolve, reject) => {
-      crypto.pbkdf2(password, salt, iterations, keyLength, 'RSA-SHA512', (err, hash) => {
-        if(hash.toString('hex') === pass)
-          reject();
-        else
-          resolve();
-      });
+    return util.promisify(crypto.pbkdf2)(
+      password, 
+      salt, 
+      iterations, 
+      keyLength, 
+      'RSA-SHA512'
+    ).catch((err) => {
+      console.log(err);
+    }).then((hash) => {
+      const hstring = hash.toString('hex');
+      if(hstring === pass)
+        return Promise.resolve();
+      else
+        return Promise.reject();
     });
+
+    // console.log(password);
+    // return new Promise((resolve, reject) => {
+    //   console.log('really validating');
+    //   crypto.pbkdf2(password, salt, iterations, keyLength, 'RSA-SHA512', (err, hash) => {
+    //     console.log('in validation');
+    //     console.log(hash.toString('hex'));
+    //     console.log(pass);
+    //     if(hash.toString('hex') === pass)
+    //       resolve();
+    //     else
+    //       reject();
+    //   });
+    // });
   }
 
   get id() {

@@ -61,7 +61,8 @@ class AccountStore extends BaseStore {
   }
 
   get(sid, callback) {
-    callback(null, this.sessionsBySid[sid]);
+    const wrapper = this.sessionsBySid[sid] || {};
+    callback(null, wrapper.session);
   }
 
   set(sid, session, callback) {
