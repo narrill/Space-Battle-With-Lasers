@@ -13,9 +13,9 @@ class RemoteInput {
     this.commands = {};
     this.mouseDirection = 0;
     this.sendInterval = 50;
-    this.stateIndex = 0;
+    this.stateIndex = -1;
     this.radius = (objectParams.radius) ? objectParams.radius : 10000;
-    this.lastSend = owner.game.elapsedGameTime + Math.random() * this.sendInterval;
+    this.lastSend = owner.game.elapsedRealTime - this.sendInterval;
     this.nonInterp = {};
     this.sentInitial = false;
     const socket = objectParams.specialProperties.socket;
@@ -100,9 +100,12 @@ class RemoteInput {
 
     inputState.advanceStateDictionary.call(this.commands);
 
-    const sinceLastSend = owner.game.elapsedGameTime - this.lastSend;
+    const sinceLastSend = owner.game.elapsedRealTime - this.lastSend;
+    const sendIntervalsElapsed = Math.floor(sinceLastSend / this.sendInterval);
+
     if (this.remoteSend && sinceLastSend >= this.sendInterval) {
-      this.lastSend += this.sendInterval;
+      this.lastSend += this.sendInterval * sendIntervalsElapsed;
+      this.stateIndex += sendIntervalsElapsed;
       owner.game.queueFunction(this.sendData.bind(this));
     }
   }
@@ -172,7 +175,7 @@ class RemoteInput {
     const fetchInfo = owner.game.spatialHash.boundedFetch([owner.x, owner.y], this.radius);
 
     const worldInfo = new NetworkWorldInfo({
-      stateIndex: this.stateIndex++,
+      stateIndex: this.stateIndex,
       objs: populateWICategory(fetchInfo, 'obj'),
       asteroids: populateNonInterpWICategory(fetchInfo, 'asteroid'),
       prjs: populateNonInterpWICategory(fetchInfo, 'prj'),

@@ -75,6 +75,7 @@ class Game {
 
     this.lastTime = Date.now();
     this.elapsedGameTime = 0;
+    this.elapsedRealTime = 0;
   }
 
   loop() {
@@ -90,6 +91,7 @@ class Game {
       this.update(this.timeStep);
       this.accumulator -= this.timeStep;
     }
+    this.elapsedRealTime += dt * 1000;
   }
 
   // one game tick

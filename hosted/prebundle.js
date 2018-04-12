@@ -1870,12 +1870,15 @@ class ObjInfo {
 		if(!this.worldInfo.wiInterval) return this.getMostRecentValue(val);
 		
 		const perc = desiredStateIndex - oldestStateIndex;
-		if(perc < 0)
+		if(perc < 0) {
+			console.log('interp min');
 			return this.states[0][val];
+		}
 		else if(perc < this.stateCount - 1) {
 			return lerp(this.states[Math.floor(perc)][val], this.states[Math.ceil(perc)][val], perc - Math.floor(perc));
 		}
 		else {
+			console.log('interp max');
 			return this.states[this.stateCount - 1][val];
 		}
 	}
