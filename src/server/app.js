@@ -21,7 +21,7 @@ const utilities = require('./utilities.js');
 
 const game = new Game();
 
-const dbURL = process.env.MONGODB_URI || 'mongodb://localhost/SpaceBattle';
+const dbURL = process.env.MONGODB_URI || 'mongodb://localhost/';
 
 db.connect(dbURL).catch((err) => {
   throw err;

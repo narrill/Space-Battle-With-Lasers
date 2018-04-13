@@ -1,7 +1,7 @@
 const MongoClient = require('mongodb').MongoClient;
 const ObjectID = require('mongodb').ObjectID;
 
-const DB_NAME = 'SpaceBattle';
+const DB_NAME = 'heroku_3l2sjq27';
 const ACCOUNTS_COLLECTION_NAME = 'Accounts';
 const BP_COLLECTION_NAME = 'BPs';
 
