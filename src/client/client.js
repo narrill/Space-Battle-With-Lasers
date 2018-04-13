@@ -5,7 +5,7 @@ const ShipWaitScreen = require('./ShipWaitScreen.js');
 //const NameScreen = require('./NameScreen.js');
 //const NameWaitScreen = require('./NameWaitScreen.js');
 const DisconnectScreen = require('./DisconnectScreen.js');
-//const BuilderScreen = require('./BuilderScreen.js');
+const BuilderScreen = require('./BuilderScreen.js');
 const Camera = require('./Camera.js');
 const Oscillator = require('./Oscillator.js');
 const Stinger = require('./Stinger.js');
@@ -111,7 +111,7 @@ class Client {
     //this.nameWaitScreen = new NameWaitScreen(this);
     //this.nameScreen = new NameScreen(this);
     this.disconnectScreen = new DisconnectScreen(this);
-    //this.builderScreen = new BuilderScreen(this);
+    this.builderScreen = new BuilderScreen(this);
 
     this.currentScreen = {};
     this.switchScreen(this.titleScreen);
@@ -152,6 +152,10 @@ class Client {
 
     this.socket.on('ships', (ships) => {
       this.worldInfo.addShips(ships);
+    });
+
+    this.socket.on('currency', (currency) => {
+      this.currency = currency;
     });
 
     this.socket.on('disconnect', () => {
@@ -198,7 +202,7 @@ class Client {
     utilities.fillText(this.camera.ctx,'fps: ' + Math.floor(1 / dt), 15, 15, "8pt Orbitron", 'white');
   }
 
-  switchScreen(screen) {
+  switchScreen(screen, ...args) {
     this._switchScreen(screen, false, false);
   }
 
@@ -210,13 +214,13 @@ class Client {
     this._switchScreen(previousScreen, false, true);
   }
 
-  _switchScreen(screen, toModal, fromModal) {
+  _switchScreen(screen, toModal, fromModal, ...args) {
     if(!toModal && this.currentScreen.onExit) this.currentScreen.onExit();
     if(screen.init && !screen.initialized) {
       screen.init();
       screen.initialized = true;
     }
-    if(!fromModal && screen.onEnter) screen.onEnter();
+    if(!fromModal && screen.onEnter) screen.onEnter(...args);
     this.input.setListeners(screen.keyDown, screen.keyUp, screen.mouse);
     this.currentScreen = screen;
   }

@@ -416,11 +416,15 @@ class BuilderScreen extends Screen {
               name: shipName,
               bp: bp
             };
-            requests.postRequest('/addShip', ship, (statusCode) => {
-              const message = (statusCode === 204) ? "Success" : "Name unavailable";
+            const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            requests.postRequest('/addShip', ship, csrf, (statusCode, json) => {
+              const message = (statusCode === 200) ? "Success" : "Error submitting blueprint";
               client.enterModal(ModalConfirmationScreen, () => {
-                if(statusCode === 204)
+                if(statusCode === 200) {
+                  const cost = json.cost;
+                  this.client.shipList[shipName] = cost;
                   client.switchScreen(client.titleScreen);
+                }
               }, message);
             });
           }, "Enter a name for the ship");

@@ -18,6 +18,10 @@ class PowerSystem {
     }, params);
   }
 
+  static getBPCost(params = {}) {
+    return 500;
+  }
+
   update(dt) {
     // Scales target values of the given power system such that they sum to 1
     // Expects to be bound to the power system object

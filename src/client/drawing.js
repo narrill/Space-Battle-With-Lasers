@@ -640,18 +640,23 @@ const drawing = {
   },
 
   //draw pause screen in the given camera
-  drawChooseShipScreen:function(camera, entry, shipList = []){
+  drawChooseShipScreen:function(camera, currency, entry, shipList = {}){
     var ctx = camera.ctx;
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     var list = "Options: ";
-    for(var c = 0;c<shipList.length;c++)
+    const names = Object.keys(shipList);
+    for(var c = 0;c<names.length;c++)
     {
       if(c>0)list+=', ';
-      list+=shipList[c];
+      list+=names[c];
     }
     utilities.fillText(ctx,list,camera.width/2,camera.height/2 +30,"10pt Orbitron",'white');
+    utilities.fillText(ctx, `Available currency: ${Math.floor(currency)}`, camera.width/2, 2*camera.height/3, "20pt Orbitron", 'white');
+    const cost = shipList[entry];
+    if(cost || cost === 0)
+      utilities.fillText(ctx, `Required currency: ${Math.floor(cost)}`, camera.width/2, 2*camera.height/3 + 30, '20pt Orbitron', 'white');
     ctx.restore();
   },
 

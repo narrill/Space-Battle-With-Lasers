@@ -7,15 +7,18 @@ module.exports = {
     xhr.open('GET', url);
     xhr.setRequestHeader('Accept', "application/json");
     xhr.send();
-    this.openRequests++;
   },
 
-  postRequest(url, data, callback) {
+  postRequest(url, data, csrf, callback) {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', url);
     xhr.onload = () => {
-      callback(xhr.status);
+      console.log(xhr.response);
+      callback(xhr.status, JSON.parse(xhr.response));
     };
+    xhr.setRequestHeader('CSRF-Token', csrf);
+    xhr.setRequestHeader('content-type', 'application/json');
+    xhr.setRequestHeader('Accept', 'application/json');
     xhr.send(JSON.stringify(data));
   }
 };

@@ -8,15 +8,17 @@ const enums = require('./enums.js');
 const has = Object.prototype.hasOwnProperty;
 const componentClasses = require('./ComponentTypes.js').classes;
 const Accelerable = require('./Accelerable.js');
+const Log = require('./Log.js');
 
 const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
 
 class Obj extends Accelerable {
   constructor(oPar = {}, game, owner, playerId) {
-    const objectParams = oPar;
+    const objectParams = oPar
     super();
     const gridPosition = gridFunctions.randomGridPosition(game.grid);
     this.id = id.takeIdTag();
+    this.playerId = playerId;
     this.game = game;
     this.owner = owner;
     this.faction = -1;
@@ -50,15 +52,6 @@ class Obj extends Accelerable {
 
     const physProp = objectParams.physicalProperties;
 
-    // Set defaults
-    const defaults = {
-      shield: {
-        max: 100,
-        recharge: 3,
-        efficiency: 8,
-      },
-    };
-
     objectParams.destructible = {
       maxHp: physProp.mass,
       radius: physProp.radius,
@@ -73,9 +66,7 @@ class Obj extends Accelerable {
       if (!has.call(this, key)) {
         const Component = componentClasses[capitalize(key)];
         if (Component) {
-          const newParams = objectParams[key];
-          const defaultParams = defaults[key] || {};
-          let params = utilities.deepObjectMerge.call(defaultParams, newParams);
+          let params = objectParams[key];
           if (Component.getBP) {
             params = Component.getBP(params);
           }
@@ -92,8 +83,31 @@ class Obj extends Accelerable {
     // Copy any top-level literal overrides
     utilities.veryShallowObjectMerge.call(this, objectParams);
 
+    // Pass model data to clients - this is a bit of a hack
+    Object.keys(game.socketSubscriptions).forEach((pid) => {
+      const s = game.socketSubscriptions[pid];
+      if (pid === playerId && this.model.overlay.ranges) {
+        const modelCopy = utilities.deepObjectMerge.call({}, this.model);
+        const key2s = Object.keys(modelCopy.overlay.ranges);
+        for (let n = 0; n < key2s.length; n++) {
+          const key2 = key2s[n];
+          let r = this[key2];
+          if (r) r = r.range;
+          if (r) modelCopy.overlay.ranges[key2] = r;
+        }
+        s.emit('ship', { id: this.id, model: modelCopy });
+      } else { s.emit('ship', { id: this.id, model: this.model }); }
+    });
+
     // Faction coloring (though factions don't do anything right now)
     if (this.faction !== -1) { this.color = game.factionColors[this.faction]; }
+
+    // Bit of a hack - player and AI controlled objs get a damage log
+    if(oPar.ai || playerId || playerId === 0) {
+      this.damageLog = new Log();
+    }
+
+    this.cost = Obj.getBPCost(Obj.completeBP(objectParams));
   }
 
   update(dt) {
@@ -120,6 +134,11 @@ class Obj extends Accelerable {
   }
 
   destroy() {
+    if(this.damageLog)
+      this.damageLog.publish((id, amt) => {
+        this.game.currencyLog.log(id, amt);
+      }, this.cost / this.destructible.maxHp);
+
     const returnIdTag = (src) => {
       if (!src) { return; }
       Object.keys(src).forEach((key) => {
@@ -140,12 +159,12 @@ class Obj extends Accelerable {
     for (let c = 0; c < this.destructibleComponents.length; c++) {
       this.destructibleComponents[c].destroy();
     }
-    if (this.respawnTime) {
-      this.game.respawnQueue.push({
-        time: this.game.elapsedGameTime + (this.respawnTime * 1000),
-        params: this.constructionObject,
-      });
-    }
+    // if (this.respawnTime) {
+    //   this.game.respawnQueue.push({
+    //     time: this.game.elapsedGameTime + (this.respawnTime * 1000),
+    //     params: this.constructionObject,
+    //   });
+    // }
     returnIdTag(this);
   }
 

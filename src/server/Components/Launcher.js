@@ -1,12 +1,11 @@
 const utilities = require('../utilities.js');
-const missiles = require('../objBlueprints.js').missiles;
 
 class Launcher {
   constructor(bp, owner) {
     this.owner = owner;
     this.firing = false;
     this.lastFireTime = 0;
-    this.missile = missiles.tomcat;
+    this.missile = owner.game.bps.missiles.tomcat;
 
     utilities.veryShallowObjectMerge.call(this, bp);
   }

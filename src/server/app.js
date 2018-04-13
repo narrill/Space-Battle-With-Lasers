@@ -17,12 +17,13 @@ const sharedsession = require('express-socket.io-session');
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
 const Game = require('./Game.js');
-const buildableBPs = require('./ComponentTypes.js').buildableBPs;
 const objBlueprints = require('./objBlueprints.js');
 
 const ships = objBlueprints.ships;
 const Obj = require('./Obj.js');
 const utilities = require('./utilities.js');
+
+const has = Object.prototype.hasOwnProperty;
 
 let shipList = Object.keys(ships);
 
@@ -44,7 +45,7 @@ app.use('/assets', express.static(path.resolve(`${__dirname}/../../hosted/`)));
 //app.use(favicon(`${__dirname}/../hosted/img/favicon.png`));
 app.disable('x-powered-by');
 app.use(compression());
-//app.use(bodyParser.json());
+app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended: true,
 }));
@@ -90,13 +91,30 @@ io.on('connection', (s) => {
     s.disconnect();
     return;
   }
+
+  s.handshake.session.account.attachSocket(s);
+
+  s.emit('currency', s.handshake.session.account.currency);
+
+  const account = s.handshake.session.account;
+
   let inputHandler;
-  s.emit('shipList', shipList);
+
+  const stockShipNamesAndCosts = {};
+  Object.keys(ships).forEach((name) => {
+    stockShipNamesAndCosts[name] = ships[name].buyCost;
+  });
+
+  const userShipNamesAndCosts = account.bpNamesAndCosts;
+  s.emit('shipList', utilities.shallowObjectMerge.call(stockShipNamesAndCosts, userShipNamesAndCosts));
 
   s.on('ship', (shipName) => {
-    const chosenShipBP = ships[String(shipName).toLowerCase().valueOf()];
-    if (chosenShipBP && s.handshake.session.account.trySubtract(Obj.getBPCost(chosenShipBP))) {
-      inputHandler = game.createPlayerObj(s, chosenShipBP);  
+    const nameString = String(shipName).toLowerCase().valueOf();
+    const chosenStockBP = ships[nameString];
+    const chosenUserBP = account.getBP(nameString);
+    const chosenShipBP = (chosenStockBP) ? chosenStockBP : chosenUserBP;
+    if (chosenShipBP && s.handshake.session.account.trySubtract(chosenShipBP.buyCost)) {
+      inputHandler = game.createPlayerObj(s, s.handshake.session.account.id, chosenShipBP);  
       s.emit('grid', game.grid);
     } else {
       s.emit('badShipError');

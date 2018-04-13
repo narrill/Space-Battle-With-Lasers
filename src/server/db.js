@@ -4,10 +4,12 @@ const Binary = require('mongodb').Binary;
 
 const DB_NAME = 'SpaceBattle';
 const ACCOUNTS_COLLECTION_NAME = 'Accounts';
+const BP_COLLECTION_NAME = 'BPs';
 
 let client;
 let db;
 let accountsCollection;
+let bpCollection;
 
 const cleanMongoDocument = (doc) => {
   const cleanDoc = {};
@@ -29,6 +31,7 @@ const connect = (dbURL) => {
     db = client.db(DB_NAME);
     accountsCollection = db.collection(ACCOUNTS_COLLECTION_NAME);
     accountsCollection.createIndex({ username: 1 }, { unique: true });
+    bpCollection = db.collection(BP_COLLECTION_NAME);
   });
 };
 
@@ -50,9 +53,13 @@ const findAccountById = (id) => {
   });
 };
 
+const findBPsByAccount = (acc) => {
+  return bpCollection.find({ account: acc.id }).toArray();
+};
+
 const updateAccountCurrency = (account) => {
-  accountsCollection.updateOne(
-    { _id: account.id }, 
+  return accountsCollection.updateOne(
+    { _id: ObjectID(account.id) }, 
     { $set: { currency: account.currency }}
   ).catch((err) => {
     console.log(err);
@@ -60,10 +67,14 @@ const updateAccountCurrency = (account) => {
 };
 
 const updateAccount = (account) => {
-  accountsCollection.updateOne({ _id: account.id }, account.doc).catch((err) => {
+  return accountsCollection.updateOne({ _id: ObjectID(account.id) }, account.doc).catch((err) => {
     console.log(err);
   });
 };
+
+const submitBP = (doc) => {
+  return bpCollection.update({ name: doc.name }, doc, { upsert: true });
+}
 
 module.exports = {
   connect,
@@ -71,5 +82,7 @@ module.exports = {
   findAccountByUsername,
   findAccountById,
   updateAccountCurrency,
-  updateAccount
+  updateAccount,
+  findBPsByAccount,
+  submitBP
 };

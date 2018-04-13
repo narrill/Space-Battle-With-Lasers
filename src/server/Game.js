@@ -11,6 +11,9 @@ const SpatialHash = require('./SpatialHash.js');
 const ReportQueue = require('./ReportQueue.js');
 const ships = require('./objBlueprints.js').ships;
 const collisions = require('./collisions.js');
+const Log = require('./Log.js');
+const accountStore = require('./accountStore.js');
+const objBlueprints = require('./objBlueprints.js');
 
 class Game {
   constructor() {
@@ -19,15 +22,17 @@ class Game {
     this.timeStep = 0.0167;
     this.lastTime = 0; // used by calculateDeltaTime()
     this.objs = [];
-    this.maxNPCs = 60;
+    this.maxNPCs = 0;
     this.factions = 4;
     this.factionColors = [];
     this.hitscans = [];
     this.projectiles = [];
     this.radials = [];
+    this.currencyLog = new Log();
     this.reportQueue = new ReportQueue();
     this.functionQueue = [];
     this.socketSubscriptions = {};
+    this.bps = objBlueprints;
     this.grid = {
       gridLines: 500, // number of grid lines
       gridSpacing: 100, // pixels per grid unit
@@ -111,6 +116,12 @@ class Game {
     checkForDestruction(this.objs);
     checkForDestruction(this.projectiles);
     checkForDestruction(this.radials);
+
+    this.currencyLog.publish((id, amt) => {
+      const acc = accountStore.getAccountById(id);
+      if(acc)
+        acc.addCurrency(amt);
+    });
 
     // Spawn NPCs
     const shipList = Object.keys(ships);
@@ -347,8 +358,8 @@ class Game {
           if (this.frameCount < 25) { asteroid.destructible.hp = -1; } else {
             const objectSpeed = Math.sqrt((ship.velocityX * ship.velocityX)
               + (ship.velocityY * ship.velocityY));
-            collisions.dealDamage.call(ship, 0.1 * dt * objectSpeed);
-            collisions.dealDamage.call(asteroid, 0.2 * dt * objectSpeed);
+            collisions.dealDamage.call(ship, undefined, 0.1 * dt * objectSpeed);
+            collisions.dealDamage.call(asteroid, undefined, 0.2 * dt * objectSpeed);
             ship.velocityX *= (1 - (2 * dt));
             ship.velocityY *= (1 - (2 * dt));
           }
@@ -360,7 +371,10 @@ class Game {
     for (let n = 0; n < this.radials.length; n++) {
       const rad = this.radials[n];
       for (let c = 0; c < this.objs.length; c++) {
-        const gameObj = this.objs[c]; // lol
+        const gameObj = this.objs[c];
+
+        if(rad.isOwner(gameObj))
+          continue;
 
         const circleInner = { center: [rad.x, rad.y], radius: rad.radius };
         const circleOuter = { center: [rad.x, rad.y], radius: rad.radius + (rad.velocity * dt) };
@@ -383,26 +397,11 @@ class Game {
     this.reportQueue.clear();
   }
 
-  createPlayerObj(socket, bp) {
-    const bpCopy = utilities.deepObjectMerge.call({}, chosenShipBP);
+  createPlayerObj(socket, playerId, bp) {
+    const bpCopy = utilities.deepObjectMerge.call({}, bp);
     this.socketSubscriptions[socket.id] = socket;
     bpCopy.remoteInput = { specialProperties: { socket } };
-    const ship = new Obj(bpCopy, this, null, socket.id);
-
-    // Pass model data to clients - this is a bit of a hack
-    Object.values(game.socketSubscriptions).forEach((s) => {
-      if (s.id === socket.id && ship.model.overlay.ranges) {
-        const modelCopy = utilities.deepObjectMerge.call({}, ship.model);
-        const key2s = Object.keys(modelCopy.overlay.ranges);
-        for (let n = 0; n < key2s.length; n++) {
-          const key2 = key2s[n];
-          let r = ship[key2];
-          if (r) r = r.range;
-          if (r) modelCopy.overlay.ranges[key2] = r;
-        }
-        s.emit('ship', { id: ship.id, model: modelCopy });
-      } else { s.emit('ship', { id: ship.id, model: ship.model }); }
-    });
+    const ship = new Obj(bpCopy, this, null, playerId);
 
     // Add the new ship to the game
     this.objs.push(ship);

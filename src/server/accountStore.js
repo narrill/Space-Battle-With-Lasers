@@ -39,11 +39,20 @@ class AccountStore extends BaseStore {
     this.sessionsBySid = {};
     this.accountsById = {};
     this.accountsByUsername = {};
+    this.socketsById = {};
 
     this.checkPeriod = options.checkPeriod || 300000; // 5 minutes
     this.maxAge = options.maxAge || 3600000; // 1 hour
 
     this.pruneInterval = setInterval(this._prune.bind(this), this.checkPeriod);
+
+    this.saveAccountPeriod = options.saveAccountPeriod || 5000; // 5 seconds
+
+    this.saveInterval = setInterval(this._saveAllAccounts.bind(this), this.saveAccountPeriod);
+  }
+
+  attachSocket(s, id) {
+    this.socketsById[id] = s;
   }
 
   addAccount(acc) {
@@ -54,10 +63,19 @@ class AccountStore extends BaseStore {
   removeAccount(acc) {
     delete this.accountsById[acc.id];
     delete this.accountsByUsername[acc.username];
+    delete this.socketsById[acc.id];
+  }
+
+  getSocketForAccount(acc) {
+    return this.socketsById[acc.id];
   }
 
   getAccountByUsername(username) {
     return this.accountsByUsername[username];
+  }
+
+  getAccountById(id) {
+    return this.accountsById[id];
   }
 
   get(sid, callback) {
@@ -101,6 +119,12 @@ class AccountStore extends BaseStore {
       const wrapper = this.sessionsBySid[sid];
       if(wrapper.age >= this.maxAge)
         this.destroy(sid);
+    });
+  }
+
+  _saveAllAccounts() {
+    Object.values(this.accountsById).forEach((acc) => {
+      acc.save();
     });
   }
 }

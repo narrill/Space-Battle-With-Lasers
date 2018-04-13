@@ -14,7 +14,7 @@ class DisconnectScreen extends Screen {
   keyDown(e) {
     if(e.key === 'Enter') {
       this.client.keyclick.play();
-      this.client.switchScreen(this.client.chooseShipScreen);
+      this.client.switchScreen(this.client.titleScreen);
     }
   }
 }

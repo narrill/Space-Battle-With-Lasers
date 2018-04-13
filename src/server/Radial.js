@@ -36,6 +36,23 @@ class Radial {
   get networkRepresentation() {
     return new NetworkRadial(this);
   }
+
+  isOwner(o) {
+    let c = this;
+    while(c.owner) {
+      c = c.owner;
+      if(c.owner === o)
+        return true;
+    }
+    return false;
+  }
+
+  get trueOwner() {
+    let c = this;
+    while(c.owner)
+      c = c.owner;
+    return c;
+  }
 }
 
 module.exports = Radial;

@@ -9,7 +9,7 @@ class ChooseShipScreen extends EntryScreen {
 
   draw(now, dt) {
     drawing.drawEntryScreen(this.client.camera, "Enter ship name", this.entry);
-    drawing.drawChooseShipScreen(this.client.camera, this.entry, this.client.shipList);
+    drawing.drawChooseShipScreen(this.client.camera, this.client.currency, this.entry, this.client.shipList);
   }
 }
 
