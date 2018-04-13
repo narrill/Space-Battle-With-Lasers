@@ -22,7 +22,7 @@ class Game {
     this.timeStep = 0.0167;
     this.lastTime = 0; // used by calculateDeltaTime()
     this.objs = [];
-    this.maxNPCs = 0;
+    this.maxNPCs = 60;
     this.factions = 4;
     this.factionColors = [];
     this.hitscans = [];
@@ -119,8 +119,7 @@ class Game {
 
     this.currencyLog.publish((id, amt) => {
       const acc = accountStore.getAccountById(id);
-      if(acc)
-        acc.addCurrency(amt);
+      if (acc) { acc.addCurrency(amt); }
     });
 
     // Spawn NPCs
@@ -149,7 +148,7 @@ class Game {
     Asteroid.makeAsteroids(this);
     updateCollection(this.asteroids.objs);
     updateCollection(this.projectiles);
-    
+
     updateCollection(this.radials);
     updateCollection(this.objs);
     updateCollection(this.hitscans);
@@ -173,7 +172,11 @@ class Game {
     // obj collisions
     for (let i = 0; i < this.objs.length; i++) {
       const currentObj = this.objs[i];
-      const fetchInfo = this.spatialHash.boundedFetch([currentObj.x, currentObj.y], currentObj.destructible.radius * 3, {obj:[]});
+      const fetchInfo = this.spatialHash.boundedFetch(
+        [currentObj.x, currentObj.y],
+        currentObj.destructible.radius * 3,
+        { obj: [] },
+      );
       const currentObjCapsule = new utilities.VelocityCapsule(currentObj, dt);
 
       for (let c = i + 1; c < fetchInfo.obj.length; c++) {
@@ -346,7 +349,11 @@ class Game {
     // asteroid collisions
     for (let c = 0; c < this.objs.length; c++) {
       const ship = this.objs[c];
-      const fetchInfo = this.spatialHash.fetch([ship.x, ship.y], ship.destructible.radius * 20, {asteroid:[]});
+      const fetchInfo = this.spatialHash.fetch(
+        [ship.x, ship.y],
+        ship.destructible.radius * 20,
+        { asteroid: [] },
+      );
       for (let n = 0; n < fetchInfo.asteroid.length; n++) {
         const asteroid = fetchInfo.asteroid[n];
         const distance = ((ship.x - asteroid.x) * (ship.x - asteroid.x))
@@ -373,16 +380,15 @@ class Game {
       for (let c = 0; c < this.objs.length; c++) {
         const gameObj = this.objs[c];
 
-        if(rad.isOwner(gameObj))
-          continue;
+        if (!rad.isOwner(gameObj)) {
+          const circleInner = { center: [rad.x, rad.y], radius: rad.radius };
+          const circleOuter = { center: [rad.x, rad.y], radius: rad.radius + (rad.velocity * dt) };
 
-        const circleInner = { center: [rad.x, rad.y], radius: rad.radius };
-        const circleOuter = { center: [rad.x, rad.y], radius: rad.radius + (rad.velocity * dt) };
-
-        const capsule = new utilities.VelocityCapsule(gameObj, dt);
-        if (utilities.circleCapsuleSAT(circleOuter, capsule)
-          && !utilities.isCapsuleWithinCircle(circleInner, capsule)) {
-          rad.collisionFunction(rad, gameObj, dt);
+          const capsule = new utilities.VelocityCapsule(gameObj, dt);
+          if (utilities.circleCapsuleSAT(circleOuter, capsule)
+            && !utilities.isCapsuleWithinCircle(circleInner, capsule)) {
+            rad.collisionFunction(rad, gameObj, dt);
+          }
         }
       }
     }
@@ -415,7 +421,7 @@ class Game {
 
     return (data) => {
       ship.remoteInput.messageHandler(data);
-    }
+    };
   }
 
   // createAiObj(bp) {

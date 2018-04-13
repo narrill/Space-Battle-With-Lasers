@@ -6,8 +6,8 @@ class Ai {
     this.owner = owner;
     this.lastTargetCheck = 0;
     this.specialProperties = {
-      target: undefined
-    }
+      target: undefined,
+    };
     utilities.veryShallowObjectMerge.call(this, bp);
   }
 

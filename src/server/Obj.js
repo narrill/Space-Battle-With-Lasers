@@ -14,7 +14,7 @@ const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
 
 class Obj extends Accelerable {
   constructor(oPar = {}, game, owner, playerId) {
-    const objectParams = oPar
+    const objectParams = oPar;
     super();
     const gridPosition = gridFunctions.randomGridPosition(game.grid);
     this.id = id.takeIdTag();
@@ -103,7 +103,7 @@ class Obj extends Accelerable {
     if (this.faction !== -1) { this.color = game.factionColors[this.faction]; }
 
     // Bit of a hack - player and AI controlled objs get a damage log
-    if(oPar.ai || playerId || playerId === 0) {
+    if (oPar.ai || playerId || playerId === 0) {
       this.damageLog = new Log();
     }
 
@@ -134,10 +134,11 @@ class Obj extends Accelerable {
   }
 
   destroy() {
-    if(this.damageLog)
-      this.damageLog.publish((id, amt) => {
-        this.game.currencyLog.log(id, amt);
+    if (this.damageLog) {
+      this.damageLog.publish((oid, amt) => {
+        this.game.currencyLog.log(oid, amt);
       }, this.cost / this.destructible.maxHp);
+    }
 
     const returnIdTag = (src) => {
       if (!src) { return; }
@@ -242,8 +243,7 @@ class Obj extends Accelerable {
     let cost = 0;
     Object.keys(bp).forEach((component) => {
       const Component = componentClasses[capitalize(component)];
-      if(Component && Component.getBPCost)
-        cost += Component.getBPCost(bp[component]);
+      if (Component && Component.getBPCost) { cost += Component.getBPCost(bp[component]); }
     });
 
     return cost;
@@ -271,8 +271,8 @@ class Obj extends Accelerable {
     if (this.thrusterSystem.rotational.targetStrength * diff >= 0
       && Math.abs(diff) > this.stabilizer.precision / 6) {
       this.objRotationalThrusters(
-        //diff * this.stabilizer.strength * this.physicalProperties.mass,
-        diff * this.thrusterSystem.rotational.maxStrength
+        // diff * this.stabilizer.strength * this.physicalProperties.mass,
+        diff * this.thrusterSystem.rotational.maxStrength,
       );
     } else if (this.stabilizer.clamps.enabled
       && Math.abs(this.rotationalVelocity) >= this.stabilizer.clamps.rotational
@@ -290,8 +290,8 @@ class Obj extends Accelerable {
     if (this.thrusterSystem.medial.targetStrength * medialVelocity >= 0
       && Math.abs(medialVelocity) > this.stabilizer.precision) {
       this.objMedialThrusters(
-        //medialVelocity * this.stabilizer.strength * this.physicalProperties.mass,
-        medialVelocity * this.thrusterSystem.medial.maxStrength
+        // medialVelocity * this.stabilizer.strength * this.physicalProperties.mass,
+        medialVelocity * this.thrusterSystem.medial.maxStrength,
       );
     } else if (this.stabilizer.clamps.enabled
       && Math.abs(medialVelocity) >= this.stabilizer.clamps.medial
@@ -308,8 +308,8 @@ class Obj extends Accelerable {
     if (this.thrusterSystem.lateral.targetStrength * lateralVelocity >= 0
       && Math.abs(lateralVelocity) > this.stabilizer.precision) {
       this.objLateralThrusters(
-        //lateralVelocity * this.stabilizer.strength * this.physicalProperties.mass,
-        lateralVelocity * this.thrusterSystem.lateral.maxStrength
+        // lateralVelocity * this.stabilizer.strength * this.physicalProperties.mass,
+        lateralVelocity * this.thrusterSystem.lateral.maxStrength,
       );
     } else if (this.stabilizer.clamps.enabled
       && Math.abs(lateralVelocity) >= this.stabilizer.clamps.lateral

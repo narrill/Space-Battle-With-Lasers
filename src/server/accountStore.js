@@ -85,10 +85,11 @@ class AccountStore extends BaseStore {
 
   set(sid, session, callback) {
     const wrapper = this.sessionsBySid[sid];
-    if(wrapper)
+    if (wrapper) {
       wrapper.update(session);
-    else
+    } else {
       this.sessionsBySid[sid] = new SessionWrapper(session);
+    }
 
     callback(null);
   }
@@ -97,28 +98,24 @@ class AccountStore extends BaseStore {
     // For now, remove accounts when the associated
     // session is pruned
     const wrapper = this.sessionsBySid[sid];
-    if(wrapper && wrapper.session.account) 
-      this.removeAccount(wrapper.session.account);
+    if (wrapper && wrapper.session.account) { this.removeAccount(wrapper.session.account); }
     delete this.sessionsBySid[sid];
 
-    if(callback) callback(null);
+    if (callback) callback(null);
   }
 
   touch(sid, session, callback) {
     const wrapper = this.sessionsBySid[sid];
-    if(wrapper) {
+    if (wrapper) {
       wrapper.touch();
       callback(null);
-    }
-    else
-      callback(new Error("Session not found"));
+    } else { callback(new Error('Session not found')); }
   }
 
   _prune() {
     Object.keys(this.sessionsBySid).forEach((sid) => {
       const wrapper = this.sessionsBySid[sid];
-      if(wrapper.age >= this.maxAge)
-        this.destroy(sid);
+      if (wrapper.age >= this.maxAge) { this.destroy(sid); }
     });
   }
 

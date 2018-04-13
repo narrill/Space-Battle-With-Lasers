@@ -5,15 +5,14 @@ const utilities = require('./utilities.js');
 
 const has = Object.prototype.hasOwnProperty;
 
-// Takes initial angular velocity, initial angular acceleration, constant angular jerk, and a t value
-// Returns the change in orientation after t time has passed under the given constant angular jerk
-const tripleIntegrateToDelta = (wo, ao, z, t) => {
-  return (wo * t) + (0.5 * ao * t * t) + ((1 / 6) * z * t * t * t);
-};
+// Takes initial angular velocity, initial angular acceleration, constant angular jerk, 
+// and a t value
+// Returns the change in orientation after t time has passed under the 
+// given constant angular jerk
+const tripleIntegrateToDelta = (wo, ao, z, t) =>
+  (wo * t) + (0.5 * ao * t * t) + ((1 / 6) * z * t * t * t);
 
-const doubleIntegrateToDelta = (ao, z, t) => {
-  return (ao * t) + (.5 * z * t * t);
-};
+const doubleIntegrateToDelta = (ao, z, t) => (ao * t) + (0.5 * z * t * t);
 
 // Gets the time (as offset from present) and orientation at which the obj's velocity
 // would hit 0 if it immediately began firing its rotational thruster fully against
@@ -24,10 +23,10 @@ const getStopInfo = (obj) => {
   const mo = obj.momentOfInertia;
   const fo = obj.thrusterSystem.rotational.currentStrength;
   let wo = obj.rotationalVelocity;
-  if(wo === 0)
-    return {deltaTheta: 0, t: 0};
+  if (wo === 0) { return { deltaTheta: 0, t: 0 }; }
   const wSign = wo / Math.abs(wo);
-  const ao = (fo * wSign <= 0) ? 0 : (fo * r) / mo; // Thrusters can drop to 0 immediately, so we should assume initial acceleration is 0
+  // Thrusters can drop to 0 immediately, so we should assume initial acceleration is 0
+  const ao = (fo * wSign <= 0) ? 0 : (fo * r) / mo;
   // Angular jerk is assumed to be opposite angular velocity
   const z = (r / mo) * prl * (-wSign);
   // This is the quadratic formula - we need addition when w is negative and
@@ -36,30 +35,27 @@ const getStopInfo = (obj) => {
 
   const thrusterMax = obj.thrusterSystem.rotational.maxStrength;
   const thrusterCurrent = obj.thrusterSystem.rotational.currentStrength;
-  const thrusterSign = thrusterCurrent * wSign;
-  const thrusterStart = (thrusterSign >= 0) ? 0 : Math.abs(thrusterCurrent);
   const thrusterT = (thrusterMax - thrusterCurrent) / prl;
 
   let theta;
-  const thetao = obj.rotation;
 
-  if(thrusterT < t) {
+  if (thrusterT < t) {
     const accelerationAtThrusterMax = (thrusterMax * r) / mo;
     theta = tripleIntegrateToDelta(wo, ao, z, thrusterT);
     wo = doubleIntegrateToDelta(ao, z, thrusterT);
     theta += doubleIntegrateToDelta(wo, accelerationAtThrusterMax, t - thrusterT);
-  }
-  else {
+  } else {
     theta = tripleIntegrateToDelta(wo, ao, z, t);
   }
 
-  return {deltaTheta: theta, t};
+  return { deltaTheta: theta, t };
 };
 
 const aiFunctions = {
-  basic(dt) {
-    let specialProperties = this.ai.specialProperties;
-    if(Date.now() - this.ai.lastTargetCheck > 5000 || specialProperties.target.destructible.hp <= 0) {
+  basic() {
+    const specialProperties = this.ai.specialProperties;
+    if (Date.now() - this.ai.lastTargetCheck > 5000
+      || specialProperties.target.destructible.hp <= 0) {
       let lowestDistance = Number.MAX_VALUE;
       for (let c = 0; c < this.game.objs.length; c++) {
         const ship = this.game.objs[c];
@@ -77,7 +73,7 @@ const aiFunctions = {
       }
     }
 
-    let target = specialProperties.target;
+    const target = specialProperties.target;
 
     if (!target) {
       return;
@@ -92,19 +88,19 @@ const aiFunctions = {
     );
 
     const stabRatio = this.stabilizer.thrustRatio;
-    if(relativeAngleToTarget !== 0) {
+    if (relativeAngleToTarget !== 0) {
       const wSign = relativeAngleToTarget / Math.abs(relativeAngleToTarget);
       const towardTarget = wSign * this.thrusterSystem.rotational.maxStrength;
       const awayTarget = -towardTarget;
-      if(relativeAngleToTarget * this.rotationalVelocity <= 0) {
+      if (relativeAngleToTarget * this.rotationalVelocity <= 0) {
         this.objRotationalThrusters(awayTarget);
-      }
-      else {
+      } else {
         const stopInfo = getStopInfo(this);
-        if(Math.abs(stopInfo.deltaTheta) < Math.abs(relativeAngleToTarget))
+        if (Math.abs(stopInfo.deltaTheta) < Math.abs(relativeAngleToTarget)) {
           this.objRotationalThrusters(awayTarget);
-        else
+        } else {
           this.objRotationalThrusters(towardTarget);
+        }
       }
     }
 
@@ -156,8 +152,8 @@ const aiFunctions = {
       this.objLateralThrusters.call(this, -latMaxStrength / stabRatio);
     }
 
-     this.objMedialStabilizers();
-     this.objLateralStabilizers();
+    this.objMedialStabilizers();
+    this.objLateralStabilizers();
     // this.objRotationalStabilizers();
   },
 

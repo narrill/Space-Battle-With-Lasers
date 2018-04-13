@@ -18,7 +18,7 @@ class PowerSystem {
     }, params);
   }
 
-  static getBPCost(params = {}) {
+  static getBPCost() {
     return 500;
   }
 

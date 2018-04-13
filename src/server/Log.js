@@ -1,20 +1,20 @@
 class Log {
-	constructor() {
-		this.amountsById = {};
-	}
+  constructor() {
+    this.amountsById = {};
+  }
 
-	log(id, amt) {
-		let a = this.amountsById[id] || 0;
-		this.amountsById[id] = a + amt;
-	}
+  log(id, amt) {
+    const a = this.amountsById[id] || 0;
+    this.amountsById[id] = a + amt;
+  }
 
-	publish(func, coeff = 1) {
-		Object.keys(this.amountsById).forEach((id) => {
-			func(id, this.amountsById[id] * coeff);
-		});
+  publish(func, coeff = 1) {
+    Object.keys(this.amountsById).forEach((id) => {
+      func(id, this.amountsById[id] * coeff);
+    });
 
-		this.amountsById = {};
-	}
+    this.amountsById = {};
+  }
 }
 
 module.exports = Log;

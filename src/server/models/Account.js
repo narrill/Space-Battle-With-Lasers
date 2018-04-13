@@ -7,7 +7,6 @@ const objBlueprints = require('../objBlueprints.js');
 const iterations = 10000;
 const saltLength = 64;
 const keyLength = 64;
-const MAX_BPS = 5;
 
 class Account {
   constructor(doc) {
@@ -22,22 +21,18 @@ class Account {
   // that resolves to the matching account if it
   // exists and validates and rejects if a matching
   // account couldn't be found or validated
-  static load(username, password) {    
+  static load(username, password) {
     // Try to get from account store
     let acc = accountStore.getAccountByUsername(username);
-    if(acc) {
-      return acc._validatePassword(password).then(() => {
-        return Promise.resolve(acc);
-      });
+    if (acc) {
+      return acc._validatePassword(password).then(() => Promise.resolve(acc));
     }
 
     return db.findAccountByUsername(username).then((doc) => {
       acc = new Account(doc);
       return acc._validatePassword(password);
-    }).then(() => {
-      return db.findBPsByAccount(acc);
-    }).then((bpDocs) => {
-      for(let c = 0; c < bpDocs.length; ++c) {
+    }).then(() => db.findBPsByAccount(acc)).then((bpDocs) => {
+      for (let c = 0; c < bpDocs.length; ++c) {
         const processedBP = objBlueprints.processShip(bpDocs[c].bp);
         acc.bpsByName[bpDocs[c].name] = processedBP;
       }
@@ -55,7 +50,7 @@ class Account {
         username,
         salt,
         pass,
-        currency: 0
+        currency: 0,
       };
       return db.createAccount(accData);
     }).then((doc) => {
@@ -69,33 +64,29 @@ class Account {
     const salt = crypto.randomBytes(saltLength).toString('hex');
 
     return util.promisify(crypto.pbkdf2)(
-      password, 
-      salt, 
-      iterations, 
-      keyLength, 
-      'RSA-SHA512'
-    ).then((hash) => {
-      return Promise.resolve({ salt, pass: hash.toString('hex')});
-    });
+      password,
+      salt,
+      iterations,
+      keyLength,
+      'RSA-SHA512',
+    ).then(hash => Promise.resolve({ salt, pass: hash.toString('hex') }));
   }
 
   _validatePassword(password) {
-    const {salt, pass} = this.doc;
+    const { salt, pass } = this.doc;
 
     return util.promisify(crypto.pbkdf2)(
-      password, 
-      salt, 
-      iterations, 
-      keyLength, 
-      'RSA-SHA512'
+      password,
+      salt,
+      iterations,
+      keyLength,
+      'RSA-SHA512',
     ).catch((err) => {
       console.log(err);
     }).then((hash) => {
       const hstring = hash.toString('hex');
-      if(hstring === pass)
-        return Promise.resolve();
-      else
-        return Promise.reject();
+      if (hstring === pass) { return Promise.resolve(); }
+      return Promise.reject();
     });
   }
 
@@ -129,7 +120,7 @@ class Account {
     const bpDoc = {
       name: bpInfo.name,
       bp: bpInfo.bp,
-      account: this.id
+      account: this.id,
     };
 
     return db.submitBP(bpDoc).then(() => {
@@ -148,13 +139,12 @@ class Account {
   }
 
   trySubtract(amt) {
-    if(this.doc.currency >= amt) {
+    if (this.doc.currency >= amt) {
       this.doc.currency -= amt;
       this.isDirtyCurrency = true;
       return true;
     }
-    else
-      return false;
+    return false;
   }
 
   addCurrency(amt) {
@@ -164,22 +154,22 @@ class Account {
 
   emitCurrency() {
     const socket = accountStore.getSocketForAccount(this);
-    if(socket && socket.connected)
-      socket.emit('currency', this.doc.currency);
+    if (socket && socket.connected) { socket.emit('currency', this.doc.currency); }
   }
 
   save() {
-    if(this.isDirty)
+    if (this.isDirty) {
       db.updateAccount(this).then(() => {
         this.isDirty = false;
         this.isDirtyCurrency = false;
         this.emitCurrency();
       });
-    else if(this.isDirtyCurrency)
+    } else if (this.isDirtyCurrency) {
       db.updateAccountCurrency(this).then(() => {
         this.isDirtyCurrency = false;
         this.emitCurrency();
       });
+    }
   }
 }
 

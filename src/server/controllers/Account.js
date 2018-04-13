@@ -1,5 +1,6 @@
 const models = require('../models');
 const buildableBPs = require('../ComponentTypes.js').buildableBPs;
+
 const Account = models.Account;
 
 const loginPage = (req, res) => {
@@ -66,7 +67,7 @@ const signup = (request, response) => {
 const submitBP = (request, response) => {
   const bpInfo = request.body;
   request.session.account.submitBP(bpInfo).then((cost) => {
-    response.status(200).json({ cost: cost });
+    response.status(200).json({ cost });
   }).catch((err) => {
     console.log(err);
     response.status(400).json({ error: 'Error submitting blueprint' });

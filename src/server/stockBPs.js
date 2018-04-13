@@ -278,4 +278,4 @@ const missiles = {
   },
 };
 
-module.exports = {ships, missiles};
+module.exports = { ships, missiles };

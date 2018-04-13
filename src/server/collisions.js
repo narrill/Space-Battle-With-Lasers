@@ -14,10 +14,8 @@ const collisions = {
       } else { dmg = 0; }
     }
     this.destructible.hp -= dmg;
-    if(this.destructible.hp < 0)
-      dmg += this.destructible.hp;
-    if(this.damageLog)
-      this.damageLog.log(fromPlayerId, dmg);
+    if (this.destructible.hp < 0) { dmg += this.destructible.hp; }
+    if (this.damageLog) { this.damageLog.log(fromPlayerId, dmg); }
   },
   basicLaserCollision: (laser, obj, tValOfObj, dt) => {
     collisions.dealDamage.call(obj, laser.owner.playerId, laser.power * dt * (1 - tValOfObj));
@@ -27,15 +25,17 @@ const collisions = {
     let colliderPid;
     let collideePid;
 
-    if(collider.owner)
+    if (collider.owner) {
       colliderPid = collider.owner.playerId;
-    else if(collider.playerId)
+    } else if (collider.playerId) {
       colliderPid = collider.playerId;
+    }
 
-    if(collidee.owner)
+    if (collidee.owner) {
       collideePid = collidee.owner.playerId;
-    else if(collidee.playerId)
+    } else if (collidee.playerId) {
       collideePid = collidee.playerId;
+    }
 
     const LIMITINGSIZEFACTOR = 10;
     const objVel = [
@@ -71,7 +71,11 @@ const collisions = {
   },
 
   basicBlastwaveCollision: (radial, obj, dt) => {
-    collisions.dealDamage.call(obj, radial.trueOwner.playerId, radial.velocity * radial.collisionProperties.density * dt);
+    collisions.dealDamage.call(
+      obj,
+      radial.trueOwner.playerId,
+      radial.velocity * radial.collisionProperties.density * dt,
+    );
   },
 };
 

@@ -1,13 +1,10 @@
 const http = require('http');
 const socketio = require('socket.io');
 const path = require('path');
-const url = require('url');
 const express = require('express');
 const expressHandlebars = require('express-handlebars');
 const bodyParser = require('body-parser');
 const compression = require('compression');
-const favicon = require('serve-favicon');
-const cookieParser = require('cookie-parser');
 const expressSession = require('express-session');
 const accountStore = require('./accountStore.js');
 const csrf = require('csurf');
@@ -20,12 +17,7 @@ const Game = require('./Game.js');
 const objBlueprints = require('./objBlueprints.js');
 
 const ships = objBlueprints.ships;
-const Obj = require('./Obj.js');
 const utilities = require('./utilities.js');
-
-const has = Object.prototype.hasOwnProperty;
-
-let shipList = Object.keys(ships);
 
 const game = new Game();
 
@@ -42,7 +34,7 @@ const server = http.Server(app);
 const io = socketio(server);
 
 app.use('/assets', express.static(path.resolve(`${__dirname}/../../hosted/`)));
-//app.use(favicon(`${__dirname}/../hosted/img/favicon.png`));
+// app.use(favicon(`${__dirname}/../hosted/img/favicon.png`));
 app.disable('x-powered-by');
 app.use(compression());
 app.use(bodyParser.json());
@@ -61,13 +53,13 @@ const session = expressSession({
 });
 app.use(session);
 app.set('views', `${__dirname}/../views`);
-app.engine('handlebars', expressHandlebars({ 
+app.engine('handlebars', expressHandlebars({
   defaultLayout: 'client',
-  layoutsDir: 'src/views/layouts'
+  layoutsDir: 'src/views/layouts',
 }));
 app.set('view engine', 'handlebars');
 
-//app.use(cookieParser());
+// app.use(cookieParser());
 app.use(csrf());
 app.use((err, req, res, next) => {
   if (err.code !== 'EBADCSRFTOKEN') return next(err);
@@ -87,7 +79,7 @@ server.listen(port, (err) => {
 io.use(sharedsession(session));
 
 io.on('connection', (s) => {
-  if(!s.handshake.session.account) {
+  if (!s.handshake.session.account) {
     s.disconnect();
     return;
   }
@@ -112,9 +104,9 @@ io.on('connection', (s) => {
     const nameString = String(shipName).toLowerCase().valueOf();
     const chosenStockBP = ships[nameString];
     const chosenUserBP = account.getBP(nameString);
-    const chosenShipBP = (chosenStockBP) ? chosenStockBP : chosenUserBP;
+    const chosenShipBP = (chosenStockBP) || chosenUserBP;
     if (chosenShipBP && s.handshake.session.account.trySubtract(chosenShipBP.buyCost)) {
-      inputHandler = game.createPlayerObj(s, s.handshake.session.account.id, chosenShipBP);  
+      inputHandler = game.createPlayerObj(s, s.handshake.session.account.id, chosenShipBP);
       s.emit('grid', game.grid);
     } else {
       s.emit('badShipError');

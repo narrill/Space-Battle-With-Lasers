@@ -116,7 +116,7 @@ const ships = {
       max: 100,
       recharge: 3,
       efficiency: 8,
-    }
+    },
   },
 
   tiger: {
@@ -354,16 +354,15 @@ const populatePhysicalProperties = (bp) => {
     momentOfInertia,
   };
   console.log(ship.physicalProperties);
-}
+};
 
 const processShip = (bp) => {
   const bpCopy = utilities.deepObjectMerge.call({}, bp);
   populatePhysicalProperties(bpCopy);
   bpCopy.cost = Obj.getBPCost(bpCopy);
-  if(!has.call(bpCopy, "buyCost"))
-    bpCopy.buyCost = bpCopy.cost;
+  if (!has.call(bpCopy, 'buyCost')) { bpCopy.buyCost = bpCopy.cost; }
   return Obj.completeBP(bpCopy);
-}
+};
 
 const addShip = (ship) => {
   if (!ships[ship.name]) {

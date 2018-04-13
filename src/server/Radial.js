@@ -39,18 +39,16 @@ class Radial {
 
   isOwner(o) {
     let c = this;
-    while(c.owner) {
+    while (c.owner) {
       c = c.owner;
-      if(c.owner === o)
-        return true;
+      if (c.owner === o) { return true; }
     }
     return false;
   }
 
   get trueOwner() {
     let c = this;
-    while(c.owner)
-      c = c.owner;
+    while (c.owner) { c = c.owner; }
     return c;
   }
 }

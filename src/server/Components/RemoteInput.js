@@ -58,8 +58,8 @@ class RemoteInput {
     // rotational motion - mouse    
     // console.log(-this.remoteInput.mouseDirection); 
     const mouseDirection = this.mouseDirection;
-    const mouseSensitivity = .01;
-    const maxTorque = this.owner.thrusterSystem.rotational.maxStrength * this.owner.destructible.radius
+    const mouseSensitivity = 0.01;
+    const maxTorque = owner.thrusterSystem.rotational.maxStrength * owner.destructible.radius;
     const maxAngularAcceleration = maxTorque / this.owner.momentOfInertia;
     let desiredVelocity = mouseDirection * mouseSensitivity * maxAngularAcceleration;
     // owner.objRotationalThrusters(

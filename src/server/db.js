@@ -1,6 +1,5 @@
 const MongoClient = require('mongodb').MongoClient;
 const ObjectID = require('mongodb').ObjectID;
-const Binary = require('mongodb').Binary;
 
 const DB_NAME = 'SpaceBattle';
 const ACCOUNTS_COLLECTION_NAME = 'Accounts';
@@ -16,65 +15,46 @@ const cleanMongoDocument = (doc) => {
 
   Object.keys(doc).forEach((key) => {
     const val = doc[key];
-    if(val.toJSON)
-      cleanDoc[key] = val.toJSON();
-    else
-      cleanDoc[key] = val;
+    if (val.toJSON) { cleanDoc[key] = val.toJSON(); } else { cleanDoc[key] = val; }
   });
 
   return cleanDoc;
-}
-
-const connect = (dbURL) => {
-  return MongoClient.connect(dbURL).then((cl) => {
-    client = cl;
-    db = client.db(DB_NAME);
-    accountsCollection = db.collection(ACCOUNTS_COLLECTION_NAME);
-    accountsCollection.createIndex({ username: 1 }, { unique: true });
-    bpCollection = db.collection(BP_COLLECTION_NAME);
-  });
 };
 
-const createAccount = (accData) => {
-  return accountsCollection.insertOne(accData).then((opDoc) => {
-    return Promise.resolve(opDoc.ops[0]);
-  });
-};
+const connect = dbURL => MongoClient.connect(dbURL).then((cl) => {
+  client = cl;
+  db = client.db(DB_NAME);
+  accountsCollection = db.collection(ACCOUNTS_COLLECTION_NAME);
+  accountsCollection.createIndex({ username: 1 }, { unique: true });
+  bpCollection = db.collection(BP_COLLECTION_NAME);
+});
 
-const findAccountByUsername = (username) => {
-  return accountsCollection.findOne({ username }).then((doc) => {
-    return Promise.resolve(cleanMongoDocument(doc));
-  });
-};
+const createAccount = accData =>
+  accountsCollection.insertOne(accData).then(opDoc => Promise.resolve(opDoc.ops[0]));
 
-const findAccountById = (id) => {
-  return accountsCollection.findOne({ _id: id }).then((doc) => {
-    return Promise.resolve(cleanMongoDocument(doc));
-  });
-};
+const findAccountByUsername = username =>
+  accountsCollection.findOne({ username }).then(doc => Promise.resolve(cleanMongoDocument(doc)));
 
-const findBPsByAccount = (acc) => {
-  return bpCollection.find({ account: acc.id }).toArray();
-};
+const findAccountById = id =>
+  accountsCollection.findOne({ _id: id }).then(doc => Promise.resolve(cleanMongoDocument(doc)));
 
-const updateAccountCurrency = (account) => {
-  return accountsCollection.updateOne(
-    { _id: ObjectID(account.id) }, 
-    { $set: { currency: account.currency }}
+const findBPsByAccount = acc =>
+  bpCollection.find({ account: acc.id }).toArray();
+
+const updateAccountCurrency = account =>
+  accountsCollection.updateOne(
+    { _id: ObjectID(account.id) },
+    { $set: { currency: account.currency } },
   ).catch((err) => {
     console.log(err);
   });
-};
 
-const updateAccount = (account) => {
-  return accountsCollection.updateOne({ _id: ObjectID(account.id) }, account.doc).catch((err) => {
+const updateAccount = account =>
+  accountsCollection.updateOne({ _id: ObjectID(account.id) }, account.doc).catch((err) => {
     console.log(err);
   });
-};
 
-const submitBP = (doc) => {
-  return bpCollection.update({ name: doc.name }, doc, { upsert: true });
-}
+const submitBP = doc => bpCollection.update({ name: doc.name }, doc, { upsert: true });
 
 module.exports = {
   connect,
@@ -84,5 +64,5 @@ module.exports = {
   updateAccountCurrency,
   updateAccount,
   findBPsByAccount,
-  submitBP
+  submitBP,
 };
