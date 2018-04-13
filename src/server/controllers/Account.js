@@ -23,7 +23,7 @@ const login = (request, response) => {
   const password = `${req.body.pass}`;
 
   if (!username || !password) {
-    return res.status(400).json({ error: 'RAWR! All fields are required' });
+    return res.status(400).json({ error: 'All fields are required' });
   }
 
   return Account.load(username, password).then((acc) => {
@@ -31,7 +31,7 @@ const login = (request, response) => {
     res.json({ redirect: '/play' });
   }).catch((err) => {
     console.log(err);
-    return res.status(400).json({ error: 'RAWR! WRONG USER NAME OR PASSWORD!' });
+    return res.status(400).json({ error: 'Wrong username or password' });
   });
 };
 
@@ -44,11 +44,11 @@ const signup = (request, response) => {
   req.body.pass2 = `${req.body.pass2}`;
 
   if (!req.body.username || !req.body.pass || !req.body.pass2) {
-    return res.status(400).json({ error: 'RAWR! All fields are required' });
+    return res.status(400).json({ error: 'All fields are required' });
   }
 
   if (req.body.pass !== req.body.pass2) {
-    return res.status(400).json({ error: 'RAWR! Passwords do not match' });
+    return res.status(400).json({ error: 'Passwords do not match' });
   }
 
   return Account.create(req.body.username, req.body.pass).then((acc) => {

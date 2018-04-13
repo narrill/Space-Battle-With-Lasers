@@ -32,6 +32,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var Menu = require('./Menu.js');
     var requests = require('./requests.js');
 
+    var persistentTutorialText = function persistentTutorialText(camera, text) {
+      var ctx = camera.ctx;
+      ctx.save();
+      ctx.fillStyle = 'white';
+      ctx.font = '14pt Orbitron';
+      ctx.textAlign = 'center';
+      ctx.fillText(text, camera.width / 2, camera.height / 10);
+      ctx.restore();
+    };
+
+    var tutorialText = function tutorialText(camera, text) {
+      var ctx = camera.ctx;
+      ctx.save();
+      ctx.fillStyle = 'white';
+      ctx.font = '14pt Orbitron';
+      ctx.textAlign = 'center';
+      ctx.fillText(text, camera.width / 2, camera.height / 5);
+      ctx.restore();
+    };
+
     var drawHighlight = function drawHighlight(ctx, x, y, text, height) {
       ctx.save();
       var width = ctx.measureText(text).width;
@@ -228,7 +248,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       _createClass(ShipEditor, [{
         key: "draw",
-        value: function draw(ctx, x, y, active) {
+        value: function draw(camera, x, y, active) {
+          var ctx = camera.ctx;
           ctx.save();
           ctx.font = "12pt Orbitron";
           ctx.textAlign = 'left';
@@ -241,6 +262,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             y = this.elements[c].draw(ctx, x, y, height, lineHeight, active && this.cursor === c, indent);
           }
           ctx.restore();
+
+          if (active) tutorialText(camera, "Navigate with the ARROW KEYS. Enable/disable components and change values with ENTER.");
         }
       }, {
         key: "_boundLineOffset",
@@ -333,6 +356,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               ctx.strokeStyle = 'red';
               ctx.stroke();
             }
+
+            tutorialText(camera, "Select a point with the ARROW KEYS and ENTER. Move the point with the ARROW KEYS and deselect with ENTER. Add points with A, remove a point with BACKSPACE");
           }
         }
       }, {
@@ -442,8 +467,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         value: function draw() {
           this.modelEditor.draw(this.client.camera, this.activeEditor === this.modelEditor);
           if (this.shipEditor) {
-            this.shipEditor.draw(this.client.camera.ctx, 50, this.client.camera.height / 2, this.activeEditor === this.shipEditor);
+            this.shipEditor.draw(this.client.camera, 50, this.client.camera.height / 2, this.activeEditor === this.shipEditor);
             this.menu.draw(this.client.camera.ctx, this.client.camera.width - 100, this.client.camera.height / 2, "20pt Orbitron", this.activeEditor === this.menu);
+            persistentTutorialText(this.client.camera, "Move between components, model, and menu with TAB");
           }
         }
       }, {
@@ -1284,20 +1310,23 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       _createClass(Menu, [{
         key: "draw",
         value: function draw(ctx, x, y, font, active) {
+          var color = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 'white';
+
           ctx.save();
           ctx.font = font;
           ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = 'white';
+          ctx.textBaseline = 'bottom';
+          ctx.fillStyle = color;
           var height = ctx.measureText("M").width;
           var lineHeight = height * 1.5;
+          y += this.elements.length * lineHeight / 2;
           for (var i = this.elements.length - 1; i >= 0; --i) {
             if (active && this.cursor === i) {
               ctx.save();
               var width = ctx.measureText(this.elements[i].text).width;
               ctx.globalAlpha = 0.5;
               ctx.fillStyle = 'blue';
-              ctx.fillRect(x - width / 2, y - height / 2, width, height);
+              ctx.fillRect(x - width / 2, y - height, width, height);
               ctx.restore();
             }
             ctx.fillText(this.elements[i].text, x, y);
@@ -1619,6 +1648,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                   return _this20.client.switchScreen(_this20.client.chooseShipScreen);
                 } }, { text: 'Build', func: function func() {
                   return _this20.client.switchScreen(_this20.client.builderScreen);
+                } }, { text: 'Logout', func: function func() {
+                  return window.location.replace('/logout');
                 } }]);
             }
           }

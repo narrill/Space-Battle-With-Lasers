@@ -62,7 +62,7 @@ const session = expressSession({
 app.use(session);
 app.set('views', `${__dirname}/../views`);
 app.engine('handlebars', expressHandlebars({ 
-  defaultLayout: 'main',
+  defaultLayout: 'client',
   layoutsDir: 'src/views/layouts'
 }));
 app.set('view engine', 'handlebars');

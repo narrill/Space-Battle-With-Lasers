@@ -8,7 +8,7 @@ const router = (app) => {
   app.post('/signup', mid.requiresSecure, mid.requiresLogout, controllers.Account.signup);
   app.get('/logout', mid.requiresLogin, controllers.Account.logout);
   app.get('/play', mid.requiresLogin, (req, res) => {
-  	res.render('client', { layout: 'client', csrfToken: req.csrfToken() });
+  	res.render('client', { csrfToken: req.csrfToken() });
   });
   app.get('/components', mid.requiresLogin, controllers.Account.components);
   app.post('/addShip', mid.requiresSecure, mid.requiresLogin, controllers.Account.submitBP);

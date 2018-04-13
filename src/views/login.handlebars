@@ -1,18 +1,9 @@
-<nav><a href="/login"><img id="logo" src="/assets/img/face.png" alt="face logo"/></a>
-  <div class="navlink"><a href="/login">Login</a></div>
-  <div class="navlink"><a href="/signup">Sign up</a></div>
-</nav>
-<section id="login">
-  <form id="loginForm" name="loginForm" action="/login" method="POST" class="mainForm">
-    <label for="username">Username: </label>
-    <input id="user" type="text" name="username" placeholder="username"/>
-    <label for="pass">Password: </label>
-    <input id="pass" type="password" name="pass" placeholder="password"/>
-    <input type="hidden" name="_csrf" value={{csrfToken}} />
-    <input class="formSubmit" type="submit" value="Sign In" />
-  </form>
-</section>
-<div id="domoMessage"><img id="speech" src="/assets/img/speech.png" alt="speech box"/>
-  <h3><span id="errorMessage">Wrong username or password</span></h3><img id="domo" src="assets/img/domo.png" alt="domo"/>
-</div>
+<meta name="csrf-token" content="{{csrfToken}}">
+<span class="font-loader">
+	<span class="aroma-light"><!-- / --></span>
+	<span class="aroma-bold"><!-- / --></span>
+	<span class="prime"><!-- / --></span>
+	<span class="orbitron-light"><!-- / --></span>
+	<span class="orbitron-black"><!-- / --></span>
+</span>
 <script src="/assets/loginbundle.js"></script>

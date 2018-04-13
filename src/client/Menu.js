@@ -4,21 +4,22 @@ class Menu {
     this.cursor = 0;
   }
 
-  draw(ctx, x, y, font, active) {
+  draw(ctx, x, y, font, active, color = 'white') {
     ctx.save();
     ctx.font = font;
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'white';
+    ctx.textBaseline = 'bottom';
+    ctx.fillStyle = color;
     const height = ctx.measureText("M").width;
     const lineHeight = height * 1.5;
+    y += (this.elements.length * lineHeight) / 2;
     for (let i = this.elements.length - 1; i >= 0; --i) {
       if(active && this.cursor === i) {
         ctx.save();
         const width = ctx.measureText(this.elements[i].text).width;
         ctx.globalAlpha = 0.5;
         ctx.fillStyle = 'blue';
-        ctx.fillRect(x - width/2, y - height/2, width, height);
+        ctx.fillRect(x - width/2, y - height, width, height);
         ctx.restore();
       }
       ctx.fillText(this.elements[i].text, x, y);

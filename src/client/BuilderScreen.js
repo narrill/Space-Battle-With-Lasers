@@ -5,6 +5,26 @@ const drawing = require('./drawing.js');
 const Menu = require('./Menu.js');
 const requests = require('./requests.js');
 
+const persistentTutorialText = (camera, text) => {
+  const ctx = camera.ctx;
+  ctx.save();
+  ctx.fillStyle = 'white';
+  ctx.font = '14pt Orbitron';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, camera.width / 2, camera.height / 10);
+  ctx.restore();
+};
+
+const tutorialText = (camera, text) => {
+  const ctx = camera.ctx;
+  ctx.save();
+  ctx.fillStyle = 'white';
+  ctx.font = '14pt Orbitron';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, camera.width / 2, camera.height / 5);
+  ctx.restore();
+};
+
 const drawHighlight = (ctx, x, y, text, height) => {
   ctx.save();
   const width = ctx.measureText(text).width;
@@ -165,7 +185,8 @@ class ShipEditor extends Navigable {
     this.lineOffset = 0;
   }
 
-  draw(ctx, x, y, active) {
+  draw(camera, x, y, active) {
+    const ctx = camera.ctx;
     ctx.save();
     ctx.font = "12pt Orbitron";
     ctx.textAlign = 'left';
@@ -178,6 +199,9 @@ class ShipEditor extends Navigable {
       y = this.elements[c].draw(ctx, x, y, height, lineHeight, active && this.cursor === c, indent);
     }
     ctx.restore();
+
+    if(active)
+      tutorialText(camera, "Navigate with the ARROW KEYS. Enable/disable components and change values with ENTER.")
   }
 
   get shipBP() {
@@ -273,6 +297,8 @@ class ModelEditor {
         ctx.strokeStyle = 'red';
         ctx.stroke();
       }
+
+      tutorialText(camera, "Select a point with the ARROW KEYS and ENTER. Move the point with the ARROW KEYS and deselect with ENTER. Add points with A, remove a point with BACKSPACE");
     }
   }
 
@@ -386,8 +412,9 @@ class BuilderScreen extends Screen {
   draw() {
     this.modelEditor.draw(this.client.camera, this.activeEditor === this.modelEditor);
     if(this.shipEditor) {
-      this.shipEditor.draw(this.client.camera.ctx, 50, this.client.camera.height/2, this.activeEditor === this.shipEditor);
+      this.shipEditor.draw(this.client.camera, 50, this.client.camera.height/2, this.activeEditor === this.shipEditor);
       this.menu.draw(this.client.camera.ctx, this.client.camera.width - 100, this.client.camera.height/2, "20pt Orbitron", this.activeEditor === this.menu);
+      persistentTutorialText(this.client.camera, "Move between components, model, and menu with TAB");
     }
   }
 

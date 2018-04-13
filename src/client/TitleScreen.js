@@ -31,7 +31,8 @@ class TitleScreen extends Screen {
       if(e.key === 'Enter') {
         this.menu = new Menu([
           { text: 'Play', func: () => this.client.switchScreen(this.client.chooseShipScreen) },
-          { text: 'Build', func: () => this.client.switchScreen(this.client.builderScreen) }
+          { text: 'Build', func: () => this.client.switchScreen(this.client.builderScreen) },
+          { text: 'Logout', func: () => window.location.replace('/logout') }
         ]);
       }
     }     
